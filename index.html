@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Dashboard Central</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+
+:root{
+--bg:#0b0f19;
+--card:#111827;
+--line:#1f2937;
+--text:#f9fafb;
+--muted:#9ca3af;
+--accent:#7c3aed;
+--radius:16px;
+}
+
+*{
+box-sizing:border-box;
+margin:0;
+padding:0;
+font-family:Inter,sans-serif;
+}
+
+body{
+background:var(--bg);
+color:var(--text);
+height:100vh;
+display:flex;
+flex-direction:column;
+overflow:hidden;
+}
+
+/* HEADER */
+
+.header{
+padding:14px 18px;
+border-bottom:1px solid var(--line);
+display:flex;
+align-items:center;
+gap:12px;
+background:#0b0f19;
+}
+
+.search{
+flex:1;
+position:relative;
+}
+
+.search input{
+width:100%;
+padding:12px 16px;
+border-radius:999px;
+border:1px solid var(--line);
+background:#020617;
+color:white;
+font-size:14px;
+outline:none;
+}
+
+.search input:focus{
+border-color:var(--accent);
+}
+
+/* RESULTADOS */
+
+.results{
+position:absolute;
+top:44px;
+left:0;
+right:0;
+background:#020617;
+border:1px solid var(--line);
+border-radius:14px;
+max-height:320px;
+overflow:auto;
+display:none;
+z-index:50;
+}
+
+.result{
+padding:12px 14px;
+cursor:pointer;
+border-bottom:1px solid var(--line);
+font-size:14px;
+}
+
+.result:hover{
+background:#111827;
+}
+
+/* IFRAME */
+
+.main{
+flex:1;
+position:relative;
+}
+
+iframe{
+width:100%;
+height:100%;
+border:0;
+background:white;
+}
+
+/* LOGIN */
+
+.login{
+position:fixed;
+inset:0;
+background:#020617;
+display:flex;
+align-items:center;
+justify-content:center;
+z-index:999;
+}
+
+.login-card{
+background:#020617;
+border:1px solid var(--line);
+padding:40px;
+border-radius:20px;
+width:320px;
+text-align:center;
+}
+
+.login-title{
+font-size:20px;
+font-weight:700;
+margin-bottom:10px;
+}
+
+.login-sub{
+font-size:13px;
+color:var(--muted);
+margin-bottom:24px;
+}
+
+.login input{
+width:100%;
+padding:12px;
+border-radius:12px;
+border:1px solid var(--line);
+background:#020617;
+color:white;
+margin-bottom:12px;
+outline:none;
+}
+
+.login button{
+width:100%;
+padding:12px;
+border-radius:12px;
+border:none;
+background:var(--accent);
+color:white;
+font-weight:700;
+cursor:pointer;
+}
+
+.login button:hover{
+opacity:.9;
+}
+
+/* APRESENTAÇÃO */
+
+.welcome{
+position:absolute;
+inset:0;
+display:flex;
+align-items:center;
+justify-content:center;
+flex-direction:column;
+gap:12px;
+background:linear-gradient(180deg,#020617,#020617);
+z-index:2;
+transition:opacity .6s;
+}
+
+.welcome h1{
+font-size:24px;
+font-weight:800;
+}
+
+.welcome p{
+color:var(--muted);
+}
+
+.hidden{
+opacity:0;
+pointer-events:none;
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+
+<div class="login" id="login">
+
+<div class="login-card">
+
+<div class="login-title">
+Sr. Nalbert Souza
+</div>
+
+<div class="login-sub">
+Digite sua senha para acessar
+</div>
+
+<input type="password" id="senha" placeholder="Senha">
+
+<button onclick="login()">Entrar</button>
+
+</div>
+
+</div>
+
+<!-- HEADER -->
+
+<div class="header">
+
+<div class="search">
+
+<input
+id="search"
+placeholder="Buscar dashboards..."
+oninput="buscar()"
+/>
+
+<div class="results" id="results"></div>
+
+</div>
+
+</div>
+
+<!-- MAIN -->
+
+<div class="main">
+
+<div class="welcome" id="welcome">
+
+<h1>Dashboard Central</h1>
+<p>Busque um painel para começar</p>
+
+</div>
+
+<iframe id="frame"></iframe>
+
+</div>
+
+<script>
+
+const dashboards = [
+
+{
+nome:"Reservas Mercatto",
+url:"https://reservas-mercatto.vercel.app"
+},
+
+{
+nome:"Painel Requisições",
+url:"https://grupodvbr.github.io/requisicoesvilla/"
+},
+
+{
+nome:"Controle CMV",
+url:"https://grupodvbr.github.io/cmv/"
+},
+
+{
+nome:"Painel Cancelamentos",
+url:"https://script.google.com/macros/s/AKfycbzM1mmixFkFE5tbC-0Evc6GVyZEJkh88HCikNK08FujRwCrgUA1e_E29nMHip81kRPoSg/exec"
+},
+
+{
+nome:"Metas Financeiras",
+url:"https://script.google.com/macros/s/AKfycbziCPWWJxxfrnSeT3RHsNbw21z9MfnnB8JpV7ZQcZnvUQQ7dL3lVJdpUG7epACVjFaO/exec"
+}
+
+]
+
+const results = document.getElementById("results")
+
+function buscar(){
+
+const v = document.getElementById("search").value.toLowerCase()
+
+results.innerHTML=""
+
+if(!v){
+results.style.display="none"
+return
+}
+
+const filtrados = dashboards.filter(d =>
+d.nome.toLowerCase().includes(v)
+)
+
+filtrados.forEach(d => {
+
+const el = document.createElement("div")
+
+el.className="result"
+
+el.innerText=d.nome
+
+el.onclick=()=>{
+abrir(d.url)
+results.style.display="none"
+}
+
+results.appendChild(el)
+
+})
+
+results.style.display="block"
+
+}
+
+function abrir(url){
+
+document.getElementById("frame").src=url
+
+document.getElementById("welcome").classList.add("hidden")
+
+}
+
+/* LOGIN */
+
+const senhaCorreta="848663"
+const tempo=23*60*60*1000+59*60*1000
+
+function login(){
+
+const s=document.getElementById("senha").value
+
+if(s!==senhaCorreta){
+alert("Senha incorreta")
+return
+}
+
+localStorage.setItem("dashboard_auth",Date.now())
+
+document.getElementById("login").style.display="none"
+
+}
+
+function checkLogin(){
+
+const t=localStorage.getItem("dashboard_auth")
+
+if(!t){
+return
+}
+
+if(Date.now()-t>tempo){
+localStorage.removeItem("dashboard_auth")
+return
+}
+
+document.getElementById("login").style.display="none"
+
+}
+
+checkLogin()
+
+</script>
+
+</body>
+</html>
