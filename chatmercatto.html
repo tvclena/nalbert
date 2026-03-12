@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+
+<meta charset="UTF-8">
+<title>Gestor de Conversas • Mercatto Delícia</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+
+:root{
+--bg:#0f172a;
+--sidebar:#111827;
+--chat:#020617;
+--card:#1e293b;
+--border:#334155;
+--text:#f1f5f9;
+--muted:#94a3b8;
+--brand:#22c55e;
+--danger:#ef4444;
+}
+
+*{box-sizing:border-box}
+
+body{
+margin:0;
+font-family:Inter;
+background:var(--bg);
+color:var(--text);
+height:100vh;
+display:flex;
+}
+
+.sidebar{
+width:340px;
+background:var(--sidebar);
+border-right:1px solid var(--border);
+display:flex;
+flex-direction:column;
+}
+
+.header{
+padding:16px;
+font-weight:800;
+font-size:18px;
+border-bottom:1px solid var(--border);
+}
+
+.search{
+padding:10px;
+border-bottom:1px solid var(--border);
+}
+
+.search input{
+width:100%;
+padding:10px;
+border-radius:8px;
+border:none;
+background:#020617;
+color:white;
+}
+
+.clients{
+flex:1;
+overflow:auto;
+}
+
+.client{
+padding:14px;
+border-bottom:1px solid var(--border);
+cursor:pointer;
+}
+
+.client:hover{
+background:#020617;
+}
+
+.phone{
+font-weight:700;
+}
+
+.preview{
+font-size:12px;
+color:var(--muted);
+margin-top:4px;
+}
+
+.chat{
+flex:1;
+display:flex;
+flex-direction:column;
+background:var(--chat);
+}
+
+.chat-header{
+padding:16px;
+border-bottom:1px solid var(--border);
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+.messages{
+flex:1;
+overflow:auto;
+padding:20px;
+display:flex;
+flex-direction:column;
+gap:10px;
+}
+
+.msg{
+max-width:60%;
+padding:12px;
+border-radius:10px;
+font-size:14px;
+}
+
+.user{
+background:#1e293b;
+align-self:flex-start;
+}
+
+.assistant{
+background:#16a34a;
+align-self:flex-end;
+}
+
+.time{
+font-size:10px;
+margin-top:4px;
+opacity:0.6;
+}
+
+.actions{
+display:flex;
+gap:10px;
+}
+
+button{
+padding:8px 12px;
+border:none;
+border-radius:6px;
+cursor:pointer;
+font-weight:600;
+}
+
+.delete{
+background:var(--danger);
+color:white;
+}
+
+.delete-all{
+background:#7f1d1d;
+color:white;
+}
+
+.select{
+margin-right:8px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="sidebar">
+
+<div class="header">
+Conversas
+</div>
+
+<div class="search">
+<input id="buscar" placeholder="Buscar telefone...">
+</div>
+
+<div class="clients" id="clientes"></div>
+
+</div>
+
+<div class="chat">
+
+<div class="chat-header">
+
+<div id="clienteAtual">
+Selecione um cliente
+</div>
+
+<div class="actions">
+
+<button class="delete" onclick="excluirSelecionadas()">Excluir selecionadas</button>
+<button class="delete-all" onclick="excluirConversa()">Excluir conversa</button>
+
+</div>
+
+</div>
+
+<div class="messages" id="mensagens"></div>
+
+</div>
+
+<script>
+
+const supabase = supabase.createClient(
+"https://dxkszikemntfusfyrzos.supabase.co",
+"sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
+)
+
+
+  
+let clienteSelecionado=null
+let selecionadas=[]
+
+async function carregarClientes(){
+
+const {data} = await supabase
+.from("conversas_whatsapp")
+.select("*")
+.order("created_at",{ascending:false})
+
+const clientesMap={}
+
+data.forEach(m=>{
+if(!clientesMap[m.telefone]){
+clientesMap[m.telefone]=m
+}
+})
+
+const clientes = Object.values(clientesMap)
+
+const container = document.getElementById("clientes")
+container.innerHTML=""
+
+clientes.forEach(c=>{
+
+const div=document.createElement("div")
+div.className="client"
+
+div.innerHTML=`
+
+<div class="phone">${c.telefone}</div>
+<div class="preview">${c.mensagem}</div>
+
+`
+
+div.onclick=()=>abrirConversa(c.telefone)
+
+container.appendChild(div)
+
+})
+
+}
+
+async function abrirConversa(telefone){
+
+clienteSelecionado=telefone
+
+document.getElementById("clienteAtual").innerText=telefone
+
+const {data} = await supabase
+.from("conversas_whatsapp")
+.select("*")
+.eq("telefone",telefone)
+.order("created_at",{ascending:true})
+
+const container=document.getElementById("mensagens")
+
+container.innerHTML=""
+
+selecionadas=[]
+
+data.forEach(m=>{
+
+const div=document.createElement("div")
+
+div.className="msg "+(m.role==="assistant"?"assistant":"user")
+
+const date = new Date(m.created_at).toLocaleString()
+
+div.innerHTML=`
+
+<div>
+<input class="select" type="checkbox" value="${m.id}">
+${m.mensagem}
+<div class="time">${date}</div>
+</div>
+
+`
+
+div.querySelector("input").onchange=(e)=>{
+
+if(e.target.checked){
+
+selecionadas.push(m.id)
+
+}else{
+
+selecionadas=selecionadas.filter(x=>x!==m.id)
+
+}
+
+}
+
+container.appendChild(div)
+
+})
+
+container.scrollTop=container.scrollHeight
+
+}
+
+async function excluirSelecionadas(){
+
+if(selecionadas.length===0) return
+
+if(!confirm("Excluir mensagens selecionadas?")) return
+
+await supabase
+.from("conversas_whatsapp")
+.delete()
+.in("id",selecionadas)
+
+abrirConversa(clienteSelecionado)
+
+}
+
+async function excluirConversa(){
+
+if(!clienteSelecionado) return
+
+if(!confirm("Excluir toda a conversa deste cliente?")) return
+
+await supabase
+.from("conversas_whatsapp")
+.delete()
+.eq("telefone",clienteSelecionado)
+
+document.getElementById("mensagens").innerHTML=""
+document.getElementById("clienteAtual").innerText="Selecione um cliente"
+
+carregarClientes()
+
+}
+
+carregarClientes()
+
+</script>
+
+</body>
+</html>
