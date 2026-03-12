@@ -4,10 +4,9 @@
 
 <meta charset="UTF-8">
 <title>Gestor de Conversas • Mercatto Delícia</title>
-
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -36,8 +35,10 @@ height:100vh;
 display:flex;
 }
 
+/* SIDEBAR */
+
 .sidebar{
-width:340px;
+width:360px;
 background:var(--sidebar);
 border-right:1px solid var(--border);
 display:flex;
@@ -45,24 +46,25 @@ flex-direction:column;
 }
 
 .header{
-padding:16px;
+padding:18px;
 font-weight:800;
 font-size:18px;
 border-bottom:1px solid var(--border);
 }
 
 .search{
-padding:10px;
+padding:12px;
 border-bottom:1px solid var(--border);
 }
 
 .search input{
 width:100%;
-padding:10px;
+padding:12px;
 border-radius:8px;
 border:none;
 background:#020617;
 color:white;
+font-size:14px;
 }
 
 .clients{
@@ -71,9 +73,10 @@ overflow:auto;
 }
 
 .client{
-padding:14px;
+padding:16px;
 border-bottom:1px solid var(--border);
 cursor:pointer;
+transition:.2s;
 }
 
 .client:hover{
@@ -88,7 +91,12 @@ font-weight:700;
 font-size:12px;
 color:var(--muted);
 margin-top:4px;
+white-space:nowrap;
+overflow:hidden;
+text-overflow:ellipsis;
 }
+
+/* CHAT */
 
 .chat{
 flex:1;
@@ -98,27 +106,54 @@ background:var(--chat);
 }
 
 .chat-header{
-padding:16px;
+padding:16px 20px;
 border-bottom:1px solid var(--border);
 display:flex;
 justify-content:space-between;
 align-items:center;
 }
 
-.messages{
-flex:1;
-overflow:auto;
-padding:20px;
+.chat-title{
+font-weight:700;
+font-size:16px;
+}
+
+.actions{
 display:flex;
-flex-direction:column;
 gap:10px;
 }
 
+button{
+padding:8px 14px;
+border:none;
+border-radius:6px;
+cursor:pointer;
+font-weight:600;
+}
+
+.delete{
+background:var(--danger);
+color:white;
+}
+
+.messages{
+flex:1;
+overflow:auto;
+padding:25px;
+display:flex;
+flex-direction:column;
+gap:14px;
+}
+
+/* MENSAGENS */
+
 .msg{
 max-width:60%;
-padding:12px;
-border-radius:10px;
+padding:14px 16px;
+border-radius:14px;
 font-size:14px;
+line-height:1.5;
+position:relative;
 }
 
 .user{
@@ -132,36 +167,21 @@ align-self:flex-end;
 }
 
 .time{
-font-size:10px;
-margin-top:4px;
-opacity:0.6;
+font-size:11px;
+margin-top:6px;
+opacity:.7;
 }
 
-.actions{
-display:flex;
-gap:10px;
+.checkbox{
+position:absolute;
+top:-8px;
+left:-26px;
 }
 
-button{
-padding:8px 12px;
-border:none;
-border-radius:6px;
-cursor:pointer;
-font-weight:600;
-}
-
-.delete{
-background:var(--danger);
-color:white;
-}
-
-.delete-all{
-background:#7f1d1d;
-color:white;
-}
-
-.select{
-margin-right:8px;
+.empty{
+margin:auto;
+opacity:.5;
+font-size:14px;
 }
 
 </style>
@@ -187,53 +207,57 @@ Conversas
 
 <div class="chat-header">
 
-<div id="clienteAtual">
+<div class="chat-title" id="clienteAtual">
 Selecione um cliente
 </div>
 
 <div class="actions">
 
-<button class="delete" onclick="excluirSelecionadas()">Excluir selecionadas</button>
-<button class="delete-all" onclick="excluirConversa()">Excluir conversa</button>
+<button class="delete" onclick="excluirSelecionadas()">Excluir mensagens</button>
+<button class="delete" onclick="excluirConversa()">Excluir conversa</button>
 
 </div>
 
 </div>
 
-<div class="messages" id="mensagens"></div>
+<div class="messages" id="mensagens">
+
+<div class="empty">
+Nenhuma conversa selecionada
+</div>
+
+</div>
 
 </div>
 
 <script>
 
-const supabase = supabase.createClient(
+const db = supabase.createClient(
 "https://dxkszikemntfusfyrzos.supabase.co",
 "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 )
 
-
-  
 let clienteSelecionado=null
 let selecionadas=[]
 
+/* CARREGAR CLIENTES */
+
 async function carregarClientes(){
 
-const {data} = await supabase
+const {data} = await db
 .from("conversas_whatsapp")
 .select("*")
 .order("created_at",{ascending:false})
 
-const clientesMap={}
+const map={}
 
 data.forEach(m=>{
-if(!clientesMap[m.telefone]){
-clientesMap[m.telefone]=m
-}
+if(!map[m.telefone]) map[m.telefone]=m
 })
 
-const clientes = Object.values(clientesMap)
+const clientes = Object.values(map)
 
-const container = document.getElementById("clientes")
+const container=document.getElementById("clientes")
 container.innerHTML=""
 
 clientes.forEach(c=>{
@@ -242,10 +266,8 @@ const div=document.createElement("div")
 div.className="client"
 
 div.innerHTML=`
-
 <div class="phone">${c.telefone}</div>
 <div class="preview">${c.mensagem}</div>
-
 `
 
 div.onclick=()=>abrirConversa(c.telefone)
@@ -256,52 +278,47 @@ container.appendChild(div)
 
 }
 
+/* ABRIR CONVERSA */
+
 async function abrirConversa(telefone){
 
 clienteSelecionado=telefone
+selecionadas=[]
 
 document.getElementById("clienteAtual").innerText=telefone
 
-const {data} = await supabase
+const {data} = await db
 .from("conversas_whatsapp")
 .select("*")
 .eq("telefone",telefone)
 .order("created_at",{ascending:true})
 
 const container=document.getElementById("mensagens")
-
 container.innerHTML=""
-
-selecionadas=[]
 
 data.forEach(m=>{
 
 const div=document.createElement("div")
-
 div.className="msg "+(m.role==="assistant"?"assistant":"user")
 
 const date = new Date(m.created_at).toLocaleString()
 
 div.innerHTML=`
 
-<div>
-<input class="select" type="checkbox" value="${m.id}">
-${m.mensagem}
+<input type="checkbox" class="checkbox" value="${m.id}">
+
+<div>${m.mensagem}</div>
+
 <div class="time">${date}</div>
-</div>
 
 `
 
 div.querySelector("input").onchange=(e)=>{
 
 if(e.target.checked){
-
 selecionadas.push(m.id)
-
 }else{
-
 selecionadas=selecionadas.filter(x=>x!==m.id)
-
 }
 
 }
@@ -314,13 +331,18 @@ container.scrollTop=container.scrollHeight
 
 }
 
+/* EXCLUIR MENSAGENS */
+
 async function excluirSelecionadas(){
 
-if(selecionadas.length===0) return
+if(selecionadas.length===0){
+alert("Selecione mensagens")
+return
+}
 
 if(!confirm("Excluir mensagens selecionadas?")) return
 
-await supabase
+await db
 .from("conversas_whatsapp")
 .delete()
 .in("id",selecionadas)
@@ -329,23 +351,44 @@ abrirConversa(clienteSelecionado)
 
 }
 
+/* EXCLUIR CONVERSA */
+
 async function excluirConversa(){
 
 if(!clienteSelecionado) return
 
-if(!confirm("Excluir toda a conversa deste cliente?")) return
+if(!confirm("Excluir conversa completa?")) return
 
-await supabase
+await db
 .from("conversas_whatsapp")
 .delete()
 .eq("telefone",clienteSelecionado)
 
-document.getElementById("mensagens").innerHTML=""
-document.getElementById("clienteAtual").innerText="Selecione um cliente"
+document.getElementById("mensagens").innerHTML='<div class="empty">Conversa excluída</div>'
 
 carregarClientes()
 
 }
+
+/* BUSCA */
+
+document.getElementById("buscar").addEventListener("input",function(){
+
+const filtro=this.value.toLowerCase()
+
+document.querySelectorAll(".client").forEach(c=>{
+
+const texto=c.innerText.toLowerCase()
+
+c.style.display=texto.includes(filtro)?"block":"none"
+
+})
+
+})
+
+/* AUTO UPDATE */
+
+setInterval(carregarClientes,5000)
 
 carregarClientes()
 
