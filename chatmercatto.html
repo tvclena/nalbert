@@ -4,6 +4,7 @@
 
 <meta charset="UTF-8">
 <title>Gestor de Conversas • Mercatto Delícia</title>
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -33,12 +34,13 @@ background:var(--bg);
 color:var(--text);
 height:100vh;
 display:flex;
+overflow:hidden;
 }
 
 /* SIDEBAR */
 
 .sidebar{
-width:360px;
+width:380px;
 background:var(--sidebar);
 border-right:1px solid var(--border);
 display:flex;
@@ -46,25 +48,27 @@ flex-direction:column;
 }
 
 .header{
-padding:18px;
+padding:20px;
 font-weight:800;
 font-size:18px;
 border-bottom:1px solid var(--border);
+letter-spacing:.5px;
 }
 
 .search{
-padding:12px;
+padding:14px;
 border-bottom:1px solid var(--border);
 }
 
 .search input{
 width:100%;
-padding:12px;
-border-radius:8px;
+padding:12px 14px;
+border-radius:10px;
 border:none;
 background:#020617;
 color:white;
 font-size:14px;
+outline:none;
 }
 
 .clients{
@@ -73,7 +77,10 @@ overflow:auto;
 }
 
 .client{
-padding:16px;
+display:flex;
+gap:12px;
+align-items:center;
+padding:14px;
 border-bottom:1px solid var(--border);
 cursor:pointer;
 transition:.2s;
@@ -83,17 +90,29 @@ transition:.2s;
 background:#020617;
 }
 
-.phone{
+.avatar{
+width:40px;
+height:40px;
+border-radius:50%;
+background:#1e293b;
+display:flex;
+align-items:center;
+justify-content:center;
 font-weight:700;
+}
+
+.phone{
+font-weight:600;
+font-size:14px;
 }
 
 .preview{
 font-size:12px;
 color:var(--muted);
-margin-top:4px;
 white-space:nowrap;
 overflow:hidden;
 text-overflow:ellipsis;
+max-width:220px;
 }
 
 /* CHAT */
@@ -106,7 +125,7 @@ background:var(--chat);
 }
 
 .chat-header{
-padding:16px 20px;
+padding:18px 22px;
 border-bottom:1px solid var(--border);
 display:flex;
 justify-content:space-between;
@@ -115,7 +134,7 @@ align-items:center;
 
 .chat-title{
 font-weight:700;
-font-size:16px;
+font-size:15px;
 }
 
 .actions{
@@ -126,9 +145,10 @@ gap:10px;
 button{
 padding:8px 14px;
 border:none;
-border-radius:6px;
+border-radius:8px;
 cursor:pointer;
 font-weight:600;
+font-size:13px;
 }
 
 .delete{
@@ -139,10 +159,10 @@ color:white;
 .messages{
 flex:1;
 overflow:auto;
-padding:25px;
+padding:28px;
 display:flex;
 flex-direction:column;
-gap:14px;
+gap:16px;
 }
 
 /* MENSAGENS */
@@ -154,6 +174,7 @@ border-radius:14px;
 font-size:14px;
 line-height:1.5;
 position:relative;
+animation:fade .2s ease;
 }
 
 .user{
@@ -169,19 +190,25 @@ align-self:flex-end;
 .time{
 font-size:11px;
 margin-top:6px;
-opacity:.7;
+opacity:.6;
+text-align:right;
 }
 
 .checkbox{
 position:absolute;
-top:-8px;
-left:-26px;
+top:-10px;
+left:-28px;
 }
 
 .empty{
 margin:auto;
 opacity:.5;
 font-size:14px;
+}
+
+@keyframes fade{
+from{opacity:0;transform:translateY(6px)}
+to{opacity:1}
 }
 
 </style>
@@ -212,20 +239,14 @@ Selecione um cliente
 </div>
 
 <div class="actions">
-
 <button class="delete" onclick="excluirSelecionadas()">Excluir mensagens</button>
 <button class="delete" onclick="excluirConversa()">Excluir conversa</button>
-
 </div>
 
 </div>
 
 <div class="messages" id="mensagens">
-
-<div class="empty">
-Nenhuma conversa selecionada
-</div>
-
+<div class="empty">Nenhuma conversa selecionada</div>
 </div>
 
 </div>
@@ -239,8 +260,6 @@ const db = supabase.createClient(
 
 let clienteSelecionado=null
 let selecionadas=[]
-
-/* CARREGAR CLIENTES */
 
 async function carregarClientes(){
 
@@ -265,9 +284,17 @@ clientes.forEach(c=>{
 const div=document.createElement("div")
 div.className="client"
 
+const inicial = c.telefone.slice(-2)
+
 div.innerHTML=`
+
+<div class="avatar">${inicial}</div>
+
+<div>
 <div class="phone">${c.telefone}</div>
 <div class="preview">${c.mensagem}</div>
+</div>
+
 `
 
 div.onclick=()=>abrirConversa(c.telefone)
@@ -277,8 +304,6 @@ container.appendChild(div)
 })
 
 }
-
-/* ABRIR CONVERSA */
 
 async function abrirConversa(telefone){
 
@@ -301,7 +326,8 @@ data.forEach(m=>{
 const div=document.createElement("div")
 div.className="msg "+(m.role==="assistant"?"assistant":"user")
 
-const date = new Date(m.created_at).toLocaleString()
+const date = new Date(m.created_at)
+.toLocaleString("pt-BR",{hour:"2-digit",minute:"2-digit"})
 
 div.innerHTML=`
 
@@ -331,8 +357,6 @@ container.scrollTop=container.scrollHeight
 
 }
 
-/* EXCLUIR MENSAGENS */
-
 async function excluirSelecionadas(){
 
 if(selecionadas.length===0){
@@ -351,8 +375,6 @@ abrirConversa(clienteSelecionado)
 
 }
 
-/* EXCLUIR CONVERSA */
-
 async function excluirConversa(){
 
 if(!clienteSelecionado) return
@@ -370,8 +392,6 @@ carregarClientes()
 
 }
 
-/* BUSCA */
-
 document.getElementById("buscar").addEventListener("input",function(){
 
 const filtro=this.value.toLowerCase()
@@ -380,13 +400,11 @@ document.querySelectorAll(".client").forEach(c=>{
 
 const texto=c.innerText.toLowerCase()
 
-c.style.display=texto.includes(filtro)?"block":"none"
+c.style.display=texto.includes(filtro)?"flex":"none"
 
 })
 
 })
-
-/* AUTO UPDATE */
 
 setInterval(carregarClientes,5000)
 
