@@ -2,11 +2,11 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Dashboard Executivo</title>
+<title>Dashboard</title>
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 
 <style>
 
@@ -17,7 +17,6 @@
 --text:#f1f5f9;
 --muted:#94a3b8;
 --accent:#7c3aed;
---radius:16px;
 }
 
 *{
@@ -29,99 +28,80 @@ font-family:Inter,sans-serif;
 
 body{
 background:var(--bg);
-color:var(--text);
 height:100vh;
-display:flex;
-flex-direction:column;
 overflow:hidden;
 }
 
-/* HEADER */
+/* SEARCH */
 
-.header{
-padding:12px 16px;
-border-bottom:1px solid var(--line);
-display:flex;
-align-items:center;
-background:#070b14;
-}
-
-.search{
-width:100%;
-position:relative;
-}
-
-.search input{
-width:100%;
-padding:12px 16px;
-border-radius:999px;
-border:1px solid var(--line);
-background:#020617;
-color:white;
-font-size:14px;
-outline:none;
-transition:.2s;
-}
-
-.search input:focus{
-border-color:var(--accent);
-}
-
-/* RESULTADOS */
-
-.results{
-position:absolute;
-top:46px;
-left:0;
-right:0;
-background:#020617;
-border:1px solid var(--line);
-border-radius:14px;
-max-height:300px;
-overflow:auto;
-display:none;
+.search-box{
+position:fixed;
+top:16px;
+left:16px;
+width:240px;
 z-index:50;
 }
 
+.search-box input{
+width:100%;
+padding:10px 12px;
+border-radius:10px;
+border:1px solid var(--line);
+background:#020617;
+color:white;
+font-size:13px;
+outline:none;
+}
+
+/* RESULTS */
+
+.results{
+margin-top:6px;
+background:#020617;
+border:1px solid var(--line);
+border-radius:10px;
+display:none;
+max-height:220px;
+overflow:auto;
+}
+
 .result{
-padding:12px 14px;
+padding:10px 12px;
+font-size:13px;
 cursor:pointer;
 border-bottom:1px solid var(--line);
-font-size:14px;
-transition:.2s;
+color:var(--muted);
 }
 
 .result:hover{
 background:#111827;
+color:white;
 }
 
-/* MAIN */
-
-.main{
-flex:1;
-position:relative;
-}
+/* IFRAME */
 
 iframe{
+position:absolute;
+top:0;
+left:0;
 width:100%;
 height:100%;
 border:0;
 background:white;
 }
 
-/* APRESENTAÇÃO */
+/* WELCOME */
 
 .welcome{
 position:absolute;
 inset:0;
 display:flex;
+flex-direction:column;
 align-items:center;
 justify-content:center;
-flex-direction:column;
 gap:10px;
+color:white;
 background:#020617;
-z-index:2;
-transition:.5s;
 }
 
 .welcome h1{
@@ -130,13 +110,12 @@ font-weight:800;
 }
 
 .welcome p{
-color:var(--muted);
 font-size:13px;
+color:var(--muted);
 }
 
 .hidden{
-opacity:0;
-pointer-events:none;
+display:none;
 }
 
 /* LOGIN */
@@ -148,32 +127,26 @@ background:#020617;
 display:flex;
 align-items:center;
 justify-content:center;
-z-index:999;
+z-index:100;
 }
 
 .login-card{
 background:#020617;
 border:1px solid var(--line);
 padding:36px;
-border-radius:20px;
-width:320px;
+border-radius:16px;
+width:300px;
 text-align:center;
-animation:fade .6s;
 }
 
-@keyframes fade{
-from{opacity:0;transform:translateY(20px)}
-to{opacity:1}
-}
-
-.avatar{
-width:84px;
-height:84px;
+.login-avatar{
+width:80px;
+height:80px;
 border-radius:50%;
 margin:auto;
 margin-bottom:14px;
-border:3px solid #1f2937;
 object-fit:cover;
+border:3px solid #1f2937;
 }
 
 .login-title{
@@ -185,33 +158,28 @@ margin-bottom:6px;
 .login-sub{
 font-size:12px;
 color:var(--muted);
-margin-bottom:22px;
+margin-bottom:20px;
 }
 
 .login input{
 width:100%;
 padding:12px;
-border-radius:12px;
+border-radius:10px;
 border:1px solid var(--line);
 background:#020617;
 color:white;
-margin-bottom:14px;
-outline:none;
+margin-bottom:12px;
 }
 
 .login button{
 width:100%;
 padding:12px;
-border-radius:12px;
+border-radius:10px;
 border:none;
 background:var(--accent);
 color:white;
 font-weight:700;
 cursor:pointer;
-}
-
-.login button:hover{
-opacity:.9;
 }
 
 </style>
@@ -225,24 +193,15 @@ opacity:.9;
 
 <div class="login-card">
 
-<img
-class="avatar"
+<img class="login-avatar"
 src="https://dxkszikemntfusfyrzos.supabase.co/storage/v1/object/sign/avatars/WhatsApp%20Image%202026-03-12%20at%2016.15.14.jpeg?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9mYTE3NDc4OC02OTE0LTQ5NDYtYTEyYi04ZWRhYzAxNDRhNDEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJhdmF0YXJzL1doYXRzQXBwIEltYWdlIDIwMjYtMDMtMTIgYXQgMTYuMTUuMTQuanBlZyIsImlhdCI6MTc3MzM0Mjk1MywiZXhwIjoxODA0ODc4OTUzfQ.NSBf2rVIsZdCB1ORasm21y73W4r8TG6X8Yhk3ks39h0"
 />
 
-<div class="login-title">
-Sr. Nalbert Souza
-</div>
+<div class="login-title">Sr. Nalbert Souza</div>
 
-<div class="login-sub">
-Digite sua senha para acessar
-</div>
+<div class="login-sub">Digite sua senha</div>
 
-<input
-type="password"
-id="senha"
-placeholder="Senha"
-/>
+<input type="password" id="senha" placeholder="Senha">
 
 <button onclick="login()">Entrar</button>
 
@@ -250,85 +209,55 @@ placeholder="Senha"
 
 </div>
 
-<!-- HEADER -->
+<!-- SEARCH -->
 
-<div class="header">
+<div class="search-box">
 
-<div class="search">
-
-<input
-id="search"
-placeholder="Buscar dashboards..."
-oninput="buscar()"
-/>
+<input id="search" placeholder="Buscar painel...">
 
 <div class="results" id="results"></div>
 
 </div>
 
-</div>
-
-<!-- MAIN -->
-
-<div class="main">
+<!-- WELCOME -->
 
 <div class="welcome" id="welcome">
 
 <h1>Dashboard Central</h1>
-<p>Pesquise um painel para começar</p>
+<p>Digite o nome de um painel</p>
 
 </div>
+
+<!-- IFRAME -->
 
 <iframe id="frame"></iframe>
 
-</div>
-
 <script>
 
-/* ENTER PARA LOGIN */
+/* ENTER LOGIN */
 
-document.getElementById("senha").addEventListener("keypress",function(e){
-if(e.key==="Enter"){
-login()
-}
+document.getElementById("senha").addEventListener("keypress",e=>{
+if(e.key==="Enter") login()
 })
 
 /* DASHBOARDS */
 
 const dashboards=[
 
-{
-nome:"Reservas Villa",
-url:"https://grupodvbr.github.io/reserva-villa/"
-},
-
-{
-nome:"Painel Requisições",
-url:"https://grupodvbr.github.io/requisicoesvilla/"
-},
-
-{
-nome:"Controle CMV",
-url:"https://grupodvbr.github.io/cmv/"
-},
-
-{
-nome:"Painel Cancelamentos",
-url:"https://script.google.com/macros/s/AKfycbzM1mmixFkFE5tbC-0Evc6GVyZEJkh88HCikNK08FujRwCrgUA1e_E29nMHip81kRPoSg/exec"
-},
-
-{
-nome:"Metas Financeiras",
-url:"https://script.google.com/macros/s/AKfycbziCPWWJxxfrnSeT3RHsNbw21z9MfnnB8JpV7ZQcZnvUQQ7dL3lVJdpUG7epACVjFaO/exec"
-}
+{nome:"Reservas Villa e Churrascada",url:"https://grupodvbr.github.io/reserva-villa/"},
+{nome:"Painel Requisições",url:"https://grupodvbr.github.io/requisicoesvilla/"},
+{nome:"Controle CMV",url:"https://grupodvbr.github.io/cmv/"},
+{nome:"Painel Cancelamentos",url:"https://script.google.com/macros/s/AKfycbzM1mmixFkFE5tbC-0Evc6GVyZEJkh88HCikNK08FujRwCrgUA1e_E29nMHip81kRPoSg/exec"},
+{nome:"Metas Financeiras",url:"https://script.google.com/macros/s/AKfycbziCPWWJxxfrnSeT3RHsNbw21z9MfnnB8JpV7ZQcZnvUQQ7dL3lVJdpUG7epACVjFaO/exec"}
 
 ]
 
+const search=document.getElementById("search")
 const results=document.getElementById("results")
 
-function buscar(){
+search.addEventListener("input",()=>{
 
-const v=document.getElementById("search").value.toLowerCase()
+const v=search.value.toLowerCase()
 
 results.innerHTML=""
 
@@ -337,11 +266,9 @@ results.style.display="none"
 return
 }
 
-const filtrados=dashboards.filter(d=>
-d.nome.toLowerCase().includes(v)
-)
-
-filtrados.forEach(d=>{
+dashboards
+.filter(d=>d.nome.toLowerCase().includes(v))
+.forEach(d=>{
 
 const el=document.createElement("div")
 
@@ -360,7 +287,7 @@ results.appendChild(el)
 
 results.style.display="block"
 
-}
+})
 
 function abrir(url){
 
