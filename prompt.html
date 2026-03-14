@@ -3,7 +3,7 @@
 <head>
 
 <meta charset="UTF-8">
-<title>Mercatto • Gerenciador de Prompts IA</title>
+<title>Mercatto • Prompts IA</title>
 
 <meta name="viewport"
 content="width=device-width,
@@ -15,7 +15,7 @@ viewport-fit=cover">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#020617">
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
@@ -42,7 +42,7 @@ margin:0;
 font-family:Inter;
 background:var(--bg);
 color:var(--text);
-padding:18px;
+padding:16px;
 }
 
 body.modal-open{
@@ -55,7 +55,7 @@ overflow:hidden;
 display:flex;
 justify-content:space-between;
 align-items:center;
-margin-bottom:16px;
+margin-bottom:14px;
 }
 
 .header h1{
@@ -65,10 +65,6 @@ margin:0;
 
 /* BUSCA */
 
-.search{
-margin-bottom:14px;
-}
-
 .search input{
 width:100%;
 padding:12px;
@@ -76,22 +72,8 @@ border-radius:10px;
 border:1px solid var(--border);
 background:var(--card);
 color:white;
+margin-bottom:14px;
 }
-
-/* BOTÕES */
-
-.btn{
-border:none;
-padding:10px 14px;
-border-radius:10px;
-font-weight:600;
-cursor:pointer;
-}
-
-.green{background:var(--green);color:white}
-.red{background:var(--red);color:white}
-.blue{background:var(--blue);color:white}
-.yellow{background:var(--yellow);color:black}
 
 /* LISTA */
 
@@ -131,12 +113,27 @@ gap:6px;
 margin-top:10px;
 }
 
+/* BOTÕES */
+
+.btn{
+border:none;
+padding:8px 12px;
+border-radius:8px;
+cursor:pointer;
+font-weight:600;
+}
+
+.green{background:var(--green);color:white}
+.red{background:var(--red);color:white}
+.blue{background:var(--blue);color:white}
+.yellow{background:var(--yellow);color:black}
+
 /* MODAL */
 
 .modal{
 position:fixed;
 inset:0;
-background:rgba(0,0,0,.85);
+background:rgba(0,0,0,.9);
 display:none;
 align-items:center;
 justify-content:center;
@@ -146,7 +143,7 @@ z-index:999;
 .modal-box{
 background:var(--card);
 border-radius:var(--radius);
-padding:18px;
+padding:16px;
 width:100%;
 max-width:650px;
 max-height:90vh;
@@ -176,8 +173,6 @@ background:var(--bg);
 color:white;
 }
 
-/* BUSCA INTERNA */
-
 .popup-search{
 display:flex;
 gap:6px;
@@ -186,8 +181,6 @@ gap:6px;
 .popup-search button{
 width:40px;
 }
-
-/* CONTADORES */
 
 .info{
 font-size:12px;
@@ -202,17 +195,12 @@ justify-content:space-between;
 <body>
 
 <div class="header">
-
 <h1>Prompts IA</h1>
-
-<button class="btn green" onclick="novoPrompt()">
-Novo Prompt
-</button>
-
+<button class="btn green" onclick="novoPrompt()">Novo</button>
 </div>
 
 <div class="search">
-<input id="buscar" placeholder="Buscar prompts...">
+<input id="buscar" placeholder="Buscar prompt...">
 </div>
 
 <div id="lista" class="lista"></div>
@@ -227,7 +215,7 @@ Novo Prompt
 
 <div class="popup-search">
 
-<input id="buscarPopup" placeholder="Buscar no texto">
+<input id="buscarPopup" placeholder="Buscar dentro do prompt">
 
 <button class="btn blue" onclick="prevResult()">↑</button>
 <button class="btn blue" onclick="nextResult()">↓</button>
@@ -268,21 +256,25 @@ let editId=null
 const lista=document.getElementById("lista")
 const modal=document.getElementById("modal")
 
-/* BUSCA INTERNA */
-
-let resultados=[]
-let indiceAtual=0
-
-/* CONTADORES */
+/* CONTADOR */
 
 prompt.addEventListener("input",()=>{
 
 charCount.innerText = prompt.value.length + " caracteres"
 
-wordCount.innerText =
-prompt.value.trim().split(/\s+/).length + " palavras"
+let palavras = prompt.value.trim()
+
+if(!palavras) palavras=0
+else palavras=palavras.split(/\s+/).length
+
+wordCount.innerText = palavras + " palavras"
 
 })
+
+/* BUSCA INTERNA */
+
+let resultados=[]
+let indice=0
 
 /* CARREGAR */
 
@@ -294,7 +286,6 @@ const {data}=await db
 .order("ordem",{ascending:true})
 
 listaGlobal=data||[]
-
 render()
 
 }
@@ -334,9 +325,7 @@ ${p.prompt.substring(0,220)}
 
 <div class="actions">
 
-<button class="btn blue" onclick="editar('${p.id}')">
-Editar
-</button>
+<button class="btn blue" onclick="editar('${p.id}')">Editar</button>
 
 <button class="btn green" onclick="toggle('${p.id}',${p.ativo})">
 ${p.ativo?"Ativo":"Inativo"}
@@ -405,19 +394,16 @@ carregar()
 
 }
 
-/* NOVO */
+/* CRUD */
 
 function novoPrompt(){
 
 editId=null
 nome.value=""
 prompt.value=""
-
 abrirModal()
 
 }
-
-/* EDITAR */
 
 async function editar(id){
 
@@ -434,8 +420,6 @@ prompt.value=data.prompt
 abrirModal()
 
 }
-
-/* SALVAR */
 
 async function salvar(){
 
@@ -467,8 +451,6 @@ carregar()
 
 }
 
-/* DUPLICAR */
-
 async function duplicar(id){
 
 const p=listaGlobal.find(x=>x.id==id)
@@ -486,8 +468,6 @@ carregar()
 
 }
 
-/* TOGGLE */
-
 async function toggle(id,ativo){
 
 await db
@@ -498,8 +478,6 @@ await db
 carregar()
 
 }
-
-/* REMOVER */
 
 async function remover(id){
 
@@ -519,7 +497,6 @@ carregar()
 function copiar(texto){
 
 navigator.clipboard.writeText(texto)
-
 alert("Prompt copiado")
 
 }
@@ -558,7 +535,7 @@ const termo=buscarPopup.value.toLowerCase()
 const texto=prompt.value.toLowerCase()
 
 resultados=[]
-indiceAtual=0
+indice=0
 
 if(!termo) return
 
@@ -573,11 +550,11 @@ pos=texto.indexOf(termo,pos+1)
 
 })
 
-function irParaResultado(){
+function ir(){
 
 if(!resultados.length) return
 
-const pos=resultados[indiceAtual]
+const pos=resultados[indice]
 
 prompt.focus()
 prompt.setSelectionRange(pos,pos+buscarPopup.value.length)
@@ -588,12 +565,10 @@ function nextResult(){
 
 if(!resultados.length) return
 
-indiceAtual++
+indice++
+if(indice>=resultados.length) indice=0
 
-if(indiceAtual>=resultados.length)
-indiceAtual=0
-
-irParaResultado()
+ir()
 
 }
 
@@ -601,16 +576,12 @@ function prevResult(){
 
 if(!resultados.length) return
 
-indiceAtual--
+indice--
+if(indice<0) indice=resultados.length-1
 
-if(indiceAtual<0)
-indiceAtual=resultados.length-1
-
-irParaResultado()
+ir()
 
 }
-
-/* INIT */
 
 carregar()
 
