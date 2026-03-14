@@ -72,7 +72,7 @@ background:#0f172a;
 display:flex;
 flex-direction:column;
 height:100vh;
-overflow:auto;
+overflow:hidden;
 }
 
 .header{
@@ -208,6 +208,25 @@ height:100%;
 border:none;
 background:#020617;
 }
+
+
+
+.main{
+display:flex;
+flex-direction:column;
+height:100vh;
+}
+
+.frameArea{
+flex:1;
+overflow:hidden;
+}
+
+.frameArea iframe{
+width:100%;
+height:100%;
+border:none;
+}
 </style>
 </head>
 
@@ -247,18 +266,25 @@ Clientes
 <div class="header">
 
 <h2 id="tituloPagina">Analytics Operacional</h2>
- 
-<div class="filters">
 
+<div class="filters">
 <input type="date" id="inicio">
 <input type="date" id="fim">
-
 <button onclick="carregar()">Atualizar</button>
-
 </div>
 
 </div>
 
+<div class="frameArea">
+
+<iframe
+id="frameSistema"
+src="dashboard.html">
+</iframe>
+
+</div>
+
+</div>
 
 <iframe
 id="frameSistema"
