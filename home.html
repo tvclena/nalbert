@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+
+<meta charset="UTF-8">
+<title>Painel Mercatto Delícia</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+
+:root{
+--bg:#020617;
+--card:#0f172a;
+--line:#1e293b;
+--text:#e2e8f0;
+--muted:#94a3b8;
+--brand:#3b82f6;
+--ok:#22c55e;
+--warn:#f59e0b;
+--danger:#ef4444;
+}
+
+*{box-sizing:border-box}
+
+body{
+margin:0;
+font-family:Inter;
+background:var(--bg);
+color:var(--text);
+}
+
+.wrap{
+max-width:1400px;
+margin:auto;
+padding:30px;
+}
+
+header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:30px;
+}
+
+.title{
+font-size:24px;
+font-weight:800;
+}
+
+.filters{
+display:flex;
+gap:10px;
+}
+
+input,select{
+padding:8px 10px;
+border-radius:8px;
+border:1px solid var(--line);
+background:#020617;
+color:white;
+}
+
+.grid{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:16px;
+margin-bottom:20px;
+}
+
+.card{
+background:var(--card);
+border:1px solid var(--line);
+border-radius:12px;
+padding:16px;
+}
+
+.card h3{
+margin:0;
+font-size:14px;
+color:var(--muted);
+}
+
+.big{
+font-size:28px;
+font-weight:800;
+margin-top:6px;
+}
+
+.ok{color:var(--ok)}
+.warn{color:var(--warn)}
+.danger{color:var(--danger)}
+
+.section{
+margin-top:20px;
+display:grid;
+grid-template-columns:2fr 1fr;
+gap:20px;
+}
+
+.chart{
+height:220px;
+display:flex;
+align-items:flex-end;
+gap:6px;
+}
+
+.bar{
+flex:1;
+background:var(--brand);
+border-radius:4px;
+}
+
+.bar span{
+font-size:10px;
+display:block;
+text-align:center;
+margin-top:4px;
+}
+
+.reservas{
+max-height:320px;
+overflow:auto;
+}
+
+.res-item{
+border-bottom:1px solid var(--line);
+padding:8px 0;
+font-size:13px;
+}
+
+.cal{
+display:grid;
+grid-template-columns:repeat(7,1fr);
+gap:6px;
+}
+
+.day{
+background:#020617;
+border:1px solid var(--line);
+border-radius:8px;
+padding:6px;
+font-size:12px;
+cursor:pointer;
+}
+
+.day:hover{
+background:#1e293b;
+}
+
+.modal{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,.7);
+display:none;
+align-items:center;
+justify-content:center;
+}
+
+.modal-box{
+background:#020617;
+border:1px solid var(--line);
+border-radius:12px;
+padding:20px;
+width:500px;
+max-height:80vh;
+overflow:auto;
+}
+
+.modal h2{
+margin-top:0;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="wrap">
+
+<header>
+
+<div class="title">Painel de Conversas • Mercatto</div>
+
+<div class="filters">
+
+<input type="date" id="dataInicio">
+<input type="date" id="dataFim">
+
+<button onclick="carregar()">Filtrar</button>
+
+</div>
+
+</header>
+
+
+<div class="grid">
+
+<div class="card">
+<h3>Conversas Ativas</h3>
+<div id="ativas" class="big ok">0</div>
+</div>
+
+<div class="card">
+<h3>Conversas Pausadas</h3>
+<div id="pausadas" class="big danger">0</div>
+</div>
+
+<div class="card">
+<h3>Conversas Atendidas</h3>
+<div id="atendidas" class="big">0</div>
+</div>
+
+<div class="card">
+<h3>Clientes que Reservaram</h3>
+<div id="clientesReserva" class="big warn">0</div>
+</div>
+
+</div>
+
+
+<div class="section">
+
+<div class="card">
+
+<h3>Horários de Pico</h3>
+
+<div class="chart" id="chart"></div>
+
+</div>
+
+<div class="card">
+
+<h3>Mini Calendário</h3>
+
+<div id="calendar" class="cal"></div>
+
+</div>
+
+</div>
+
+
+<div class="card">
+
+<h3>Reservas no período</h3>
+
+<div id="listaReservas" class="reservas"></div>
+
+</div>
+
+</div>
+
+
+<div id="modal" class="modal">
+
+<div class="modal-box">
+
+<h2 id="modalTitle"></h2>
+
+<div id="modalLista"></div>
+
+</div>
+
+</div>
+
+
+<script>
+
+const db = supabase.createClient(
+"https://dxkszikemntfusfyrzos.supabase.co",
+"sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
+)
+
+async function carregar(){
+
+const inicio = document.getElementById("dataInicio").value
+const fim = document.getElementById("dataFim").value
+
+/* CONVERSAS */
+
+const {data:conv} = await db
+.from("conversas_whatsapp")
+.select("*")
+
+/* BOT STATUS */
+
+const {data:bot} = await db
+.from("controle_bot")
+.select("*")
+
+/* MEMORIA CLIENTES */
+
+const {data:memoria} = await db
+.from("memoria_clientes")
+.select("*")
+
+/* RESERVAS */
+
+const {data:reservas} = await db
+.from("reservas_mercatto")
+.select("*")
+
+/* CONVERSAS ATIVAS / PAUSADAS */
+
+let pausadas = bot.filter(b=>b.pausado).length
+let ativas = bot.length - pausadas
+
+document.getElementById("ativas").innerText = ativas
+document.getElementById("pausadas").innerText = pausadas
+document.getElementById("atendidas").innerText = conv.length
+
+/* CLIENTES QUE RESERVARAM */
+
+let telefones = new Set(reservas.map(r=>r.telefone))
+
+document.getElementById("clientesReserva").innerText = telefones.size
+
+/* HORARIOS DE PICO */
+
+let horas = Array(24).fill(0)
+
+conv.forEach(c=>{
+
+let h = new Date(c.created_at).getHours()
+
+horas[h]++
+
+})
+
+const chart = document.getElementById("chart")
+
+chart.innerHTML=""
+
+horas.forEach((v,i)=>{
+
+const bar = document.createElement("div")
+
+bar.className="bar"
+
+bar.style.height = (v*10+10)+"px"
+
+bar.innerHTML = `<span>${i}h</span>`
+
+chart.appendChild(bar)
+
+})
+
+/* LISTA RESERVAS */
+
+const lista = document.getElementById("listaReservas")
+
+lista.innerHTML=""
+
+reservas.sort((a,b)=> new Date(a.datahora)-new Date(b.datahora))
+
+reservas.forEach(r=>{
+
+let nome = r.nome
+
+let mem = memoria.find(m=>m.telefone===r.telefone)
+
+if(mem) nome = mem.nome
+
+const div = document.createElement("div")
+
+div.className="res-item"
+
+div.innerHTML=`
+<b>${nome}</b>
+<br>
+${new Date(r.datahora).toLocaleString("pt-BR")}
+ • ${r.mesa}
+ • ${r.pessoas} pessoas
+ • ${r.status}
+`
+
+lista.appendChild(div)
+
+})
+
+gerarCalendario(reservas)
+
+}
+
+
+/* MINI CALENDARIO */
+
+function gerarCalendario(reservas){
+
+const cal = document.getElementById("calendar")
+
+cal.innerHTML=""
+
+const hoje = new Date()
+
+const ano = hoje.getFullYear()
+
+const mes = hoje.getMonth()
+
+const dias = new Date(ano,mes+1,0).getDate()
+
+for(let i=1;i<=dias;i++){
+
+const d = document.createElement("div")
+
+d.className="day"
+
+d.innerText=i
+
+d.onclick=()=>abrirDia(i,reservas)
+
+cal.appendChild(d)
+
+}
+
+}
+
+function abrirDia(dia,reservas){
+
+const hoje = new Date()
+
+const ano = hoje.getFullYear()
+
+const mes = hoje.getMonth()
+
+const lista = reservas.filter(r=>{
+
+const d = new Date(r.datahora)
+
+return d.getDate()==dia && d.getMonth()==mes
+
+})
+
+const modal = document.getElementById("modal")
+
+const box = document.getElementById("modalLista")
+
+document.getElementById("modalTitle").innerText =
+"Reservas do dia "+dia
+
+box.innerHTML=""
+
+lista.sort((a,b)=> new Date(a.datahora)-new Date(b.datahora))
+
+lista.forEach(r=>{
+
+const div = document.createElement("div")
+
+div.className="res-item"
+
+div.innerHTML=`
+${new Date(r.datahora).toLocaleTimeString("pt-BR")}
+ • ${r.mesa}
+ • ${r.pessoas} pessoas
+ • ${r.status}
+`
+
+box.appendChild(div)
+
+})
+
+modal.style.display="flex"
+
+}
+
+document.getElementById("modal").onclick=()=>{
+modal.style.display="none"
+}
+
+carregar()
+
+</script>
+
+</body>
+</html>
