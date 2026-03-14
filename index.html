@@ -567,32 +567,44 @@ function abrir(){modal.style.display="flex"}
 function fechar(){modal.style.display="none"}
 
 /* BUSCA INTERNA */
-
-/* BUSCA INTERNA */
-
 let resultados=[]
 let index=0
 
 buscarPopup.addEventListener("input",atualizarHighlight)
 prompt.addEventListener("input",atualizarHighlight)
-const termo=buscarPopup.value.toLowerCase()
-if(!termo)return
 
-const texto=prompt.value.toLowerCase()
+const highlightLayer = document.getElementById("highlight")
+
+function atualizarHighlight(){
+
+const termo = buscarPopup.value.toLowerCase()
+
+if(!termo){
+highlightLayer.innerText = prompt.value
+resultados=[]
+return
+}
+
+const texto = prompt.value.toLowerCase()
 
 resultados=[]
 index=0
 
-let pos=texto.indexOf(termo)
+let pos = texto.indexOf(termo)
 
 while(pos!=-1){
 resultados.push(pos)
-pos=texto.indexOf(termo,pos+1)
+pos = texto.indexOf(termo,pos+1)
 }
 
-if(resultados.length)highlight()
+const textoOriginal = prompt.value
 
-})
+const regex = new RegExp(termo,"gi")
+
+highlightLayer.innerHTML =
+textoOriginal.replace(regex,m=>`<mark>${m}</mark>`)
+
+}
 
 const highlightLayer = document.getElementById("highlight")
 
@@ -618,7 +630,6 @@ const regex = new RegExp(termo,"gi")
 
 highlightLayer.innerHTML =
 texto.replace(regex,m=>`<mark>${m}</mark>`)
-prompt.value.replace(regex,m=>`<mark>${m}</mark>`)
 
 }
 function next(){
