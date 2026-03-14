@@ -391,7 +391,10 @@ const db = supabase.createClient(
 let charts={}
 
 function normalizar(t){return (t||"").replace(/\D/g,"")}
-
+function dataReserva(data){
+if(!data) return null
+return new Date(data.replace(" ","T"))
+}
 function money(v){return Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}
 
 function set(id,v){
