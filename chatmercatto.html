@@ -384,13 +384,19 @@ ${nomes[c.telefone] ? nomes[c.telefone] : c.telefone}
 
 <div class="preview">${c.mensagem}</div>
 <div class="status ${pausado?'off':'on'}">
-${pausado?'BOT PAUSADO':'BOT ATIVO'}
+● ${pausado?'BOT PAUSADO':'BOT ATIVO'}
 </div></div>
 
 <div class="menuDots" onclick="abrirMenu(event,'${c.telefone}')">⋮</div>
 <div class="menu" id="menu-${c.telefone}">
-<button onclick="toggleBot('${c.telefone}')">
-${pausado ? "Ativar bot" : "Desativar bot"}
+<button onclick="toggleBot('${c.telefone}')" style="
+background:${pausado?'#22c55e':'#ef4444'};
+color:white;
+padding:6px 10px;
+border-radius:6px;
+font-size:12px;
+">
+${pausado ? "ATIVAR BOT" : "DESATIVAR BOT"}
 </button>
 </div>
 
@@ -517,7 +523,6 @@ c.style.display=texto.includes(filtro)?"flex":"none"
 
 })
 
-setInterval(carregarClientes,5000)
 
 carregarClientes()
 function abrirRepertorio(){
@@ -564,13 +569,16 @@ m.style.display="none"
 
 async function verificarPausa(telefone){
 
-const {data} = await db
+const {data,error} = await db
 .from("controle_bot")
 .select("pausado")
 .eq("telefone",telefone)
+.limit(1)
 .maybeSingle()
 
-return data?.pausado || false
+if(error) return false
+
+return data?.pausado === true
 
 }
 
@@ -578,26 +586,32 @@ return data?.pausado || false
 
 async function toggleBot(telefone){
 
-const pausado = await verificarPausa(telefone)
-
-const {data} = await db
+const {data,error} = await db
 .from("controle_bot")
-.select("telefone")
+.select("pausado")
 .eq("telefone",telefone)
+.limit(1)
 .maybeSingle()
+
+if(error){
+console.error(error)
+return
+}
+
+const novoStatus = !(data?.pausado === true)
 
 if(data){
 
 await db
 .from("controle_bot")
-.update({pausado:!pausado})
+.update({pausado:novoStatus})
 .eq("telefone",telefone)
 
 }else{
 
 await db
 .from("controle_bot")
-insert({
+.insert({
 telefone:telefone,
 pausado:true
 })
