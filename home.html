@@ -4,43 +4,26 @@
 <head>
 
 <meta charset="UTF-8">
-<title>Dashboard Mercatto</title>
+<title>Mercatto Analytics</title>
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
 
 <style>
-
-:root{
---bg:#020617;
---panel:#0f172a;
---card:#111827;
---line:#1e293b;
-
---text:#e2e8f0;
---muted:#94a3b8;
-
---blue:#3b82f6;
---green:#22c55e;
---yellow:#f59e0b;
---red:#ef4444;
-}
-
-*{box-sizing:border-box}
 
 body{
 margin:0;
 font-family:Inter;
-background:var(--bg);
-color:var(--text);
+background:#020617;
+color:white;
 }
 
 .container{
-max-width:1500px;
+max-width:1600px;
 margin:auto;
 padding:30px;
 }
@@ -64,9 +47,9 @@ gap:10px;
 
 input,button{
 background:#020617;
-border:1px solid var(--line);
-border-radius:8px;
+border:1px solid #1e293b;
 padding:8px 10px;
+border-radius:8px;
 color:white;
 }
 
@@ -80,28 +63,23 @@ margin-bottom:20px;
 }
 
 .card{
-background:var(--panel);
-border:1px solid var(--line);
+background:#0f172a;
+border:1px solid #1e293b;
 border-radius:12px;
-padding:20px;
+padding:18px;
 }
 
 .card h3{
 margin:0;
-font-size:13px;
-color:var(--muted);
+font-size:12px;
+color:#94a3b8;
 }
 
 .kpi{
-font-size:28px;
+font-size:26px;
 font-weight:800;
 margin-top:6px;
 }
-
-.green{color:var(--green)}
-.red{color:var(--red)}
-.yellow{color:var(--yellow)}
-.blue{color:var(--blue)}
 
 .layout{
 display:grid;
@@ -110,8 +88,6 @@ gap:20px;
 margin-bottom:20px;
 }
 
-.chartCard{height:320px}
-
 .calendar{
 display:grid;
 grid-template-columns:repeat(7,1fr);
@@ -119,25 +95,25 @@ gap:6px;
 }
 
 .day{
-border:1px solid var(--line);
-border-radius:8px;
-padding:8px;
 background:#020617;
-cursor:pointer;
+border:1px solid #1e293b;
+border-radius:6px;
+padding:6px;
 min-height:60px;
+cursor:pointer;
 position:relative;
 }
 
-.day:hover{background:#1e293b}
-
-.dayNum{font-weight:700}
+.day:hover{
+background:#1e293b;
+}
 
 .dayCount{
 position:absolute;
-bottom:6px;
+bottom:4px;
 right:6px;
 font-size:11px;
-color:var(--yellow);
+color:#f59e0b;
 }
 
 .reservas{
@@ -146,7 +122,7 @@ overflow:auto;
 }
 
 .res{
-border-bottom:1px solid var(--line);
+border-bottom:1px solid #1e293b;
 padding:10px 0;
 font-size:13px;
 }
@@ -157,14 +133,14 @@ top:0;
 left:0;
 width:100%;
 height:100%;
-background:rgba(0,0,0,.7);
+background:rgba(0,0,0,.8);
 display:none;
 align-items:center;
 justify-content:center;
 }
 
 .modalBox{
-background:var(--panel);
+background:#0f172a;
 border-radius:12px;
 padding:20px;
 width:600px;
@@ -182,7 +158,7 @@ overflow:auto;
 
 <header>
 
-<div class="title">Dashboard Operacional • Mercatto</div>
+<div class="title">Analytics Mercatto Delícia</div>
 
 <div class="filters">
 
@@ -197,40 +173,42 @@ overflow:auto;
 
 <div class="grid">
 
-<div class="card"><h3>Conversas únicas</h3><div id="convUnicas" class="kpi blue">0</div></div>
+<div class="card"><h3>Conversas únicas</h3><div id="convUnicas" class="kpi">0</div></div>
 <div class="card"><h3>Mensagens</h3><div id="mensagens" class="kpi">0</div></div>
-<div class="card"><h3>Conversas Ativas</h3><div id="ativas" class="kpi green">0</div></div>
-<div class="card"><h3>Conversas Pausadas</h3><div id="pausadas" class="kpi red">0</div></div>
-<div class="card"><h3>Clientes com Reserva</h3><div id="clientesReserva" class="kpi yellow">0</div></div>
-<div class="card"><h3>Taxa Conversa → Reserva</h3><div id="taxaReserva" class="kpi">0%</div></div>
+<div class="card"><h3>Mensagens clientes</h3><div id="msgClientes" class="kpi">0</div></div>
+<div class="card"><h3>Mensagens bot</h3><div id="msgBot" class="kpi">0</div></div>
+<div class="card"><h3>Conversas ativas</h3><div id="ativas" class="kpi">0</div></div>
+<div class="card"><h3>Conversas pausadas</h3><div id="pausadas" class="kpi">0</div></div>
 
 </div>
 
 <div class="grid">
 
-<div class="card"><h3>Pessoas reservadas</h3><div id="pessoas" class="kpi"></div></div>
-<div class="card"><h3>Valor estimado</h3><div id="valorEstimado" class="kpi"></div></div>
-<div class="card"><h3>Antecipado</h3><div id="valorAntecipado" class="kpi"></div></div>
-<div class="card"><h3>Final pago</h3><div id="valorFinal" class="kpi"></div></div>
-<div class="card"><h3>Tempo médio resposta</h3><div id="tempoResposta" class="kpi"></div></div>
-
-<div class="card">
-<h3>Status reservas</h3>
-<canvas id="graficoStatus"></canvas>
-</div>
+<div class="card"><h3>Clientes com reserva</h3><div id="clientesReserva" class="kpi">0</div></div>
+<div class="card"><h3>Total reservas</h3><div id="totalReservas" class="kpi">0</div></div>
+<div class="card"><h3>Pessoas reservadas</h3><div id="pessoas" class="kpi">0</div></div>
+<div class="card"><h3>Ticket médio</h3><div id="ticket" class="kpi">0</div></div>
+<div class="card"><h3>Valor estimado</h3><div id="estimado" class="kpi">0</div></div>
+<div class="card"><h3>Valor antecipado</h3><div id="antecipado" class="kpi">0</div></div>
 
 </div>
 
 <div class="layout">
 
-<div class="card chartCard">
-<h3>Horários de Pico</h3>
+<div class="card">
+
+<h3>Horários de pico</h3>
+
 <canvas id="graficoPico"></canvas>
+
 </div>
 
 <div class="card">
-<h3>Calendário de Reservas</h3>
+
+<h3>Calendário reservas</h3>
+
 <div id="calendar" class="calendar"></div>
+
 </div>
 
 </div>
@@ -238,6 +216,7 @@ overflow:auto;
 <div class="card">
 
 <h3>Reservas no período</h3>
+
 <div id="lista" class="reservas"></div>
 
 </div>
@@ -249,6 +228,7 @@ overflow:auto;
 <div class="modalBox">
 
 <h2 id="modalTitle"></h2>
+
 <div id="modalLista"></div>
 
 </div>
@@ -257,7 +237,7 @@ overflow:auto;
 
 <script>
 
-const db = supabase.createClient(
+const db=supabase.createClient(
 "https://dxkszikemntfusfyrzos.supabase.co",
 "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 )
@@ -270,7 +250,7 @@ function money(v){
 return Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"})
 }
 
-function setText(id,v){
+function set(id,v){
 const el=document.getElementById(id)
 if(el) el.innerText=v
 }
@@ -298,46 +278,46 @@ const {data:conversas}=await db.from("conversas_whatsapp").select("*")
 const {data:reservas}=await db.from("reservas_mercatto").select("*")
 const {data:controle}=await db.from("controle_bot").select("*")
 
-const convPeriodo=conversas.filter(c=>{
+const conv=conversas.filter(c=>{
 const d=new Date(c.created_at)
 return d>=new Date(inicio)&&d<=new Date(fim)
 })
 
+set("mensagens",conv.length)
+
+set("msgClientes",conv.filter(c=>c.role==="user").length)
+set("msgBot",conv.filter(c=>c.role==="assistant").length)
+
 const telefones=new Set()
+conv.forEach(c=>telefones.add(normalizar(c.telefone)))
 
-convPeriodo.forEach(c=>telefones.add(normalizar(c.telefone)))
-
-setText("convUnicas",telefones.size)
-setText("mensagens",convPeriodo.length)
+set("convUnicas",telefones.size)
 
 let pausadas=controle.filter(c=>c.pausado).length
 let ativas=controle.length-pausadas
 
-setText("ativas",ativas)
-setText("pausadas",pausadas)
+set("ativas",ativas)
+set("pausadas",pausadas)
 
-const reservasPeriodo=reservas.filter(r=>{
+const res=reservas.filter(r=>{
 const d=new Date(r.datahora)
 return d>=new Date(inicio)&&d<=new Date(fim)
 })
 
-const clientesReserva=new Set()
+set("totalReservas",res.length)
 
-reservasPeriodo.forEach(r=>clientesReserva.add(normalizar(r.telefone)))
+const clientes=new Set()
+res.forEach(r=>clientes.add(normalizar(r.telefone)))
 
-setText("clientesReserva",clientesReserva.size)
+set("clientesReserva",clientes.size)
 
-let taxa=telefones.size?((clientesReserva.size/telefones.size)*100).toFixed(1):0
-setText("taxaReserva",taxa+"%")
-
-let pessoas=reservasPeriodo.reduce((a,r)=>a+Number(r.pessoas||0),0)
-setText("pessoas",pessoas)
+let pessoas=res.reduce((a,r)=>a+Number(r.pessoas||0),0)
+set("pessoas",pessoas)
 
 let estimado=0
 let antecipado=0
-let finalPago=0
 
-reservasPeriodo.forEach(r=>{
+res.forEach(r=>{
 
 estimado+=Number(r.valorEstimado||0)
 
@@ -349,35 +329,35 @@ Number(r.pagamentoExtra4||0)+
 Number(r.pagamentoExtra5||0)
 
 antecipado+=Number(r.pagamentoAntecipado||0)+extra
-finalPago+=Number(r.valorFinalPago||0)
 
 })
 
-setText("valorEstimado",money(estimado))
-setText("valorAntecipado",money(antecipado))
-setText("valorFinal",money(finalPago))
+set("estimado",money(estimado))
+set("antecipado",money(antecipado))
 
-let tempos=[]
+let ticket=res.length?estimado/res.length:0
+set("ticket",money(ticket))
 
-for(let i=1;i<convPeriodo.length;i++){
+gerarCalendario(res)
+listarReservas(res)
 
-let prev=convPeriodo[i-1]
-let atual=convPeriodo[i]
+let horas=Array(24).fill(0)
 
-if(prev.role==="user"&&atual.role==="assistant"){
+conv.forEach(c=>{
+const h=new Date(c.created_at).getHours()
+horas[h]++
+})
 
-let t=new Date(atual.created_at)-new Date(prev.created_at)
-tempos.push(t)
-
-}
-
-}
-
-let media=tempos.length?tempos.reduce((a,b)=>a+b)/tempos.length:0
-setText("tempoResposta",Math.round(media/1000)+"s")
-
-gerarCalendario(reservasPeriodo)
-listarReservas(reservasPeriodo)
+new Chart(
+document.getElementById("graficoPico"),
+{
+type:"bar",
+data:{
+labels:[...Array(24).keys()].map(h=>h+"h"),
+datasets:[{data:horas,backgroundColor:"#3b82f6"}]
+},
+options:{plugins:{legend:{display:false}}}
+})
 
 }
 
@@ -388,9 +368,8 @@ cal.innerHTML=""
 
 const hoje=new Date()
 const mes=hoje.getMonth()
-const ano=hoje.getFullYear()
 
-const dias=new Date(ano,mes+1,0).getDate()
+const dias=new Date(hoje.getFullYear(),mes+1,0).getDate()
 
 for(let i=1;i<=dias;i++){
 
@@ -402,10 +381,7 @@ return d.getDate()==i&&d.getMonth()==mes
 const d=document.createElement("div")
 d.className="day"
 
-d.innerHTML=`
-<div class="dayNum">${i}</div>
-<div class="dayCount">${count}</div>
-`
+d.innerHTML=`${i}<div class="dayCount">${count}</div>`
 
 d.onclick=()=>abrirDia(i,reservas)
 
@@ -421,7 +397,7 @@ const hoje=new Date()
 const mes=hoje.getMonth()
 
 const lista=reservas.filter(r=>{
-let d=new Date(r.datahora)
+const d=new Date(r.datahora)
 return d.getDate()==dia&&d.getMonth()==mes
 })
 
@@ -433,7 +409,6 @@ lista.sort((a,b)=>new Date(a.datahora)-new Date(b.datahora))
 lista.forEach(r=>{
 
 const div=document.createElement("div")
-
 div.className="res"
 
 div.innerHTML=`
@@ -441,8 +416,8 @@ div.innerHTML=`
 ${new Date(r.datahora).toLocaleTimeString("pt-BR")}
  • ${r.mesa}
  • ${r.pessoas} pessoas
- • ${r.status}
  • ${r.cardapio||""}
+ • ${r.status}
 `
 
 box.appendChild(div)
@@ -459,22 +434,21 @@ document.getElementById("modal").onclick=()=>{
 modal.style.display="none"
 }
 
-function listarReservas(reservas){
+function listarReservas(res){
 
 const lista=document.getElementById("lista")
 lista.innerHTML=""
 
-reservas.sort((a,b)=>new Date(a.datahora)-new Date(b.datahora))
+res.sort((a,b)=>new Date(a.datahora)-new Date(b.datahora))
 
-reservas.forEach(r=>{
+res.forEach(r=>{
 
 const div=document.createElement("div")
 
 div.className="res"
 
 div.innerHTML=`
-<b>${r.nome}</b>
-<br>
+<b>${r.nome}</b><br>
 ${new Date(r.datahora).toLocaleString("pt-BR")}
  • ${r.mesa}
  • ${r.pessoas} pessoas
@@ -488,7 +462,6 @@ lista.appendChild(div)
 }
 
 defaultDates()
-
 window.addEventListener("DOMContentLoaded",carregar)
 
 </script>
