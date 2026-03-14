@@ -4,7 +4,7 @@
 
 <meta charset="UTF-8">
 
-<title>Prompts IA • Mercatto</title>
+<title>CMS Prompts IA • Mercatto</title>
 
 <meta name="viewport"
 content="width=device-width,
@@ -16,6 +16,7 @@ viewport-fit=cover">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 
 <style>
 
@@ -36,7 +37,7 @@ viewport-fit=cover">
 body{
 margin:0;
 font-family:Inter;
-background:linear-gradient(180deg,#020617,#020617);
+background:#020617;
 color:var(--text);
 padding:16px;
 }
@@ -80,6 +81,7 @@ background:var(--card);
 border:1px solid var(--border);
 border-radius:var(--radius);
 padding:14px;
+cursor:grab;
 }
 
 .nome{
@@ -91,7 +93,7 @@ margin-bottom:6px;
 font-size:12px;
 color:var(--muted);
 white-space:pre-wrap;
-max-height:100px;
+max-height:120px;
 overflow:hidden;
 }
 
@@ -141,14 +143,15 @@ font-family:Inter;
 }
 
 textarea{
-height:220px;
+height:240px;
 resize:none;
 }
 
 .counter{
-font-size:11px;
+font-size:12px;
 color:var(--muted);
-text-align:right;
+display:flex;
+justify-content:space-between;
 }
 
 .empty{
@@ -174,7 +177,7 @@ Novo Prompt
 
 </div>
 
-<div class="lista" id="lista"></div>
+<div id="lista" class="lista"></div>
 
 <div id="empty" class="empty" style="display:none">
 Nenhum prompt cadastrado
@@ -190,8 +193,12 @@ Nenhum prompt cadastrado
 
 <textarea id="prompt"></textarea>
 
-<div id="counter" class="counter">
-0 caracteres
+<div class="counter">
+
+<span id="chars">0 caracteres</span>
+
+<span id="tokens">0 tokens</span>
+
 </div>
 
 <div style="display:flex;gap:10px">
@@ -212,7 +219,7 @@ Cancelar
 
 <script>
 
-/* ===== SUPABASE ===== */
+/* SUPABASE */
 
 const db = window.supabase.createClient(
 "https://dxkszikemntfusfyrzos.supabase.co",
@@ -220,8 +227,33 @@ const db = window.supabase.createClient(
 )
 
 let editId=null
+let listaGlobal=[]
 
-/* ===== CARREGAR PROMPTS ===== */
+/* TOKEN ESTIMATE */
+
+function contarTokens(texto){
+
+if(!texto) return 0
+
+return Math.ceil(texto.length / 4)
+
+}
+
+/* CONTADORES */
+
+document.getElementById("prompt").addEventListener("input",()=>{
+
+const txt=document.getElementById("prompt").value
+
+document.getElementById("chars").innerText =
+txt.length+" caracteres"
+
+document.getElementById("tokens").innerText =
+contarTokens(txt)+" tokens"
+
+})
+
+/* CARREGAR */
 
 async function carregar(){
 
@@ -234,15 +266,25 @@ if(error){
 
 console.error(error)
 alert("Erro ao carregar prompts")
-
 return
 
 }
 
+listaGlobal=data
+
+render()
+
+}
+
+/* RENDER */
+
+function render(){
+
 const lista=document.getElementById("lista")
+
 lista.innerHTML=""
 
-if(!data || data.length===0){
+if(!listaGlobal || listaGlobal.length===0){
 
 document.getElementById("empty").style.display="block"
 return
@@ -251,17 +293,20 @@ return
 
 document.getElementById("empty").style.display="none"
 
-data.forEach(p=>{
+listaGlobal.forEach(p=>{
 
-const card=document.createElement("div")
-card.className="card"
+const div=document.createElement("div")
+div.className="card"
+div.dataset.id=p.id
 
-card.innerHTML=`
+div.innerHTML=`
 
 <div class="nome">${p.nome}</div>
 
 <div class="preview">
-${(p.prompt||"").substring(0,300)}
+
+${(p.prompt||"").substring(0,400)}
+
 </div>
 
 <div class="acoes">
@@ -282,13 +327,47 @@ Excluir
 
 `
 
-lista.appendChild(card)
+lista.appendChild(div)
 
+})
+
+sortable()
+
+}
+
+/* DRAG ORDER */
+
+function sortable(){
+
+new Sortable(lista,{
+animation:150,
+onEnd:salvarOrdem
 })
 
 }
 
-/* ===== NOVO ===== */
+/* SALVAR ORDEM */
+
+async function salvarOrdem(){
+
+const cards=[...document.querySelectorAll(".card")]
+
+for(let i=0;i<cards.length;i++){
+
+const id=cards[i].dataset.id
+
+await db
+.from("prompts_mercatto")
+.update({ordem:i})
+.eq("id",id)
+
+}
+
+carregar()
+
+}
+
+/* NOVO */
 
 function novoPrompt(){
 
@@ -296,41 +375,40 @@ editId=null
 
 document.getElementById("nome").value=""
 document.getElementById("prompt").value=""
-document.getElementById("counter").innerText="0 caracteres"
 
-document.getElementById("modal").style.display="flex"
+document.getElementById("chars").innerText="0 caracteres"
+document.getElementById("tokens").innerText="0 tokens"
+
+modal.style.display="flex"
 
 }
 
-/* ===== EDITAR ===== */
+/* EDITAR */
 
 async function editar(id){
 
-const {data,error} = await db
+const {data} = await db
 .from("prompts_mercatto")
 .select("*")
 .eq("id",id)
 .single()
 
-if(error){
-
-alert("Erro ao carregar prompt")
-return
-
-}
-
 editId=id
 
-document.getElementById("nome").value=data.nome
-document.getElementById("prompt").value=data.prompt
+nome.value=data.nome
+prompt.value=data.prompt
 
-contar()
+document.getElementById("chars").innerText =
+data.prompt.length+" caracteres"
 
-document.getElementById("modal").style.display="flex"
+document.getElementById("tokens").innerText =
+contarTokens(data.prompt)+" tokens"
+
+modal.style.display="flex"
 
 }
 
-/* ===== SALVAR ===== */
+/* SALVAR */
 
 async function salvar(){
 
@@ -359,7 +437,7 @@ await db
 nome,
 prompt,
 ativo:true,
-ordem:1
+ordem:listaGlobal.length
 })
 
 }
@@ -369,7 +447,7 @@ carregar()
 
 }
 
-/* ===== REMOVER ===== */
+/* REMOVER */
 
 async function remover(id){
 
@@ -384,7 +462,7 @@ carregar()
 
 }
 
-/* ===== ATIVAR ===== */
+/* ATIVAR */
 
 async function toggle(id,ativo){
 
@@ -397,28 +475,15 @@ carregar()
 
 }
 
-/* ===== FECHAR MODAL ===== */
+/* FECHAR */
 
 function fechar(){
 
-document.getElementById("modal").style.display="none"
+modal.style.display="none"
 
 }
 
-/* ===== CONTADOR ===== */
-
-document.getElementById("prompt").addEventListener("input",contar)
-
-function contar(){
-
-const txt=document.getElementById("prompt").value
-
-document.getElementById("counter").innerText =
-txt.length + " caracteres"
-
-}
-
-/* ===== INIT ===== */
+/* INIT */
 
 carregar()
 
