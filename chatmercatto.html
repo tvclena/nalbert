@@ -331,11 +331,13 @@ const {data} = await db
 const {data:memoria} = await db
 .from("memoria_clientes")
 .select("telefone,nome")
+
 const nomes={}
 
 memoria.forEach(c=>{
 nomes[c.telefone]=c.nome
 })
+
 const map={}
 
 data.forEach(m=>{
@@ -347,10 +349,9 @@ const clientes = Object.values(map)
 const container=document.getElementById("clientes")
 container.innerHTML=""
 
-clientes.forEach(c=>{
+for (const c of clientes){
 
 const div=document.createElement("div")
-div.className="client"
 
 const inicial = c.telefone.slice(-2)
 
@@ -382,10 +383,9 @@ div.onclick=()=>abrirConversa(c.telefone)
 
 container.appendChild(div)
 
-})
-
 }
 
+}
 async function abrirConversa(telefone){
 
 clienteSelecionado=telefone
