@@ -20,10 +20,11 @@
 --border:#334155;
 --text:#f1f5f9;
 --muted:#94a3b8;
+
 --green:#22c55e;
 --red:#ef4444;
 --yellow:#f59e0b;
---blue:#2563eb;
+--blue:#3b82f6;
 }
 
 *{box-sizing:border-box}
@@ -52,6 +53,7 @@ flex-direction:column;
 padding:18px;
 font-weight:800;
 border-bottom:1px solid var(--border);
+font-size:18px;
 }
 
 /* SEARCH */
@@ -87,6 +89,7 @@ align-items:center;
 padding:12px;
 border-bottom:1px solid var(--border);
 cursor:pointer;
+transition:.2s;
 }
 
 .client:hover{
@@ -133,11 +136,14 @@ flex-direction:column;
 gap:12px;
 }
 
+/* MESSAGES */
+
 .msg{
 max-width:60%;
 padding:12px;
 border-radius:12px;
 font-size:14px;
+animation:fade .2s ease;
 }
 
 .user{
@@ -156,25 +162,38 @@ opacity:.6;
 margin-top:4px;
 }
 
-/* ACTION BUTTONS */
+@keyframes fade{
+from{opacity:0;transform:translateY(6px)}
+to{opacity:1}
+}
+
+/* BUTTONS */
 
 .actions{
 display:flex;
 gap:6px;
 }
 
-button{
+.btn{
 border:none;
 border-radius:6px;
-padding:4px 8px;
+padding:6px 10px;
 font-size:12px;
 cursor:pointer;
+display:flex;
+align-items:center;
+gap:4px;
+transition:.2s;
+}
+
+.btn:hover{
+transform:scale(1.05);
 }
 
 .pause{background:var(--yellow);color:white}
 .play{background:var(--green);color:white}
-.wa{background:#22c55e;color:white}
-.repertorio{background:var(--blue);color:white}
+.wa{background:#25D366;color:white}
+.rep{background:var(--blue);color:white}
 
 .preview{
 font-size:12px;
@@ -220,7 +239,7 @@ Conversas
 Selecione uma conversa
 </div>
 
-<button class="repertorio" onclick="abrirRepertorio()">📚 Repertórios</button>
+<button class="btn rep" onclick="abrirRepertorio()">📚 Repertórios</button>
 
 </div>
 
@@ -237,6 +256,8 @@ const db = supabase.createClient(
 
 let clienteSelecionado=null
 let statusBotAtual=false
+
+/* ================= CLIENTES ================= */
 
 async function carregarClientes(){
 
@@ -311,18 +332,17 @@ div.innerHTML=`
 <div style="flex:1">
 
 <div>${nome}</div>
-
 <div class="preview">${c.mensagem}</div>
 
 </div>
 
 <div class="actions">
 
-<button class="pause" onclick="pausarBot('${c.telefone}')">⏸</button>
+<button class="btn pause" onclick="pausarBot('${c.telefone}')">⏸</button>
 
-<button class="play" onclick="despausarBot('${c.telefone}')">▶</button>
+<button class="btn play" onclick="despausarBot('${c.telefone}')">▶</button>
 
-<button class="wa" onclick="abrirWhats('${c.telefone}')">WA</button>
+<button class="btn wa" onclick="abrirWhats('${c.telefone}')">WA</button>
 
 </div>
 
@@ -335,6 +355,8 @@ container.appendChild(div)
 })
 
 }
+
+/* ================= CONVERSA ================= */
 
 async function abrirConversa(telefone){
 
@@ -355,24 +377,15 @@ const {data:controle}=await db
 statusBotAtual = controle?.pausado || false
 
 document.getElementById("clienteAtual").innerHTML=
+
 `
 ${cliente?.nome||telefone} • ${telefone}
 
-<button onclick="toggleBot()" style="
-margin-left:10px;
-background:${statusBotAtual ? '#22c55e':'#f59e0b'};
-color:white;
-padding:4px 10px;
-border-radius:6px;
-border:none;
-cursor:pointer;
-">
-
-${statusBotAtual ? '▶ Reativar agente':'⏸ Pausar agente'}
-
+<button class="btn ${statusBotAtual?'play':'pause'}" onclick="toggleBot()">
+${statusBotAtual?'▶ Reativar':'⏸ Pausar'}
 </button>
 
-<button class="wa" onclick="abrirWhats('${telefone}')">WA</button>
+<button class="btn wa" onclick="abrirWhats('${telefone}')">WhatsApp</button>
 `
 
 const {data}=await db
@@ -387,6 +400,7 @@ container.innerHTML=""
 data?.forEach(m=>{
 
 const div=document.createElement("div")
+
 div.className="msg "+(m.role==="assistant"?"assistant":"user")
 
 const hora=new Date(m.created_at).toLocaleString("pt-BR")
@@ -404,6 +418,8 @@ container.scrollTop=container.scrollHeight
 
 }
 
+/* ================= CONTROLE BOT ================= */
+
 async function toggleBot(){
 
 if(!clienteSelecionado) return
@@ -412,7 +428,7 @@ const novo=!statusBotAtual
 
 await db
 .from("controle_bot")
-.upsert({
+upsert({
 telefone:clienteSelecionado,
 pausado:novo
 })
@@ -451,11 +467,15 @@ carregarClientes()
 
 }
 
+/* ================= WHATSAPP ================= */
+
 function abrirWhats(telefone){
 
 window.open("https://wa.me/"+telefone,"_blank")
 
 }
+
+/* ================= FILTROS ================= */
 
 document.getElementById("buscar").addEventListener("input",carregarClientes)
 document.getElementById("filtroStatus").addEventListener("change",carregarClientes)
@@ -463,6 +483,8 @@ document.getElementById("filtroStatus").addEventListener("change",carregarClient
 setInterval(carregarClientes,5000)
 
 carregarClientes()
+
+/* ================= REPERTORIO ================= */
 
 function abrirRepertorio(){
 document.getElementById("popupRepertorio").style.display="flex"
@@ -512,14 +534,7 @@ align-items:center;
 
 <b>Repertórios</b>
 
-<button onclick="fecharRepertorio()" style="
-background:#ef4444;
-color:white;
-border:none;
-border-radius:6px;
-padding:6px 12px;
-cursor:pointer;
-">Fechar</button>
+<button onclick="fecharRepertorio()" class="btn pause">Fechar</button>
 
 </div>
 
@@ -531,13 +546,13 @@ border-bottom:1px solid #334155;
 flex-wrap:wrap;
 ">
 
-<button onclick="abrirIframe('prompt.html')">Prompt de comando</button>
+<button class="btn rep" onclick="abrirIframe('prompt.html')">Prompt</button>
 
-<button onclick="abrirIframe('conversas.html')">Conversas Pausadas</button>
+<button class="btn rep" onclick="abrirIframe('conversas.html')">Conversas Pausadas</button>
 
-<button onclick="abrirIframe('reservas.html')">Reservas</button>
+<button class="btn rep" onclick="abrirIframe('reservas.html')">Reservas</button>
 
-<button onclick="abrirIframe('repertorio4.html')">Promoções</button>
+<button class="btn rep" onclick="abrirIframe('repertorio4.html')">Promoções</button>
 
 </div>
 
