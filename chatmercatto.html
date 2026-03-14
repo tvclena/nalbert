@@ -247,18 +247,19 @@ Conversas
 </div>
 
 <div class="chat">
-
 <div class="chat-header">
 
 <div class="chat-title" id="clienteAtual">
 Selecione um cliente
 </div>
 
-<div class="actions">
-<button class="delete" onclick="excluirSelecionadas()">Excluir mensagens</button>
-<button class="delete" onclick="excluirConversa()">Excluir conversa</button>
-</div>
+<div style="display:flex;gap:10px">
 
+<button onclick="abrirRepertorio()" style="background:#2563eb;color:white">
+📚 Repertórios
+</button>
+
+</div>
 </div>
 
 <div class="messages" id="mensagens">
@@ -442,8 +443,88 @@ c.style.display=texto.includes(filtro)?"flex":"none"
 setInterval(carregarClientes,5000)
 
 carregarClientes()
+function abrirRepertorio(){
+document.getElementById("popupRepertorio").style.display="flex"
+}
 
+function fecharRepertorio(){
+document.getElementById("popupRepertorio").style.display="none"
+}
+
+function abrirIframe(url){
+document.getElementById("frameRepertorio").src=url
+}
 </script>
+<div id="popupRepertorio" style="
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,.7);
+display:none;
+align-items:center;
+justify-content:center;
+z-index:999;
+">
 
+<div style="
+width:90%;
+height:85%;
+background:#020617;
+border-radius:14px;
+display:flex;
+flex-direction:column;
+overflow:hidden;
+">
+
+<div style="
+padding:14px;
+border-bottom:1px solid #334155;
+display:flex;
+justify-content:space-between;
+align-items:center;
+">
+
+<b>Repertórios</b>
+
+<button onclick="fecharRepertorio()" style="
+background:#ef4444;
+color:white;
+border:none;
+border-radius:6px;
+padding:6px 12px;
+cursor:pointer;
+">Fechar</button>
+
+</div>
+
+<div style="
+display:flex;
+gap:10px;
+padding:12px;
+border-bottom:1px solid #334155;
+flex-wrap:wrap;
+">
+
+<button onclick="abrirIframe('prompt.html')">Prompt de comando</button>
+
+<button onclick="abrirIframe('repertorio2.html')">Cardápio</button>
+
+<button onclick="abrirIframe('repertorio3.html')">Reservas</button>
+
+<button onclick="abrirIframe('repertorio4.html')">Promoções</button>
+
+</div>
+
+<iframe id="frameRepertorio"
+style="
+flex:1;
+border:none;
+background:white;
+"></iframe>
+
+</div>
+</div>
 </body>
 </html>
