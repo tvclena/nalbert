@@ -137,11 +137,19 @@ font-weight:700;
 font-size:15px;
 }
 
-.actions{
+/*.actions{
 display:flex;
 gap:10px;
+}*/
+
+
+.actions{
+display:none;
 }
 
+
+
+  
 button{
 padding:8px 14px;
 border:none;
@@ -366,23 +374,13 @@ const date = new Date(m.created_at)
 
 div.innerHTML=`
 
-<input type="checkbox" class="checkbox" value="${m.id}">
-
 <div>${m.mensagem}</div>
 
 <div class="time">${date}</div>
 
+
 `
 
-div.querySelector("input").onchange=(e)=>{
-
-if(e.target.checked){
-selecionadas.push(m.id)
-}else{
-selecionadas=selecionadas.filter(x=>x!==m.id)
-}
-
-}
 
 container.appendChild(div)
 
