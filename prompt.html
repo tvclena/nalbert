@@ -3,7 +3,6 @@
 <head>
 
 <meta charset="UTF-8">
-
 <title>CMS Prompts IA • Mercatto</title>
 
 <meta name="viewport"
@@ -29,12 +28,11 @@ viewport-fit=cover">
 --green:#22c55e;
 --red:#ef4444;
 --blue:#3b82f6;
+--yellow:#facc15;
 --radius:16px;
 }
 
-*{
-box-sizing:border-box
-}
+*{box-sizing:border-box}
 
 body{
 margin:0;
@@ -147,13 +145,15 @@ border:1px solid var(--border);
 border-radius:16px;
 padding:16px;
 width:100%;
-max-width:560px;
+max-width:650px;
 display:flex;
 flex-direction:column;
 gap:10px;
 max-height:90vh;
 overflow:auto;
 }
+
+/* INPUTS */
 
 input,textarea{
 width:100%;
@@ -168,6 +168,24 @@ font-family:Inter;
 textarea{
 height:260px;
 resize:none;
+}
+
+/* BUSCA POPUP */
+
+.popup-search{
+display:flex;
+gap:6px;
+}
+
+.popup-search input{
+flex:1;
+}
+
+.highlight{
+background:var(--yellow);
+color:black;
+padding:1px 2px;
+border-radius:3px;
 }
 
 /* EMPTY */
@@ -215,6 +233,16 @@ Nenhum prompt encontrado
 
 <input id="nome" placeholder="Nome do prompt">
 
+<div class="popup-search">
+
+<input id="buscarPopup" placeholder="Buscar dentro do prompt">
+
+<button class="btn blue" onclick="limparBuscaPopup()">
+Limpar
+</button>
+
+</div>
+
 <textarea id="prompt"></textarea>
 
 <div style="display:flex;gap:10px">
@@ -235,71 +263,68 @@ Cancelar
 
 <script>
 
-/* ================= SUPABASE ================= */
+/* SUPABASE */
 
 const db = supabase.createClient(
 "https://dxkszikemntfusfyrzos.supabase.co",
 "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 )
 
-/* ================= VARS ================= */
+/* VARS */
 
-let editId = null
-let listaGlobal = []
+let editId=null
+let listaGlobal=[]
+let textoOriginal=""
 
-const lista = document.getElementById("lista")
-const modal = document.getElementById("modal")
-const nome = document.getElementById("nome")
-const prompt = document.getElementById("prompt")
-const buscar = document.getElementById("buscar")
+const lista=document.getElementById("lista")
+const modal=document.getElementById("modal")
+const nome=document.getElementById("nome")
+const prompt=document.getElementById("prompt")
+const buscar=document.getElementById("buscar")
+const buscarPopup=document.getElementById("buscarPopup")
 
-/* ================= CARREGAR ================= */
+/* CARREGAR */
 
 async function carregar(){
 
-const {data,error} = await db
+const {data,error}=await db
 .from("prompts_mercatto")
 .select("*")
 .order("ordem",{ascending:true})
 
 if(error){
-
 console.error(error)
 alert("Erro ao carregar prompts")
 return
-
 }
 
-listaGlobal = data || []
-
+listaGlobal=data||[]
 render()
 
 }
 
-/* ================= RENDER ================= */
+/* RENDER */
 
 function render(){
 
 lista.innerHTML=""
 
-let filtrados = listaGlobal
+let filtrados=listaGlobal
 
-const busca = buscar.value.toLowerCase()
+const busca=buscar.value.toLowerCase()
 
 if(busca){
 
-filtrados = listaGlobal.filter(p =>
-(p.nome || "").toLowerCase().includes(busca) ||
-(p.prompt || "").toLowerCase().includes(busca)
+filtrados=listaGlobal.filter(p=>
+(p.nome||"").toLowerCase().includes(busca) ||
+(p.prompt||"").toLowerCase().includes(busca)
 )
 
 }
 
 if(filtrados.length===0){
-
 document.getElementById("empty").style.display="block"
 return
-
 }
 
 document.getElementById("empty").style.display="none"
@@ -315,7 +340,7 @@ card.innerHTML=`
 <div class="nome">${p.nome}</div>
 
 <div class="preview">
-${(p.prompt || "").substring(0,350)}
+${(p.prompt||"").substring(0,350)}
 </div>
 
 <div class="acoes">
@@ -344,7 +369,7 @@ ativarDrag()
 
 }
 
-/* ================= DRAG ================= */
+/* DRAG */
 
 function ativarDrag(){
 
@@ -355,7 +380,7 @@ onEnd:salvarOrdem
 
 }
 
-/* ================= SALVAR ORDEM ================= */
+/* SALVAR ORDEM */
 
 async function salvarOrdem(){
 
@@ -376,11 +401,11 @@ carregar()
 
 }
 
-/* ================= BUSCA ================= */
+/* BUSCA LISTA */
 
 buscar.addEventListener("input",render)
 
-/* ================= NOVO ================= */
+/* NOVO */
 
 function novoPrompt(){
 
@@ -388,47 +413,44 @@ editId=null
 
 nome.value=""
 prompt.value=""
+buscarPopup.value=""
 
 modal.style.display="flex"
 
 }
 
-/* ================= EDITAR ================= */
+/* EDITAR */
 
 async function editar(id){
 
-const {data,error} = await db
+const {data}=await db
 .from("prompts_mercatto")
 .select("*")
 .eq("id",id)
 .single()
 
-if(error){
-alert("Erro ao carregar prompt")
-return
-}
-
 editId=id
 
 nome.value=data.nome
 prompt.value=data.prompt
+textoOriginal=data.prompt
+
+buscarPopup.value=""
 
 modal.style.display="flex"
 
 }
 
-/* ================= SALVAR ================= */
+/* SALVAR */
 
 async function salvar(){
 
-const n = nome.value.trim()
-const p = prompt.value.trim()
+const n=nome.value.trim()
+const p=prompt.value.trim()
 
-if(!n || !p){
-
+if(!n||!p){
 alert("Preencha todos os campos")
 return
-
 }
 
 if(editId){
@@ -456,11 +478,11 @@ carregar()
 
 }
 
-/* ================= REMOVER ================= */
+/* REMOVER */
 
 async function remover(id){
 
-if(!confirm("Excluir prompt?")) return
+if(!confirm("Excluir prompt?"))return
 
 await db
 .from("prompts_mercatto")
@@ -471,7 +493,7 @@ carregar()
 
 }
 
-/* ================= TOGGLE ================= */
+/* TOGGLE */
 
 async function toggle(id,ativo){
 
@@ -484,15 +506,41 @@ carregar()
 
 }
 
-/* ================= FECHAR ================= */
+/* BUSCA POPUP */
 
-function fechar(){
+buscarPopup.addEventListener("input",()=>{
 
-modal.style.display="none"
+const termo=buscarPopup.value.toLowerCase()
+
+if(!termo){
+
+prompt.value=textoOriginal
+return
 
 }
 
-/* ================= INIT ================= */
+const regex=new RegExp(`(${termo})`,"gi")
+
+prompt.value=textoOriginal.replace(regex,"[$1]")
+
+})
+
+/* LIMPAR BUSCA */
+
+function limparBuscaPopup(){
+
+buscarPopup.value=""
+prompt.value=textoOriginal
+
+}
+
+/* FECHAR */
+
+function fechar(){
+modal.style.display="none"
+}
+
+/* INIT */
 
 carregar()
 
