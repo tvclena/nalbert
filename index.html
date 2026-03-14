@@ -438,10 +438,13 @@ ativarDrag()
 }
 
 /* DRAG */
+let sortable
 
 function ativarDrag(){
 
-new Sortable(lista,{
+if(sortable) return
+
+sortable = new Sortable(lista,{
 animation:150,
 onEnd:salvarOrdem
 })
