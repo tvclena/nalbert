@@ -138,6 +138,7 @@ display:none;
 align-items:center;
 justify-content:center;
 padding:16px;
+z-index:999;
 }
 
 .modal-box{
@@ -151,6 +152,7 @@ display:flex;
 flex-direction:column;
 gap:10px;
 max-height:90vh;
+overflow:auto;
 }
 
 input,textarea{
@@ -233,17 +235,25 @@ Cancelar
 
 <script>
 
-/* SUPABASE */
+/* ================= SUPABASE ================= */
 
-const db = window.supabase.createClient(
+const db = supabase.createClient(
 "https://dxkszikemntfusfyrzos.supabase.co",
 "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 )
 
-let editId=null
-let listaGlobal=[]
+/* ================= VARS ================= */
 
-/* CARREGAR */
+let editId = null
+let listaGlobal = []
+
+const lista = document.getElementById("lista")
+const modal = document.getElementById("modal")
+const nome = document.getElementById("nome")
+const prompt = document.getElementById("prompt")
+const buscar = document.getElementById("buscar")
+
+/* ================= CARREGAR ================= */
 
 async function carregar(){
 
@@ -260,29 +270,27 @@ return
 
 }
 
-listaGlobal=data
+listaGlobal = data || []
 
 render()
 
 }
 
-/* RENDER */
+/* ================= RENDER ================= */
 
 function render(){
 
-const lista=document.getElementById("lista")
-
 lista.innerHTML=""
 
-let filtrados=listaGlobal
+let filtrados = listaGlobal
 
-const busca=document.getElementById("buscar").value.toLowerCase()
+const busca = buscar.value.toLowerCase()
 
 if(busca){
 
-filtrados=listaGlobal.filter(p=>
-p.nome.toLowerCase().includes(busca) ||
-p.prompt.toLowerCase().includes(busca)
+filtrados = listaGlobal.filter(p =>
+(p.nome || "").toLowerCase().includes(busca) ||
+(p.prompt || "").toLowerCase().includes(busca)
 )
 
 }
@@ -307,7 +315,7 @@ card.innerHTML=`
 <div class="nome">${p.nome}</div>
 
 <div class="preview">
-${(p.prompt||"").substring(0,350)}
+${(p.prompt || "").substring(0,350)}
 </div>
 
 <div class="acoes">
@@ -332,13 +340,13 @@ lista.appendChild(card)
 
 })
 
-sortable()
+ativarDrag()
 
 }
 
-/* DRAG ORDER */
+/* ================= DRAG ================= */
 
-function sortable(){
+function ativarDrag(){
 
 new Sortable(lista,{
 animation:150,
@@ -347,7 +355,7 @@ onEnd:salvarOrdem
 
 }
 
-/* SALVAR ORDEM */
+/* ================= SALVAR ORDEM ================= */
 
 async function salvarOrdem(){
 
@@ -368,11 +376,11 @@ carregar()
 
 }
 
-/* SEARCH */
+/* ================= BUSCA ================= */
 
 buscar.addEventListener("input",render)
 
-/* NOVO */
+/* ================= NOVO ================= */
 
 function novoPrompt(){
 
@@ -385,15 +393,20 @@ modal.style.display="flex"
 
 }
 
-/* EDITAR */
+/* ================= EDITAR ================= */
 
 async function editar(id){
 
-const {data} = await db
+const {data,error} = await db
 .from("prompts_mercatto")
 .select("*")
 .eq("id",id)
 .single()
+
+if(error){
+alert("Erro ao carregar prompt")
+return
+}
 
 editId=id
 
@@ -404,12 +417,12 @@ modal.style.display="flex"
 
 }
 
-/* SALVAR */
+/* ================= SALVAR ================= */
 
 async function salvar(){
 
-const n=nome.value.trim()
-const p=prompt.value.trim()
+const n = nome.value.trim()
+const p = prompt.value.trim()
 
 if(!n || !p){
 
@@ -443,7 +456,7 @@ carregar()
 
 }
 
-/* REMOVER */
+/* ================= REMOVER ================= */
 
 async function remover(id){
 
@@ -458,7 +471,7 @@ carregar()
 
 }
 
-/* ATIVAR */
+/* ================= TOGGLE ================= */
 
 async function toggle(id,ativo){
 
@@ -471,7 +484,7 @@ carregar()
 
 }
 
-/* FECHAR */
+/* ================= FECHAR ================= */
 
 function fechar(){
 
@@ -479,7 +492,7 @@ modal.style.display="none"
 
 }
 
-/* INIT */
+/* ================= INIT ================= */
 
 carregar()
 
