@@ -3,21 +3,22 @@
 <head>
 
 <meta charset="UTF-8">
-<title>CMS Prompts IA • Mercatto</title>
+<title>Mercatto • Prompt CMS</title>
 
 <meta name="viewport"
-content="width=device-width,
-initial-scale=1,
-maximum-scale=1,
-user-scalable=no,
-viewport-fit=cover">
+content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#020617">
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 
 <style>
+
+/* BASE */
 
 :root{
 --bg:#020617;
@@ -28,8 +29,7 @@ viewport-fit=cover">
 --green:#22c55e;
 --red:#ef4444;
 --blue:#3b82f6;
---yellow:#fde047;
---radius:16px;
+--radius:14px;
 --shadow:0 10px 25px rgba(0,0,0,.35);
 }
 
@@ -41,10 +41,6 @@ font-family:Inter;
 background:var(--bg);
 color:var(--text);
 padding:18px;
-}
-
-body.modal-open{
-overflow:hidden;
 }
 
 /* HEADER */
@@ -60,6 +56,20 @@ margin-bottom:16px;
 font-size:22px;
 font-weight:800;
 }
+
+/* BUTTON */
+
+.btn{
+border:none;
+padding:10px 14px;
+border-radius:10px;
+cursor:pointer;
+font-weight:600;
+}
+
+.green{background:var(--green);color:white}
+.red{background:var(--red);color:white}
+.blue{background:var(--blue);color:white}
 
 /* SEARCH */
 
@@ -77,25 +87,6 @@ color:white;
 font-size:14px;
 }
 
-/* BUTTON */
-
-.btn{
-border:none;
-padding:10px 14px;
-border-radius:10px;
-cursor:pointer;
-font-weight:600;
-transition:.15s;
-}
-
-.btn:hover{
-transform:scale(.97);
-}
-
-.green{background:var(--green);color:white}
-.red{background:var(--red);color:white}
-.blue{background:var(--blue);color:white}
-
 /* LIST */
 
 .lista{
@@ -110,18 +101,11 @@ border:1px solid var(--border);
 border-radius:var(--radius);
 padding:18px;
 cursor:grab;
-touch-action:none;
 box-shadow:var(--shadow);
-transition:.2s;
-}
-
-.card:hover{
-transform:translateY(-2px);
 }
 
 .nome{
 font-weight:700;
-font-size:15px;
 margin-bottom:6px;
 }
 
@@ -131,18 +115,12 @@ color:var(--muted);
 white-space:pre-wrap;
 max-height:120px;
 overflow:hidden;
-line-height:1.4;
 }
 
 .acoes{
 display:flex;
 gap:8px;
-margin-top:12px;
-flex-wrap:wrap;
-}
-
-.acoes button{
-flex:1;
+margin-top:10px;
 }
 
 /* MODAL */
@@ -150,11 +128,11 @@ flex:1;
 .modal{
 position:fixed;
 inset:0;
-background:rgba(0,0,0,.9);
+background:rgba(0,0,0,.92);
 display:none;
 align-items:center;
 justify-content:center;
-padding:16px;
+padding:20px;
 z-index:999;
 }
 
@@ -162,32 +140,44 @@ z-index:999;
 background:#020617;
 border:1px solid var(--border);
 border-radius:16px;
-padding:18px;
 width:100%;
-max-width:650px;
+max-width:900px;
+height:85vh;
 display:flex;
 flex-direction:column;
-gap:12px;
-max-height:90vh;
-overflow:auto;
-box-shadow:var(--shadow);
 }
 
-/* INPUT */
+/* EDITOR */
 
-input,textarea{
-width:100%;
-background:#020617;
-border:1px solid var(--border);
-border-radius:10px;
-padding:12px;
-color:white;
-font-family:Inter;
+.editor{
+flex:1;
+display:flex;
+overflow:hidden;
+}
+
+.linhas{
+width:55px;
+background:#000;
+color:#64748b;
+font-family:JetBrains Mono;
+font-size:12px;
+text-align:right;
+padding:12px 6px;
+overflow:hidden;
+user-select:none;
 }
 
 textarea{
-height:260px;
+flex:1;
+background:#000;
+border:none;
+outline:none;
+color:#e2e8f0;
+font-family:JetBrains Mono;
+font-size:13px;
+padding:12px;
 resize:none;
+line-height:1.6;
 }
 
 /* BUSCA POPUP */
@@ -195,31 +185,37 @@ resize:none;
 .popup-search{
 display:flex;
 gap:6px;
+padding:12px;
+border-bottom:1px solid var(--border);
 }
 
 .popup-search input{
 flex:1;
+padding:8px;
+border-radius:8px;
+border:1px solid var(--border);
+background:#020617;
+color:white;
 }
 
-.popup-search button{
-width:40px;
-}
-
-/* CONTADORES */
+/* INFO */
 
 .info{
 display:flex;
 justify-content:space-between;
+padding:10px 14px;
 font-size:12px;
 color:var(--muted);
+border-top:1px solid var(--border);
 }
 
-/* EMPTY */
+/* FOOTER */
 
-.empty{
-text-align:center;
-margin-top:60px;
-opacity:.6;
+.modal-actions{
+display:flex;
+gap:10px;
+padding:12px;
+border-top:1px solid var(--border);
 }
 
 </style>
@@ -228,22 +224,15 @@ opacity:.6;
 <body>
 
 <div class="header">
-<div class="title">Prompts IA</div>
-
-<button class="btn green" onclick="novoPrompt()">
-Novo Prompt
-</button>
+<div class="title">Prompt CMS</div>
+<button class="btn green" onclick="novo()">Novo</button>
 </div>
 
 <div class="search">
-<input id="buscar" placeholder="Buscar prompt...">
+<input id="buscar" placeholder="Buscar prompt">
 </div>
 
 <div id="lista" class="lista"></div>
-
-<div id="empty" class="empty" style="display:none">
-Nenhum prompt encontrado
-</div>
 
 <!-- MODAL -->
 
@@ -251,32 +240,30 @@ Nenhum prompt encontrado
 
 <div class="modal-box">
 
-<input id="nome" placeholder="Nome do prompt">
+<input id="nome" placeholder="Nome do prompt" style="margin:12px">
 
 <div class="popup-search">
-
 <input id="buscarPopup" placeholder="Buscar dentro do prompt">
-
-<button class="btn blue" onclick="prevResult()">↑</button>
-<button class="btn blue" onclick="nextResult()">↓</button>
-
+<button class="btn blue" onclick="prev()">↑</button>
+<button class="btn blue" onclick="next()">↓</button>
 </div>
+
+<div class="editor">
+
+<div id="linhas" class="linhas"></div>
 
 <textarea id="prompt"></textarea>
 
-<div class="info">
-<div id="charCount">0 caracteres</div>
-<div id="wordCount">0 palavras</div>
 </div>
 
-<div style="display:flex;gap:10px;flex-wrap:wrap">
+<div class="info">
+<div id="chars">0 caracteres</div>
+<div id="words">0 palavras</div>
+</div>
 
+<div class="modal-actions">
 <button class="btn green" onclick="salvar()">Salvar</button>
-
-<button class="btn blue" onclick="copiarPrompt()">Copiar</button>
-
 <button class="btn red" onclick="fechar()">Cancelar</button>
-
 </div>
 
 </div>
@@ -287,57 +274,70 @@ Nenhum prompt encontrado
 
 /* SUPABASE */
 
-const db = supabase.createClient(
+const db=supabase.createClient(
 "https://dxkszikemntfusfyrzos.supabase.co",
 "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 )
 
-/* VARS */
-
-let editId=null
-let listaGlobal=[]
+/* ELEMENTOS */
 
 const lista=document.getElementById("lista")
 const modal=document.getElementById("modal")
 const nome=document.getElementById("nome")
 const prompt=document.getElementById("prompt")
+const linhas=document.getElementById("linhas")
 const buscar=document.getElementById("buscar")
 const buscarPopup=document.getElementById("buscarPopup")
 
-let resultados=[]
-let indice=0
+let editId=null
+let dados=[]
+
+/* LINHAS */
+
+function atualizarLinhas(){
+
+const total=prompt.value.split("\n").length
+let html=""
+
+for(let i=1;i<=total;i++){
+html+=i+"<br>"
+}
+
+linhas.innerHTML=html
+
+}
 
 /* CONTADORES */
 
 prompt.addEventListener("input",()=>{
 
-charCount.innerText = prompt.value.length + " caracteres"
+chars.innerText=prompt.value.length+" caracteres"
 
-let palavras = prompt.value.trim()
+let p=prompt.value.trim()
 
-if(!palavras) palavras=0
-else palavras=palavras.split(/\s+/).length
+if(!p)p=0
+else p=p.split(/\s+/).length
 
-wordCount.innerText = palavras + " palavras"
+words.innerText=p+" palavras"
 
+atualizarLinhas()
+
+})
+
+prompt.addEventListener("scroll",()=>{
+linhas.scrollTop=prompt.scrollTop
 })
 
 /* CARREGAR */
 
 async function carregar(){
 
-const {data,error}=await db
+const {data}=await db
 .from("prompts_mercatto")
 .select("*")
 .order("ordem",{ascending:true})
 
-if(error){
-console.error(error)
-alert("Erro ao carregar prompts")
-return
-}
-
-listaGlobal=data||[]
+dados=data||[]
 render()
 
 }
@@ -348,25 +348,18 @@ function render(){
 
 lista.innerHTML=""
 
-let filtrados=listaGlobal
+let filtrados=dados
 
-const busca=buscar.value.toLowerCase()
+if(buscar.value){
 
-if(busca){
+const b=buscar.value.toLowerCase()
 
-filtrados=listaGlobal.filter(p=>
-(p.nome||"").toLowerCase().includes(busca) ||
-(p.prompt||"").toLowerCase().includes(busca)
+filtrados=dados.filter(p=>
+(p.nome||"").toLowerCase().includes(b)||
+(p.prompt||"").toLowerCase().includes(b)
 )
 
 }
-
-if(filtrados.length===0){
-document.getElementById("empty").style.display="block"
-return
-}
-
-document.getElementById("empty").style.display="none"
 
 filtrados.forEach(p=>{
 
@@ -378,7 +371,7 @@ card.innerHTML=`
 
 <div class="nome">${p.nome}</div>
 
-<div class="preview">${(p.prompt||"").substring(0,350)}</div>
+<div class="preview">${(p.prompt||"").substring(0,300)}</div>
 
 <div class="acoes">
 
@@ -388,13 +381,9 @@ card.innerHTML=`
 ${p.ativo?"Ativo":"Inativo"}
 </button>
 
-<button class="btn blue" onclick="copiar('${p.prompt.replace(/'/g,"&#39;")}')">
-Copiar
-</button>
+<button class="btn blue" onclick="copiar(\`${p.prompt}\`)">Copiar</button>
 
-<button class="btn red" onclick="remover('${p.id}')">
-Excluir
-</button>
+<button class="btn red" onclick="remover('${p.id}')">Excluir</button>
 
 </div>
 `
@@ -407,22 +396,12 @@ ativarDrag()
 
 }
 
-/* DRAG MOBILE */
+/* DRAG */
 
 function ativarDrag(){
 
 new Sortable(lista,{
 animation:150,
-delay:2000,
-delayOnTouchOnly:true,
-touchStartThreshold:4,
-forceFallback:true,
-fallbackTolerance:5,
-
-onStart:()=>{
-if(navigator.vibrate) navigator.vibrate(80)
-},
-
 onEnd:salvarOrdem
 })
 
@@ -449,23 +428,15 @@ carregar()
 
 }
 
-/* BUSCA LISTA */
+/* CRUD */
 
-buscar.addEventListener("input",render)
-
-/* NOVO */
-
-function novoPrompt(){
-
+function novo(){
 editId=null
 nome.value=""
 prompt.value=""
-
-abrirModal()
-
+atualizarLinhas()
+abrir()
 }
-
-/* EDITAR */
 
 async function editar(id){
 
@@ -479,11 +450,11 @@ editId=id
 nome.value=data.nome
 prompt.value=data.prompt
 
-abrirModal()
+atualizarLinhas()
+
+abrir()
 
 }
-
-/* SALVAR */
 
 async function salvar(){
 
@@ -491,7 +462,7 @@ const n=nome.value.trim()
 const p=prompt.value.trim()
 
 if(!n||!p){
-alert("Preencha todos os campos")
+alert("Preencha tudo")
 return
 }
 
@@ -510,7 +481,7 @@ await db
 nome:n,
 prompt:p,
 ativo:true,
-ordem:listaGlobal.length
+ordem:dados.length
 })
 
 }
@@ -520,11 +491,9 @@ carregar()
 
 }
 
-/* REMOVER */
-
 async function remover(id){
 
-if(!confirm("Excluir prompt?"))return
+if(!confirm("Excluir?"))return
 
 await db
 .from("prompts_mercatto")
@@ -535,101 +504,113 @@ carregar()
 
 }
 
-/* TOGGLE */
-
-async function toggle(id,ativo){
+async function toggle(id,a){
 
 await db
 .from("prompts_mercatto")
-.update({ativo:!ativo})
+.update({ativo:!a})
 .eq("id",id)
 
 carregar()
 
 }
 
-/* COPIAR */
-
-function copiar(texto){
-navigator.clipboard.writeText(texto)
-alert("Prompt copiado")
-}
-
-function copiarPrompt(){
-navigator.clipboard.writeText(prompt.value)
+function copiar(t){
+navigator.clipboard.writeText(t)
 }
 
 /* MODAL */
 
-function abrirModal(){
-modal.style.display="flex"
-document.body.classList.add("modal-open")
-}
+function abrir(){modal.style.display="flex"}
+function fechar(){modal.style.display="none"}
 
-function fechar(){
-modal.style.display="none"
-document.body.classList.remove("modal-open")
-}
+/* BUSCA INTERNA */
 
-/* BUSCA DENTRO DO PROMPT */
+let resultados=[]
+let index=0
 
-buscarPopup.addEventListener("input",buscarInterno)
-
-function buscarInterno(){
+buscarPopup.addEventListener("input",()=>{
 
 const termo=buscarPopup.value.toLowerCase()
+if(!termo)return
+
 const texto=prompt.value.toLowerCase()
 
 resultados=[]
-indice=0
+index=0
 
 let pos=texto.indexOf(termo)
 
-while(pos!==-1){
-
+while(pos!=-1){
 resultados.push(pos)
 pos=texto.indexOf(termo,pos+1)
-
 }
 
-if(resultados.length) irParaResultado()
+if(resultados.length)highlight()
 
-}
+})
 
-function irParaResultado(){
+function highlight(){
 
-const pos=resultados[indice]
+const pos=resultados[index]
 
 prompt.focus()
-prompt.setSelectionRange(pos,pos+buscarPopup.value.length)
+
+prompt.setSelectionRange(
+pos,
+pos+buscarPopup.value.length
+)
 
 }
 
-function nextResult(){
+function next(){
 
-if(!resultados.length) return
+if(!resultados.length)return
 
-indice++
-if(indice>=resultados.length) indice=0
+index++
+if(index>=resultados.length)index=0
 
-irParaResultado()
+highlight()
+
+}
+
+function prev(){
+
+if(!resultados.length)return
+
+index--
+if(index<0)index=resultados.length-1
+
+highlight()
 
 }
 
-function prevResult(){
+/* BUSCA */
 
-if(!resultados.length) return
+buscar.addEventListener("input",render)
 
-indice--
-if(indice<0) indice=resultados.length-1
+/* CTRL S */
 
-irParaResultado()
+document.addEventListener("keydown",e=>{
+
+if(e.ctrlKey && e.key==="s"){
+
+e.preventDefault()
+salvar()
 
 }
+
+})
 
 /* INIT */
 
 carregar()
+
+/* PWA */
+
+if("serviceWorker" in navigator){
+navigator.serviceWorker.register("sw.js")
+}
 
 </script>
 
