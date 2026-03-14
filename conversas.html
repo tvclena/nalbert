@@ -14,11 +14,11 @@
 <style>
 
 :root{
---bg:#0b1320;
---sidebar:#0f1b2d;
---chat:#0c1626;
+--bg:#0b1220;
+--sidebar:#0f172a;
+--chat:#0b1323;
 
---border:#1f2a3c;
+--border:#1e293b;
 
 --text:#f1f5f9;
 --muted:#94a3b8;
@@ -29,9 +29,7 @@
 --red:#ef4444;
 }
 
-*{
-box-sizing:border-box;
-}
+*{box-sizing:border-box}
 
 body{
 margin:0;
@@ -40,12 +38,13 @@ background:var(--bg);
 color:var(--text);
 height:100vh;
 display:flex;
+overflow:hidden;
 }
 
 /* SIDEBAR */
 
 .sidebar{
-width:340px;
+width:360px;
 background:var(--sidebar);
 border-right:1px solid var(--border);
 display:flex;
@@ -53,7 +52,7 @@ flex-direction:column;
 }
 
 .header{
-padding:18px 20px;
+padding:18px;
 font-weight:700;
 font-size:18px;
 border-bottom:1px solid var(--border);
@@ -72,11 +71,13 @@ border-bottom:1px solid var(--border);
 .search input,
 .search select{
 
-background:#091322;
+background:#020617;
 border:1px solid var(--border);
 color:white;
-padding:10px 12px;
+
+padding:10px;
 border-radius:8px;
+
 font-size:14px;
 
 }
@@ -91,8 +92,8 @@ overflow:auto;
 .client{
 
 display:flex;
-gap:12px;
 align-items:center;
+gap:12px;
 
 padding:14px;
 
@@ -105,11 +106,11 @@ transition:.2s;
 }
 
 .client:hover{
-background:#091322;
+background:#020617;
 }
 
 .client.pausado{
-background:#2b1212;
+background:#321717;
 }
 
 .avatar{
@@ -119,7 +120,7 @@ height:42px;
 
 border-radius:50%;
 
-background:#1f2a3c;
+background:#1e293b;
 
 display:flex;
 align-items:center;
@@ -198,16 +199,13 @@ color:white;
 /* CHAT */
 
 .chat{
-
 flex:1;
-
 display:flex;
-
 flex-direction:column;
-
 background:var(--chat);
-
 }
+
+/* HEADER CHAT */
 
 .chat-header{
 
@@ -225,6 +223,42 @@ align-items:center;
 
 .chat-title{
 font-weight:600;
+}
+
+/* HEADER ACTIONS */
+
+.chat-actions{
+display:flex;
+gap:8px;
+}
+
+.btn-header{
+
+border:none;
+
+border-radius:8px;
+
+padding:8px 12px;
+
+font-size:13px;
+
+cursor:pointer;
+
+}
+
+.btn-blue{
+background:var(--blue);
+color:white;
+}
+
+.btn-green{
+background:var(--green);
+color:white;
+}
+
+.btn-yellow{
+background:var(--yellow);
+color:white;
 }
 
 /* MESSAGES */
@@ -265,7 +299,7 @@ animation:fade .2s ease;
 
 .user{
 
-background:#1f2a3c;
+background:#1e293b;
 
 align-self:flex-start;
 
@@ -305,44 +339,6 @@ transform:none;
 
 }
 
-/* BUTTON HEADER */
-
-.header-actions{
-
-display:flex;
-gap:8px;
-
-}
-
-.btn-header{
-
-border:none;
-
-border-radius:8px;
-
-padding:8px 12px;
-
-font-size:13px;
-
-cursor:pointer;
-
-}
-
-.btn-blue{
-background:var(--blue);
-color:white;
-}
-
-.btn-yellow{
-background:var(--yellow);
-color:white;
-}
-
-.btn-green{
-background:var(--green);
-color:white;
-}
-
 </style>
 </head>
 
@@ -378,10 +374,22 @@ Conversas
 Selecione uma conversa
 </div>
 
-<div class="header-actions">
+<div class="chat-actions">
 
 <button class="btn-header btn-blue" onclick="abrirRepertorio()">
 Repertórios
+</button>
+
+<button class="btn-header btn-yellow" id="btnPause" onclick="toggleBot()" style="display:none">
+Pausar Bot
+</button>
+
+<button class="btn-header btn-green" id="btnPlay" onclick="toggleBot()" style="display:none">
+Reativar Bot
+</button>
+
+<button class="btn-header btn-green" id="btnWhats" onclick="abrirWhats(clienteSelecionado)" style="display:none">
+WhatsApp
 </button>
 
 </div>
@@ -400,6 +408,7 @@ const db = supabase.createClient(
 )
 
 let clienteSelecionado=null
+let botPausado=false
 
 async function carregarClientes(){
 
@@ -447,6 +456,16 @@ c.telefone.includes(busca)
 
 }
 
+const filtro=document.getElementById("filtroStatus").value
+
+if(filtro==="pausado"){
+clientes=clientes.filter(c=>pausados[c.telefone])
+}
+
+if(filtro==="ativo"){
+clientes=clientes.filter(c=>!pausados[c.telefone])
+}
+
 const container=document.getElementById("clientes")
 
 container.innerHTML=""
@@ -454,6 +473,7 @@ container.innerHTML=""
 clientes.forEach(c=>{
 
 const nome=nomes[c.telefone]||c.telefone
+
 const inicial=nome[0].toUpperCase()
 
 const pausado=pausados[c.telefone]
@@ -509,6 +529,19 @@ const {data:cliente}=await db
 document.getElementById("clienteAtual").innerText=
 (cliente?.nome||telefone)+" • "+telefone
 
+document.getElementById("btnWhats").style.display="block"
+
+const {data:controle}=await db
+.from("controle_bot")
+.select("pausado")
+.eq("telefone",telefone)
+.maybeSingle()
+
+botPausado=controle?.pausado||false
+
+document.getElementById("btnPause").style.display=botPausado?"none":"block"
+document.getElementById("btnPlay").style.display=botPausado?"block":"none"
+
 const {data}=await db
 .from("conversas_whatsapp")
 .select("*")
@@ -543,13 +576,34 @@ container.scrollTop=container.scrollHeight
 
 }
 
+async function toggleBot(){
+
+if(!clienteSelecionado) return
+
+botPausado=!botPausado
+
+await db
+.from("controle_bot")
+.upsert({
+
+telefone:clienteSelecionado,
+pausado:botPausado
+
+})
+
+abrirConversa(clienteSelecionado)
+
+carregarClientes()
+
+}
+
 async function pausarBot(telefone){
 
-await db.from("controle_bot").upsert({
-
+await db
+.from("controle_bot")
+.upsert({
 telefone:telefone,
 pausado:true
-
 })
 
 carregarClientes()
@@ -558,11 +612,11 @@ carregarClientes()
 
 async function despausarBot(telefone){
 
-await db.from("controle_bot").upsert({
-
+await db
+.from("controle_bot")
+.upsert({
 telefone:telefone,
 pausado:false
-
 })
 
 carregarClientes()
@@ -577,9 +631,17 @@ window.open("https://wa.me/"+telefone,"_blank")
 
 document.getElementById("buscar").addEventListener("input",carregarClientes)
 
+document.getElementById("filtroStatus").addEventListener("change",carregarClientes)
+
 setInterval(carregarClientes,4000)
 
 carregarClientes()
+
+function abrirRepertorio(){
+
+alert("Abrir painel de repertórios")
+
+}
 
 </script>
 
