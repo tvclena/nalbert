@@ -566,7 +566,7 @@ const dias=new Date(ano,mes+1,0).getDate()
 for(let i=1;i<=dias;i++){
 
 let count=reservas.filter(r=>{
-let d=new Date(r.datahora)
+let d=new Date(r.datahora.replace(" ","T"))
 return d.getDate()==i &&
 d.getMonth()==mes &&
 d.getFullYear()==ano
@@ -588,8 +588,8 @@ cal.appendChild(div)
 function abrirDia(dia,reservas,mes,ano){
 
 const lista=reservas.filter(r=>{
-const d=new Date(r.datahora)
-return d.getDate()==dia &&
+const d=new Date(r.datahora.replace(" ","T"))
+ return d.getDate()==dia &&
 d.getMonth()==mes &&
 d.getFullYear()==ano
 })
@@ -628,8 +628,8 @@ function listarReservas(res){
 const lista=document.getElementById("lista")
 lista.innerHTML=""
 
-res.sort((a,b)=>new Date(a.datahora)-new Date(b.datahora))
-
+res.sort((a,b)=>new Date(a.datahora.replace(" ","T"))-new Date(b.datahora.replace(" ","T")))
+ 
 res.forEach(r=>{
 
 const div=document.createElement("div")
