@@ -3,8 +3,7 @@
 <head>
 
 <meta charset="UTF-8">
-
-<title>Prompts IA • Mercatto</title>
+<title>Mercatto • Gerenciador de Prompts IA</title>
 
 <meta name="viewport"
 content="width=device-width,
@@ -14,22 +13,36 @@ user-scalable=no,
 viewport-fit=cover">
 
 <link rel="manifest" href="manifest.json">
-
 <meta name="theme-color" content="#020617">
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 
 <style>
 
+:root{
+--bg:#020617;
+--card:#0f172a;
+--border:#1e293b;
+--text:#f8fafc;
+--muted:#94a3b8;
+--green:#22c55e;
+--red:#ef4444;
+--blue:#3b82f6;
+--yellow:#f59e0b;
+--radius:14px;
+}
+
+*{box-sizing:border-box}
+
 body{
 margin:0;
 font-family:Inter;
-background:#020617;
-color:white;
-padding:16px;
+background:var(--bg);
+color:var(--text);
+padding:18px;
 }
 
 body.modal-open{
@@ -42,24 +55,43 @@ overflow:hidden;
 display:flex;
 justify-content:space-between;
 align-items:center;
-margin-bottom:14px;
+margin-bottom:16px;
 }
 
-.header h2{
+.header h1{
+font-size:20px;
 margin:0;
 }
 
 /* BUSCA */
 
-input{
-width:100%;
-padding:10px;
-border-radius:10px;
-border:1px solid #1e293b;
-background:#020617;
-color:white;
-margin-bottom:10px;
+.search{
+margin-bottom:14px;
 }
+
+.search input{
+width:100%;
+padding:12px;
+border-radius:10px;
+border:1px solid var(--border);
+background:var(--card);
+color:white;
+}
+
+/* BOTÕES */
+
+.btn{
+border:none;
+padding:10px 14px;
+border-radius:10px;
+font-weight:600;
+cursor:pointer;
+}
+
+.green{background:var(--green);color:white}
+.red{background:var(--red);color:white}
+.blue{background:var(--blue);color:white}
+.yellow{background:var(--yellow);color:black}
 
 /* LISTA */
 
@@ -70,39 +102,41 @@ gap:12px;
 }
 
 .card{
-background:#0f172a;
-border-radius:14px;
+background:var(--card);
+border:1px solid var(--border);
+border-radius:var(--radius);
 padding:16px;
 cursor:grab;
 touch-action:none;
 }
 
+.card h3{
+margin:0;
+font-size:16px;
+}
+
 .preview{
-font-size:12px;
-opacity:.7;
+font-size:13px;
+color:var(--muted);
 margin-top:6px;
+white-space:pre-wrap;
+max-height:120px;
+overflow:hidden;
 }
 
-/* BOTÕES */
-
-.btn{
-padding:10px;
-border:none;
-border-radius:10px;
-cursor:pointer;
-font-weight:600;
+.actions{
+display:flex;
+flex-wrap:wrap;
+gap:6px;
+margin-top:10px;
 }
-
-.green{background:#22c55e;color:white}
-.red{background:#ef4444;color:white}
-.blue{background:#3b82f6;color:white}
 
 /* MODAL */
 
 .modal{
 position:fixed;
 inset:0;
-background:rgba(0,0,0,.9);
+background:rgba(0,0,0,.85);
 display:none;
 align-items:center;
 justify-content:center;
@@ -110,9 +144,9 @@ z-index:999;
 }
 
 .modal-box{
-background:#020617;
-padding:16px;
-border-radius:14px;
+background:var(--card);
+border-radius:var(--radius);
+padding:18px;
 width:100%;
 max-width:650px;
 max-height:90vh;
@@ -125,22 +159,41 @@ gap:10px;
 textarea{
 width:100%;
 height:260px;
-background:#020617;
-border:1px solid #1e293b;
+background:var(--bg);
+border:1px solid var(--border);
 border-radius:10px;
 padding:10px;
+color:white;
+resize:none;
+}
+
+input{
+width:100%;
+padding:10px;
+border-radius:10px;
+border:1px solid var(--border);
+background:var(--bg);
 color:white;
 }
 
 /* BUSCA INTERNA */
 
-.search-popup{
+.popup-search{
 display:flex;
 gap:6px;
 }
 
-.search-popup button{
+.popup-search button{
 width:40px;
+}
+
+/* CONTADORES */
+
+.info{
+font-size:12px;
+color:var(--muted);
+display:flex;
+justify-content:space-between;
 }
 
 </style>
@@ -150,15 +203,17 @@ width:40px;
 
 <div class="header">
 
-<h2>Prompts IA</h2>
+<h1>Prompts IA</h1>
 
 <button class="btn green" onclick="novoPrompt()">
-Novo
+Novo Prompt
 </button>
 
 </div>
 
-<input id="buscar" placeholder="Buscar prompt...">
+<div class="search">
+<input id="buscar" placeholder="Buscar prompts...">
+</div>
 
 <div id="lista" class="lista"></div>
 
@@ -170,9 +225,9 @@ Novo
 
 <input id="nome" placeholder="Nome do prompt">
 
-<div class="search-popup">
+<div class="popup-search">
 
-<input id="buscarPopup" placeholder="Buscar dentro do prompt">
+<input id="buscarPopup" placeholder="Buscar no texto">
 
 <button class="btn blue" onclick="prevResult()">↑</button>
 <button class="btn blue" onclick="nextResult()">↓</button>
@@ -181,15 +236,17 @@ Novo
 
 <textarea id="prompt"></textarea>
 
-<div style="display:flex;gap:10px">
+<div class="info">
+<div id="charCount">0 caracteres</div>
+<div id="wordCount">0 palavras</div>
+</div>
 
-<button class="btn green" onclick="salvar()">
-Salvar
-</button>
+<div style="display:flex;gap:8px;flex-wrap:wrap">
 
-<button class="btn red" onclick="fechar()">
-Cancelar
-</button>
+<button class="btn green" onclick="salvar()">Salvar</button>
+<button class="btn blue" onclick="copiarPrompt()">Copiar</button>
+<button class="btn yellow" onclick="duplicarPrompt()">Duplicar</button>
+<button class="btn red" onclick="fechar()">Fechar</button>
 
 </div>
 
@@ -198,20 +255,12 @@ Cancelar
 
 <script>
 
-/* ================= PWA ================= */
-
-if("serviceWorker" in navigator){
-navigator.serviceWorker.register("sw.js")
-}
-
-/* ================= SUPABASE ================= */
+/* SUPABASE */
 
 const db = supabase.createClient(
 "https://dxkszikemntfusfyrzos.supabase.co",
 "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 )
-
-/* ================= VARS ================= */
 
 let listaGlobal=[]
 let editId=null
@@ -224,20 +273,25 @@ const modal=document.getElementById("modal")
 let resultados=[]
 let indiceAtual=0
 
-/* ================= CARREGAR ================= */
+/* CONTADORES */
+
+prompt.addEventListener("input",()=>{
+
+charCount.innerText = prompt.value.length + " caracteres"
+
+wordCount.innerText =
+prompt.value.trim().split(/\s+/).length + " palavras"
+
+})
+
+/* CARREGAR */
 
 async function carregar(){
 
-const {data,error}=await db
+const {data}=await db
 .from("prompts_mercatto")
 .select("*")
 .order("ordem",{ascending:true})
-
-if(error){
-console.error(error)
-alert("Erro ao carregar")
-return
-}
 
 listaGlobal=data||[]
 
@@ -245,13 +299,13 @@ render()
 
 }
 
-/* ================= RENDER ================= */
+/* RENDER */
 
 function render(){
 
 lista.innerHTML=""
 
-const busca=document.getElementById("buscar").value.toLowerCase()
+const busca=buscar.value.toLowerCase()
 
 let filtrados=listaGlobal
 
@@ -272,24 +326,35 @@ card.dataset.id=p.id
 
 card.innerHTML=`
 
-<strong>${p.nome}</strong>
+<h3>${p.nome}</h3>
 
 <div class="preview">
-${p.prompt.substring(0,200)}
+${p.prompt.substring(0,220)}
 </div>
 
-<div style="display:flex;gap:6px;margin-top:10px">
+<div class="actions">
 
 <button class="btn blue" onclick="editar('${p.id}')">
 Editar
+</button>
+
+<button class="btn green" onclick="toggle('${p.id}',${p.ativo})">
+${p.ativo?"Ativo":"Inativo"}
+</button>
+
+<button class="btn yellow" onclick="duplicar('${p.id}')">
+Duplicar
 </button>
 
 <button class="btn red" onclick="remover('${p.id}')">
 Excluir
 </button>
 
-</div>
+<button class="btn blue" onclick="copiar('${p.prompt.replace(/'/g,"&#39;")}')">
+Copiar
+</button>
 
+</div>
 `
 
 lista.appendChild(card)
@@ -300,25 +365,19 @@ ativarDrag()
 
 }
 
-/* ================= DRAG MOBILE ================= */
+/* DRAG */
 
 function ativarDrag(){
 
 new Sortable(lista,{
 
 animation:150,
-
 delay:2000,
 delayOnTouchOnly:true,
-
 forceFallback:true,
 
 onStart:()=>{
-
-if(navigator.vibrate){
-navigator.vibrate(80)
-}
-
+if(navigator.vibrate) navigator.vibrate(80)
 },
 
 onEnd:salvarOrdem
@@ -327,7 +386,7 @@ onEnd:salvarOrdem
 
 }
 
-/* ================= SALVAR ORDEM ================= */
+/* SALVAR ORDEM */
 
 async function salvarOrdem(){
 
@@ -346,12 +405,11 @@ carregar()
 
 }
 
-/* ================= NOVO ================= */
+/* NOVO */
 
 function novoPrompt(){
 
 editId=null
-
 nome.value=""
 prompt.value=""
 
@@ -359,7 +417,7 @@ abrirModal()
 
 }
 
-/* ================= EDITAR ================= */
+/* EDITAR */
 
 async function editar(id){
 
@@ -370,7 +428,6 @@ const {data}=await db
 .single()
 
 editId=id
-
 nome.value=data.nome
 prompt.value=data.prompt
 
@@ -378,7 +435,7 @@ abrirModal()
 
 }
 
-/* ================= SALVAR ================= */
+/* SALVAR */
 
 async function salvar(){
 
@@ -410,7 +467,39 @@ carregar()
 
 }
 
-/* ================= REMOVER ================= */
+/* DUPLICAR */
+
+async function duplicar(id){
+
+const p=listaGlobal.find(x=>x.id==id)
+
+await db
+.from("prompts_mercatto")
+.insert({
+nome:p.nome+" (cópia)",
+prompt:p.prompt,
+ativo:true,
+ordem:listaGlobal.length
+})
+
+carregar()
+
+}
+
+/* TOGGLE */
+
+async function toggle(id,ativo){
+
+await db
+.from("prompts_mercatto")
+.update({ativo:!ativo})
+.eq("id",id)
+
+carregar()
+
+}
+
+/* REMOVER */
 
 async function remover(id){
 
@@ -425,7 +514,23 @@ carregar()
 
 }
 
-/* ================= MODAL ================= */
+/* COPIAR */
+
+function copiar(texto){
+
+navigator.clipboard.writeText(texto)
+
+alert("Prompt copiado")
+
+}
+
+function copiarPrompt(){
+
+navigator.clipboard.writeText(prompt.value)
+
+}
+
+/* MODAL */
 
 function abrirModal(){
 
@@ -441,11 +546,11 @@ document.body.classList.remove("modal-open")
 
 }
 
-/* ================= BUSCA GERAL ================= */
+/* BUSCA */
 
 buscar.addEventListener("input",render)
 
-/* ================= BUSCA INTERNA ================= */
+/* BUSCA INTERNA */
 
 buscarPopup.addEventListener("input",()=>{
 
@@ -462,7 +567,6 @@ let pos=texto.indexOf(termo)
 while(pos!==-1){
 
 resultados.push(pos)
-
 pos=texto.indexOf(termo,pos+1)
 
 }
@@ -506,7 +610,7 @@ irParaResultado()
 
 }
 
-/* ================= INIT ================= */
+/* INIT */
 
 carregar()
 
