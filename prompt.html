@@ -3,6 +3,7 @@
 <head>
 
 <meta charset="UTF-8">
+
 <title>Prompts IA • Mercatto</title>
 
 <meta name="viewport"
@@ -13,6 +14,7 @@ user-scalable=no,
 viewport-fit=cover">
 
 <link rel="manifest" href="manifest.json">
+
 <meta name="theme-color" content="#020617">
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
@@ -34,12 +36,20 @@ body.modal-open{
 overflow:hidden;
 }
 
+/* HEADER */
+
 .header{
 display:flex;
 justify-content:space-between;
 align-items:center;
 margin-bottom:14px;
 }
+
+.header h2{
+margin:0;
+}
+
+/* BUSCA */
 
 input{
 width:100%;
@@ -48,13 +58,15 @@ border-radius:10px;
 border:1px solid #1e293b;
 background:#020617;
 color:white;
+margin-bottom:10px;
 }
+
+/* LISTA */
 
 .lista{
 display:flex;
 flex-direction:column;
 gap:12px;
-margin-top:10px;
 }
 
 .card{
@@ -68,18 +80,24 @@ touch-action:none;
 .preview{
 font-size:12px;
 opacity:.7;
+margin-top:6px;
 }
+
+/* BOTÕES */
 
 .btn{
 padding:10px;
 border:none;
 border-radius:10px;
 cursor:pointer;
+font-weight:600;
 }
 
 .green{background:#22c55e;color:white}
 .red{background:#ef4444;color:white}
 .blue{background:#3b82f6;color:white}
+
+/* MODAL */
 
 .modal{
 position:fixed;
@@ -114,6 +132,8 @@ padding:10px;
 color:white;
 }
 
+/* BUSCA INTERNA */
+
 .search-popup{
 display:flex;
 gap:6px;
@@ -129,8 +149,13 @@ width:40px;
 <body>
 
 <div class="header">
+
 <h2>Prompts IA</h2>
-<button class="btn green" onclick="novoPrompt()">Novo</button>
+
+<button class="btn green" onclick="novoPrompt()">
+Novo
+</button>
+
 </div>
 
 <input id="buscar" placeholder="Buscar prompt...">
@@ -158,8 +183,13 @@ width:40px;
 
 <div style="display:flex;gap:10px">
 
-<button class="btn green" onclick="salvar()">Salvar</button>
-<button class="btn red" onclick="fechar()">Cancelar</button>
+<button class="btn green" onclick="salvar()">
+Salvar
+</button>
+
+<button class="btn red" onclick="fechar()">
+Cancelar
+</button>
 
 </div>
 
@@ -168,12 +198,20 @@ width:40px;
 
 <script>
 
-/* SUPABASE */
+/* ================= PWA ================= */
+
+if("serviceWorker" in navigator){
+navigator.serviceWorker.register("sw.js")
+}
+
+/* ================= SUPABASE ================= */
 
 const db = supabase.createClient(
 "https://dxkszikemntfusfyrzos.supabase.co",
 "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 )
+
+/* ================= VARS ================= */
 
 let listaGlobal=[]
 let editId=null
@@ -186,14 +224,20 @@ const modal=document.getElementById("modal")
 let resultados=[]
 let indiceAtual=0
 
-/* CARREGAR */
+/* ================= CARREGAR ================= */
 
 async function carregar(){
 
-const {data}=await db
+const {data,error}=await db
 .from("prompts_mercatto")
 .select("*")
 .order("ordem",{ascending:true})
+
+if(error){
+console.error(error)
+alert("Erro ao carregar")
+return
+}
 
 listaGlobal=data||[]
 
@@ -201,7 +245,7 @@ render()
 
 }
 
-/* RENDER */
+/* ================= RENDER ================= */
 
 function render(){
 
@@ -214,7 +258,7 @@ let filtrados=listaGlobal
 if(busca){
 
 filtrados=listaGlobal.filter(p=>
-p.nome.toLowerCase().includes(busca)||
+p.nome.toLowerCase().includes(busca) ||
 p.prompt.toLowerCase().includes(busca)
 )
 
@@ -245,6 +289,7 @@ Excluir
 </button>
 
 </div>
+
 `
 
 lista.appendChild(card)
@@ -255,15 +300,17 @@ ativarDrag()
 
 }
 
-/* DRAG MOBILE */
+/* ================= DRAG MOBILE ================= */
 
 function ativarDrag(){
 
 new Sortable(lista,{
 
 animation:150,
+
 delay:2000,
 delayOnTouchOnly:true,
+
 forceFallback:true,
 
 onStart:()=>{
@@ -280,7 +327,7 @@ onEnd:salvarOrdem
 
 }
 
-/* SALVAR ORDEM */
+/* ================= SALVAR ORDEM ================= */
 
 async function salvarOrdem(){
 
@@ -299,11 +346,12 @@ carregar()
 
 }
 
-/* NOVO */
+/* ================= NOVO ================= */
 
 function novoPrompt(){
 
 editId=null
+
 nome.value=""
 prompt.value=""
 
@@ -311,7 +359,7 @@ abrirModal()
 
 }
 
-/* EDITAR */
+/* ================= EDITAR ================= */
 
 async function editar(id){
 
@@ -322,6 +370,7 @@ const {data}=await db
 .single()
 
 editId=id
+
 nome.value=data.nome
 prompt.value=data.prompt
 
@@ -329,7 +378,7 @@ abrirModal()
 
 }
 
-/* SALVAR */
+/* ================= SALVAR ================= */
 
 async function salvar(){
 
@@ -361,11 +410,11 @@ carregar()
 
 }
 
-/* REMOVER */
+/* ================= REMOVER ================= */
 
 async function remover(id){
 
-if(!confirm("Excluir prompt?"))return
+if(!confirm("Excluir prompt?")) return
 
 await db
 .from("prompts_mercatto")
@@ -376,7 +425,7 @@ carregar()
 
 }
 
-/* MODAL */
+/* ================= MODAL ================= */
 
 function abrirModal(){
 
@@ -392,11 +441,11 @@ document.body.classList.remove("modal-open")
 
 }
 
-/* BUSCA GERAL */
+/* ================= BUSCA GERAL ================= */
 
 buscar.addEventListener("input",render)
 
-/* BUSCA INTERNA */
+/* ================= BUSCA INTERNA ================= */
 
 buscarPopup.addEventListener("input",()=>{
 
@@ -413,6 +462,7 @@ let pos=texto.indexOf(termo)
 while(pos!==-1){
 
 resultados.push(pos)
+
 pos=texto.indexOf(termo,pos+1)
 
 }
@@ -455,6 +505,8 @@ indiceAtual=resultados.length-1
 irParaResultado()
 
 }
+
+/* ================= INIT ================= */
 
 carregar()
 
