@@ -888,72 +888,92 @@ button{
 
 
 
+/* =========================================
+   FILTROS — MENU ESCURO PREMIUM
+========================================= */
 
-
-  /* =========================
-   FILTROS — VISUAL DO "CMV EXECUTIVO TOTAL"
-   (substitui TODO o seu bloco atual de .filters + inputs/selects)
-========================= */
 .filters{
-  background:#fff;
-  padding:6px 10px;
+  background:#0f172a;
+  padding:10px 14px;
   display:flex;
   align-items:center;
-  gap:6px;
-  border-bottom:1px solid var(--border);
+  gap:8px;
+  border-bottom:1px solid #1e293b;
   position:sticky;
   top:0;
   z-index:50;
-
-  /* se tiver muitos selects, quebra sem estourar */
   flex-wrap:wrap;
 }
 
-/* INPUT (BUSCA) */
+/* INPUT BUSCA */
 .filters input{
   flex:1;
-  min-width:220px;
-  height:30px;
-  border-radius:6px;
-  border:1px solid var(--border);
-  padding:0 8px;
-  font-size:11px;
+  min-width:240px;
+  height:34px;
+
+  border-radius:8px;
+  border:1px solid #334155;
+
+  padding:0 10px;
+
+  font-size:12px;
   font-weight:600;
-  background:#f9fafb;
+
+  background:#1e293b;
+  color:#fff;
+
   outline:none;
+}
+
+.filters input::placeholder{
+  color:#94a3b8;
 }
 
 /* SELECTS */
 .filters select{
-  width:140px;
-  height:30px;
-  border-radius:6px;
-  border:1px solid var(--border);
-  padding:0 6px;
-  font-size:11px;
+  width:150px;
+  height:34px;
+
+  border-radius:8px;
+  border:1px solid #334155;
+
+  padding:0 8px;
+
+  font-size:12px;
   font-weight:600;
-  background:#f9fafb;
+
+  background:#1e293b;
+  color:#fff;
+
   outline:none;
 }
 
-/* FOCO (mesmo do executivo) */
-.filters input:focus,
-.filters select:focus{
-  border-color:var(--primary);
-  box-shadow:none;
+/* HOVER */
+.filters select:hover,
+.filters input:hover{
+  border-color:#475569;
 }
 
-/* MOBILE: busca em 1 linha e selects quebrando bonitinho */
+/* FOCO */
+.filters input:focus,
+.filters select:focus{
+  border-color:#3b82f6;
+  box-shadow:0 0 0 2px rgba(59,130,246,.2);
+}
+
+/* MOBILE */
 @media (max-width:600px){
+
   .filters input{
-    min-width:0;
     flex:1 1 100%;
+    min-width:0;
   }
+
   .filters select{
     width:48%;
   }
-}
 
+}
 
 
   
