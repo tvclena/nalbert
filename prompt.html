@@ -3,7 +3,7 @@
 <head>
 
 <meta charset="UTF-8">
-<title>CMS Prompts IA • Mercatto</title>
+<title>Prompts IA • Mercatto</title>
 
 <meta name="viewport"
 content="width=device-width,
@@ -12,41 +12,27 @@ maximum-scale=1,
 user-scalable=no,
 viewport-fit=cover">
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#020617">
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 
 <style>
 
-:root{
---bg:#020617;
---card:#0f172a;
---border:#1e293b;
---text:#f1f5f9;
---muted:#94a3b8;
---green:#22c55e;
---red:#ef4444;
---blue:#3b82f6;
---yellow:#fde047;
---radius:16px;
-}
-
-*{box-sizing:border-box}
-
 body{
 margin:0;
 font-family:Inter;
-background:var(--bg);
-color:var(--text);
+background:#020617;
+color:white;
 padding:16px;
 }
 
 body.modal-open{
 overflow:hidden;
 }
-
-/* HEADER */
 
 .header{
 display:flex;
@@ -55,83 +41,45 @@ align-items:center;
 margin-bottom:14px;
 }
 
-.title{
-font-size:20px;
-font-weight:800;
-}
-
-/* SEARCH */
-
-.search{
-margin-bottom:16px;
-}
-
-.search input{
+input{
 width:100%;
-padding:12px;
+padding:10px;
 border-radius:10px;
-border:1px solid var(--border);
+border:1px solid #1e293b;
 background:#020617;
 color:white;
-font-size:14px;
 }
-
-/* BUTTON */
-
-.btn{
-border:none;
-padding:10px 14px;
-border-radius:10px;
-cursor:pointer;
-font-weight:600;
-}
-
-.green{background:var(--green);color:white}
-.red{background:var(--red);color:white}
-.blue{background:var(--blue);color:white}
-
-/* LIST */
 
 .lista{
 display:flex;
 flex-direction:column;
 gap:12px;
+margin-top:10px;
 }
 
 .card{
-background:var(--card);
-border:1px solid var(--border);
-border-radius:var(--radius);
+background:#0f172a;
+border-radius:14px;
 padding:16px;
 cursor:grab;
 touch-action:none;
 }
 
-.nome{
-font-weight:700;
-font-size:15px;
-margin-bottom:6px;
-}
-
 .preview{
 font-size:12px;
-color:var(--muted);
-white-space:pre-wrap;
-max-height:120px;
-overflow:hidden;
+opacity:.7;
 }
 
-.acoes{
-display:flex;
-gap:8px;
-margin-top:12px;
+.btn{
+padding:10px;
+border:none;
+border-radius:10px;
+cursor:pointer;
 }
 
-.acoes button{
-flex:1;
-}
-
-/* MODAL */
+.green{background:#22c55e;color:white}
+.red{background:#ef4444;color:white}
+.blue{background:#3b82f6;color:white}
 
 .modal{
 position:fixed;
@@ -140,67 +88,39 @@ background:rgba(0,0,0,.9);
 display:none;
 align-items:center;
 justify-content:center;
-padding:16px;
 z-index:999;
 }
 
 .modal-box{
 background:#020617;
-border:1px solid var(--border);
-border-radius:16px;
 padding:16px;
+border-radius:14px;
 width:100%;
 max-width:650px;
+max-height:90vh;
+overflow:auto;
 display:flex;
 flex-direction:column;
 gap:10px;
-max-height:90vh;
-overflow:auto;
-}
-
-/* INPUT */
-
-input,textarea{
-width:100%;
-background:#020617;
-border:1px solid var(--border);
-border-radius:10px;
-padding:10px;
-color:white;
-font-family:Inter;
 }
 
 textarea{
+width:100%;
 height:260px;
-resize:none;
+background:#020617;
+border:1px solid #1e293b;
+border-radius:10px;
+padding:10px;
+color:white;
 }
 
-/* BUSCA POPUP */
-
-.popup-search{
+.search-popup{
 display:flex;
 gap:6px;
 }
 
-.popup-search input{
-flex:1;
-}
-
-.popup-search button{
+.search-popup button{
 width:40px;
-}
-
-.highlight{
-background:var(--yellow);
-color:black;
-}
-
-/* EMPTY */
-
-.empty{
-text-align:center;
-margin-top:60px;
-opacity:.6;
 }
 
 </style>
@@ -209,22 +129,13 @@ opacity:.6;
 <body>
 
 <div class="header">
-<div class="title">Prompts IA</div>
-
-<button class="btn green" onclick="novoPrompt()">
-Novo Prompt
-</button>
+<h2>Prompts IA</h2>
+<button class="btn green" onclick="novoPrompt()">Novo</button>
 </div>
 
-<div class="search">
 <input id="buscar" placeholder="Buscar prompt...">
-</div>
 
 <div id="lista" class="lista"></div>
-
-<div id="empty" class="empty" style="display:none">
-Nenhum prompt encontrado
-</div>
 
 <!-- MODAL -->
 
@@ -234,7 +145,7 @@ Nenhum prompt encontrado
 
 <input id="nome" placeholder="Nome do prompt">
 
-<div class="popup-search">
+<div class="search-popup">
 
 <input id="buscarPopup" placeholder="Buscar dentro do prompt">
 
@@ -248,13 +159,11 @@ Nenhum prompt encontrado
 <div style="display:flex;gap:10px">
 
 <button class="btn green" onclick="salvar()">Salvar</button>
-
 <button class="btn red" onclick="fechar()">Cancelar</button>
 
 </div>
 
 </div>
-
 </div>
 
 <script>
@@ -266,37 +175,28 @@ const db = supabase.createClient(
 "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 )
 
-/* VARS */
-
-let editId=null
 let listaGlobal=[]
+let editId=null
 
 const lista=document.getElementById("lista")
 const modal=document.getElementById("modal")
-const nome=document.getElementById("nome")
-const prompt=document.getElementById("prompt")
-const buscar=document.getElementById("buscar")
-const buscarPopup=document.getElementById("buscarPopup")
+
+/* BUSCA INTERNA */
 
 let resultados=[]
-let indice=0
+let indiceAtual=0
 
 /* CARREGAR */
 
 async function carregar(){
 
-const {data,error}=await db
+const {data}=await db
 .from("prompts_mercatto")
 .select("*")
 .order("ordem",{ascending:true})
 
-if(error){
-console.error(error)
-alert("Erro ao carregar prompts")
-return
-}
-
 listaGlobal=data||[]
+
 render()
 
 }
@@ -307,25 +207,18 @@ function render(){
 
 lista.innerHTML=""
 
-let filtrados=listaGlobal
+const busca=document.getElementById("buscar").value.toLowerCase()
 
-const busca=buscar.value.toLowerCase()
+let filtrados=listaGlobal
 
 if(busca){
 
 filtrados=listaGlobal.filter(p=>
-(p.nome||"").toLowerCase().includes(busca) ||
-(p.prompt||"").toLowerCase().includes(busca)
+p.nome.toLowerCase().includes(busca)||
+p.prompt.toLowerCase().includes(busca)
 )
 
 }
-
-if(filtrados.length===0){
-document.getElementById("empty").style.display="block"
-return
-}
-
-document.getElementById("empty").style.display="none"
 
 filtrados.forEach(p=>{
 
@@ -335,18 +228,16 @@ card.dataset.id=p.id
 
 card.innerHTML=`
 
-<div class="nome">${p.nome}</div>
+<strong>${p.nome}</strong>
 
-<div class="preview">${(p.prompt||"").substring(0,350)}</div>
+<div class="preview">
+${p.prompt.substring(0,200)}
+</div>
 
-<div class="acoes">
+<div style="display:flex;gap:6px;margin-top:10px">
 
 <button class="btn blue" onclick="editar('${p.id}')">
 Editar
-</button>
-
-<button class="btn green" onclick="toggle('${p.id}',${p.ativo})">
-${p.ativo?"Ativo":"Inativo"}
 </button>
 
 <button class="btn red" onclick="remover('${p.id}')">
@@ -354,7 +245,6 @@ Excluir
 </button>
 
 </div>
-
 `
 
 lista.appendChild(card)
@@ -370,18 +260,22 @@ ativarDrag()
 function ativarDrag(){
 
 new Sortable(lista,{
+
 animation:150,
 delay:2000,
 delayOnTouchOnly:true,
-touchStartThreshold:4,
 forceFallback:true,
-fallbackTolerance:5,
 
 onStart:()=>{
-if(navigator.vibrate) navigator.vibrate(80)
+
+if(navigator.vibrate){
+navigator.vibrate(80)
+}
+
 },
 
 onEnd:salvarOrdem
+
 })
 
 }
@@ -394,22 +288,16 @@ const cards=[...document.querySelectorAll(".card")]
 
 for(let i=0;i<cards.length;i++){
 
-const id=cards[i].dataset.id
-
 await db
 .from("prompts_mercatto")
 .update({ordem:i})
-.eq("id",id)
+.eq("id",cards[i].dataset.id)
 
 }
 
 carregar()
 
 }
-
-/* BUSCA LISTA */
-
-buscar.addEventListener("input",render)
 
 /* NOVO */
 
@@ -445,19 +333,14 @@ abrirModal()
 
 async function salvar(){
 
-const n=nome.value.trim()
-const p=prompt.value.trim()
-
-if(!n||!p){
-alert("Preencha todos os campos")
-return
-}
-
 if(editId){
 
 await db
 .from("prompts_mercatto")
-.update({nome:n,prompt:p})
+.update({
+nome:nome.value,
+prompt:prompt.value
+})
 .eq("id",editId)
 
 }else{
@@ -465,8 +348,8 @@ await db
 await db
 .from("prompts_mercatto")
 .insert({
-nome:n,
-prompt:p,
+nome:nome.value,
+prompt:prompt.value,
 ativo:true,
 ordem:listaGlobal.length
 })
@@ -493,42 +376,37 @@ carregar()
 
 }
 
-/* TOGGLE */
-
-async function toggle(id,ativo){
-
-await db
-.from("prompts_mercatto")
-.update({ativo:!ativo})
-.eq("id",id)
-
-carregar()
-
-}
-
 /* MODAL */
 
 function abrirModal(){
+
 modal.style.display="flex"
 document.body.classList.add("modal-open")
+
 }
 
 function fechar(){
+
 modal.style.display="none"
 document.body.classList.remove("modal-open")
+
 }
 
-/* BUSCA DENTRO DO PROMPT */
+/* BUSCA GERAL */
 
-buscarPopup.addEventListener("input",buscarInterno)
+buscar.addEventListener("input",render)
 
-function buscarInterno(){
+/* BUSCA INTERNA */
+
+buscarPopup.addEventListener("input",()=>{
 
 const termo=buscarPopup.value.toLowerCase()
 const texto=prompt.value.toLowerCase()
 
 resultados=[]
-indice=0
+indiceAtual=0
+
+if(!termo) return
 
 let pos=texto.indexOf(termo)
 
@@ -539,13 +417,13 @@ pos=texto.indexOf(termo,pos+1)
 
 }
 
-if(resultados.length) irParaResultado()
-
-}
+})
 
 function irParaResultado(){
 
-const pos=resultados[indice]
+if(!resultados.length) return
+
+const pos=resultados[indiceAtual]
 
 prompt.focus()
 prompt.setSelectionRange(pos,pos+buscarPopup.value.length)
@@ -556,8 +434,10 @@ function nextResult(){
 
 if(!resultados.length) return
 
-indice++
-if(indice>=resultados.length) indice=0
+indiceAtual++
+
+if(indiceAtual>=resultados.length)
+indiceAtual=0
 
 irParaResultado()
 
@@ -567,14 +447,14 @@ function prevResult(){
 
 if(!resultados.length) return
 
-indice--
-if(indice<0) indice=resultados.length-1
+indiceAtual--
+
+if(indiceAtual<0)
+indiceAtual=resultados.length-1
 
 irParaResultado()
 
 }
-
-/* INIT */
 
 carregar()
 
