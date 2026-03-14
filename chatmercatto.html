@@ -270,6 +270,20 @@ background:#1e293b;
 .client.pausado{
 background:#3b1212;
 }
+
+
+.status{
+font-size:11px;
+margin-top:2px;
+}
+
+.status.on{
+color:#22c55e;
+}
+
+.status.off{
+color:#ef4444;
+}
 </style>
 </head>
 
@@ -369,12 +383,15 @@ ${nomes[c.telefone] ? nomes[c.telefone] : c.telefone}
 </div>
 
 <div class="preview">${c.mensagem}</div>
-</div>
+<div class="status ${pausado?'off':'on'}">
+${pausado?'BOT PAUSADO':'BOT ATIVO'}
+</div></div>
 
 <div class="menuDots" onclick="abrirMenu(event,'${c.telefone}')">⋮</div>
-
 <div class="menu" id="menu-${c.telefone}">
-<button onclick="toggleBot('${c.telefone}')">Pausar / Reativar</button>
+<button onclick="toggleBot('${c.telefone}')">
+${pausado ? "Ativar bot" : "Desativar bot"}
+</button>
 </div>
 
 `
@@ -563,12 +580,29 @@ async function toggleBot(telefone){
 
 const pausado = await verificarPausa(telefone)
 
+const {data} = await db
+.from("controle_bot")
+.select("telefone")
+.eq("telefone",telefone)
+.maybeSingle()
+
+if(data){
+
 await db
 .from("controle_bot")
-.upsert({
+.update({pausado:!pausado})
+.eq("telefone",telefone)
+
+}else{
+
+await db
+.from("controle_bot")
+insert({
 telefone:telefone,
-pausado:!pausado
+pausado:true
 })
+
+}
 
 carregarClientes()
 
