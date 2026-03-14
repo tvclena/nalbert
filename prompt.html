@@ -28,16 +28,18 @@ viewport-fit=cover">
 --green:#22c55e;
 --red:#ef4444;
 --blue:#3b82f6;
---yellow:#facc15;
+--yellow:#fde047;
 --radius:16px;
 }
 
-*{box-sizing:border-box}
+*{
+box-sizing:border-box
+}
 
 body{
 margin:0;
 font-family:Inter;
-background:#020617;
+background:var(--bg);
 color:var(--text);
 padding:16px;
 }
@@ -100,6 +102,7 @@ border:1px solid var(--border);
 border-radius:var(--radius);
 padding:16px;
 cursor:grab;
+touch-action:none;
 }
 
 .nome{
@@ -131,7 +134,7 @@ flex:1;
 .modal{
 position:fixed;
 inset:0;
-background:rgba(0,0,0,.85);
+background:rgba(0,0,0,.9);
 display:none;
 align-items:center;
 justify-content:center;
@@ -153,7 +156,7 @@ max-height:90vh;
 overflow:auto;
 }
 
-/* INPUTS */
+/* INPUT */
 
 input,textarea{
 width:100%;
@@ -202,21 +205,15 @@ opacity:.6;
 <body>
 
 <div class="header">
-
-<div class="title">
-Prompts IA
-</div>
+<div class="title">Prompts IA</div>
 
 <button class="btn green" onclick="novoPrompt()">
 Novo Prompt
 </button>
-
 </div>
 
 <div class="search">
-
 <input id="buscar" placeholder="Buscar prompt...">
-
 </div>
 
 <div id="lista" class="lista"></div>
@@ -234,31 +231,18 @@ Nenhum prompt encontrado
 <input id="nome" placeholder="Nome do prompt">
 
 <div class="popup-search">
-
 <input id="buscarPopup" placeholder="Buscar dentro do prompt">
-
-<button class="btn blue" onclick="limparBuscaPopup()">
-Limpar
-</button>
-
+<button class="btn blue" onclick="limparBuscaPopup()">Limpar</button>
 </div>
 
 <textarea id="prompt"></textarea>
 
 <div style="display:flex;gap:10px">
-
-<button class="btn green" onclick="salvar()">
-Salvar
-</button>
-
-<button class="btn red" onclick="fechar()">
-Cancelar
-</button>
-
+<button class="btn green" onclick="salvar()">Salvar</button>
+<button class="btn red" onclick="fechar()">Cancelar</button>
 </div>
 
 </div>
-
 </div>
 
 <script>
@@ -339,9 +323,7 @@ card.innerHTML=`
 
 <div class="nome">${p.nome}</div>
 
-<div class="preview">
-${(p.prompt||"").substring(0,350)}
-</div>
+<div class="preview">${(p.prompt||"").substring(0,350)}</div>
 
 <div class="acoes">
 
@@ -369,13 +351,28 @@ ativarDrag()
 
 }
 
-/* DRAG */
+/* DRAG MOBILE + DESKTOP */
 
 function ativarDrag(){
 
 new Sortable(lista,{
 animation:150,
+delay:2000,
+delayOnTouchOnly:true,
+touchStartThreshold:4,
+forceFallback:true,
+fallbackTolerance:5,
+
+onStart:()=>{
+
+if(navigator.vibrate){
+navigator.vibrate(80)
+}
+
+},
+
 onEnd:salvarOrdem
+
 })
 
 }
@@ -410,11 +407,9 @@ buscar.addEventListener("input",render)
 function novoPrompt(){
 
 editId=null
-
 nome.value=""
 prompt.value=""
 buscarPopup.value=""
-
 modal.style.display="flex"
 
 }
@@ -430,11 +425,9 @@ const {data}=await db
 .single()
 
 editId=id
-
 nome.value=data.nome
 prompt.value=data.prompt
 textoOriginal=data.prompt
-
 buscarPopup.value=""
 
 modal.style.display="flex"
@@ -513,19 +506,14 @@ buscarPopup.addEventListener("input",()=>{
 const termo=buscarPopup.value.toLowerCase()
 
 if(!termo){
-
 prompt.value=textoOriginal
 return
-
 }
 
 const regex=new RegExp(`(${termo})`,"gi")
-
 prompt.value=textoOriginal.replace(regex,"[$1]")
 
 })
-
-/* LIMPAR BUSCA */
 
 function limparBuscaPopup(){
 
