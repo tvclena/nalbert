@@ -357,34 +357,37 @@ async function carregar(){
 const inicio = document.getElementById("inicio").value
 const fim = document.getElementById("fim").value
 
-/* CONVERSAS */
+/* =========================
+   FUNÇÃO NORMALIZAR TELEFONE
+========================= */
 
-const {data:conversas} = await db
-.from("conversas_whatsapp")
-.select("*")
+function normalizar(t){
+if(!t) return ""
+return t.replace(/\D/g,"")
+}
 
-/* CONTROLE BOT */
+/* =========================
+   BUSCAR DADOS
+========================= */
 
-const {data:controle} = await db
-.from("controle_bot")
-.select("*")
+const {data:conversas} =
+await db.from("conversas_whatsapp").select("*")
 
-/* RESERVAS */
+const {data:reservas} =
+await db.from("reservas_mercatto").select("*")
 
-const {data:reservas} = await db
-.from("reservas_mercatto")
-.select("*")
+const {data:controle} =
+await db.from("controle_bot").select("*")
 
-/* MEMORIA CLIENTES */
-
-const {data:memoria} = await db
-.from("memoria_clientes")
-.select("*")
+const {data:memoria} =
+await db.from("memoria_clientes").select("*")
 
 
-/* FILTRAR CONVERSAS POR DATA */
+/* =========================
+   FILTRAR CONVERSAS
+========================= */
 
-const convFiltradas = conversas.filter(c=>{
+const convPeriodo = conversas.filter(c=>{
 
 const d = new Date(c.created_at)
 
@@ -392,31 +395,39 @@ return d >= new Date(inicio) && d <= new Date(fim)
 
 })
 
-/* TELEFONES ÚNICOS */
+/* =========================
+   TELEFONES ÚNICOS
+========================= */
 
 const telefones = new Set()
 
-convFiltradas.forEach(c=>{
-if(c.telefone) telefones.add(c.telefone)
+convPeriodo.forEach(c=>{
+
+telefones.add(normalizar(c.telefone))
+
 })
 
-document.getElementById("convUnicas").innerText = telefones.size
+document.getElementById("convUnicas").innerText =
+telefones.size
 
-document.getElementById("mensagens").innerText = convFiltradas.length
+document.getElementById("mensagens").innerText =
+convPeriodo.length
 
 
-/* BOT STATUS */
+/* =========================
+   BOT ATIVO / PAUSADO
+========================= */
 
 let pausadas = controle.filter(c=>c.pausado).length
-
 let ativas = controle.length - pausadas
 
 document.getElementById("ativas").innerText = ativas
-
 document.getElementById("pausadas").innerText = pausadas
 
 
-/* FILTRAR RESERVAS */
+/* =========================
+   FILTRAR RESERVAS
+========================= */
 
 const reservasPeriodo = reservas.filter(r=>{
 
@@ -427,19 +438,25 @@ return d >= new Date(inicio) && d <= new Date(fim)
 })
 
 
-/* CLIENTES QUE RESERVARAM */
+/* =========================
+   CLIENTES QUE RESERVARAM
+========================= */
 
 const clientesReserva = new Set()
 
 reservasPeriodo.forEach(r=>{
-if(r.telefone) clientesReserva.add(r.telefone)
+
+clientesReserva.add(normalizar(r.telefone))
+
 })
 
 document.getElementById("clientesReserva").innerText =
 clientesReserva.size
 
 
-/* TAXA CONVERSA → RESERVA */
+/* =========================
+   TAXA CONVERSA → RESERVA
+========================= */
 
 let taxa = telefones.size
 ? ((clientesReserva.size / telefones.size) * 100).toFixed(1)
@@ -449,7 +466,9 @@ document.getElementById("taxaReserva").innerText =
 taxa + "%"
 
 
-/* PESSOAS RESERVADAS */
+/* =========================
+   PESSOAS
+========================= */
 
 let pessoas = reservasPeriodo.reduce((a,r)=>
 a + Number(r.pessoas || 0)
@@ -458,19 +477,30 @@ a + Number(r.pessoas || 0)
 document.getElementById("pessoas").innerText = pessoas
 
 
-/* VALORES */
+/* =========================
+   VALORES
+========================= */
 
-let estimado = reservasPeriodo.reduce((a,r)=>
-a + Number(r.valorEstimado || 0)
-,0)
+let estimado = 0
+let antecipado = 0
+let finalPago = 0
 
-let antecipado = reservasPeriodo.reduce((a,r)=>
-a + Number(r.pagamentoAntecipado || 0)
-,0)
+reservasPeriodo.forEach(r=>{
 
-let finalPago = reservasPeriodo.reduce((a,r)=>
-a + Number(r.valorFinalPago || 0)
-,0)
+estimado += Number(r.valorEstimado || 0)
+
+let extra =
+Number(r.pagamentoExtra1||0) +
+Number(r.pagamentoExtra2||0) +
+Number(r.pagamentoExtra3||0) +
+Number(r.pagamentoExtra4||0) +
+Number(r.pagamentoExtra5||0)
+
+antecipado += Number(r.pagamentoAntecipado||0) + extra
+
+finalPago += Number(r.valorFinalPago||0)
+
+})
 
 document.getElementById("valorEstimado").innerText =
 money(estimado)
@@ -482,7 +512,9 @@ document.getElementById("valorFinal").innerText =
 money(finalPago)
 
 
-/* VALOR A RECEBER */
+/* =========================
+   VALOR A RECEBER
+========================= */
 
 let receber = estimado - antecipado - finalPago
 
@@ -492,43 +524,50 @@ document.getElementById("valorReceber").innerText =
 money(receber)
 
 
-/* TICKET MÉDIO */
+/* =========================
+   TEMPO MÉDIO DE RESPOSTA
+========================= */
 
-let ticket = reservasPeriodo.length
-? estimado / reservasPeriodo.length
-: 0
+let tempos = []
 
-document.getElementById("ticketMedio").innerText =
-money(ticket)
+for(let i=1;i<convPeriodo.length;i++){
+
+const prev = convPeriodo[i-1]
+const atual = convPeriodo[i]
+
+if(prev.role==="user" && atual.role==="assistant"){
+
+let t =
+new Date(atual.created_at) -
+new Date(prev.created_at)
+
+tempos.push(t)
+
+}
+
+}
+
+let media = 0
+
+if(tempos.length){
+
+media =
+tempos.reduce((a,b)=>a+b,0) /
+tempos.length
+
+}
+
+document.getElementById("tempoResposta").innerText =
+Math.round(media/1000) + "s"
 
 
-/* CLIENTES NOVOS */
-
-let novos = memoria.filter(c=>{
-
-const r = reservasPeriodo.find(x=>x.telefone === c.telefone)
-
-return r
-
-}).length
-
-document.getElementById("clientesNovos").innerText =
-novos
-
-
-/* CLIENTES RECORRENTES */
-
-let recorrentes = clientesReserva.size - novos
-
-document.getElementById("clientesRecorrentes").innerText =
-recorrentes
-
-
-/* HORARIOS DE PICO */
+/* =========================
+   HORARIO DE PICO
+========================= */
 
 let horas = Array(24).fill(0)
 
-convFiltradas.forEach(c=>{
+convPeriodo.forEach(c=>{
 
 const h = new Date(c.created_at).getHours()
 
@@ -539,7 +578,9 @@ horas[h]++
 renderGraficoPico(horas)
 
 
-/* STATUS RESERVAS */
+/* =========================
+   STATUS RESERVAS
+========================= */
 
 let status = {
 Pendente:0,
@@ -561,17 +602,20 @@ status[r.status]++
 renderGraficoStatus(status)
 
 
-/* CALENDÁRIO */
+/* =========================
+   CALENDARIO
+========================= */
 
 gerarCalendario(reservasPeriodo)
 
 
-/* LISTA */
+/* =========================
+   LISTA
+========================= */
 
 listarReservas(reservasPeriodo,memoria)
 
 }
-/* calendário */
 
 function gerarCalendario(reservas){
 
