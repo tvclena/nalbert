@@ -202,7 +202,12 @@ overflow:auto;
 }
 
 canvas{max-height:260px}
-
+iframe{
+width:100%;
+height:100%;
+border:none;
+background:#020617;
+}
 </style>
 </head>
 
@@ -215,10 +220,23 @@ canvas{max-height:260px}
 <div class="logo">Mercatto BI</div>
 
 <div class="menu">
-<div>Dashboard</div>
-<div>Reservas</div>
-<div>Conversas</div>
-<div>Clientes</div>
+
+<div onclick="abrirPagina('dashboard.html','Dashboard')">
+Dashboard
+</div>
+
+<div onclick="abrirPagina('reservas.html','Reservas')">
+Reservas
+</div>
+
+<div onclick="abrirPagina('conversas.html','Conversas')">
+Conversas
+</div>
+
+<div onclick="abrirPagina('clientes.html','Clientes')">
+Clientes
+</div>
+
 </div>
 
 </div>
@@ -228,8 +246,8 @@ canvas{max-height:260px}
 
 <div class="header">
 
-<h2>Analytics Operacional</h2>
-
+<h2 id="tituloPagina">Analytics Operacional</h2>
+ 
 <div class="filters">
 
 <input type="date" id="inicio">
@@ -242,9 +260,17 @@ canvas{max-height:260px}
 </div>
 
 
-<div class="content">
-
-
+<iframe
+id="frameSistema"
+src="dashboard.html"
+style="
+width:100%;
+height:100%;
+border:none;
+background:#020617;
+">
+</iframe>
+ 
 <div class="kpis">
 
 <div class="card"><h3>Conversas únicas</h3><div id="convUnicas" class="kpi">0</div></div>
@@ -626,7 +652,13 @@ lista.appendChild(div)
 
 defaultDates()
 window.addEventListener("DOMContentLoaded",carregar)
+function abrirPagina(pagina,titulo){
 
+document.getElementById("frameSistema").src = pagina
+
+document.getElementById("tituloPagina").innerText = titulo
+
+}
 </script>
 
 </body>
