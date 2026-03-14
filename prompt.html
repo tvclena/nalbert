@@ -4,7 +4,7 @@
 
 <meta charset="UTF-8">
 
-<title>CMS de Prompts • Mercatto IA</title>
+<title>Prompts IA • Mercatto</title>
 
 <meta name="viewport"
 content="width=device-width,
@@ -18,8 +18,6 @@ viewport-fit=cover">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-
-/* ===== BASE ===== */
 
 :root{
 --bg:#020617;
@@ -65,9 +63,9 @@ cursor:pointer;
 font-weight:600;
 }
 
-.btn-green{background:var(--green);color:white}
-.btn-red{background:var(--red);color:white}
-.btn-blue{background:var(--blue);color:white}
+.green{background:var(--green);color:white}
+.red{background:var(--red);color:white}
+.blue{background:var(--blue);color:white}
 
 /* LISTA */
 
@@ -86,7 +84,6 @@ padding:14px;
 
 .nome{
 font-weight:700;
-font-size:15px;
 margin-bottom:6px;
 }
 
@@ -94,7 +91,7 @@ margin-bottom:6px;
 font-size:12px;
 color:var(--muted);
 white-space:pre-wrap;
-max-height:80px;
+max-height:100px;
 overflow:hidden;
 }
 
@@ -113,7 +110,7 @@ flex:1;
 .modal{
 position:fixed;
 inset:0;
-background:rgba(0,0,0,.7);
+background:rgba(0,0,0,.8);
 display:none;
 align-items:center;
 justify-content:center;
@@ -133,8 +130,7 @@ gap:10px;
 max-height:90vh;
 }
 
-.modal input,
-.modal textarea{
+input,textarea{
 width:100%;
 background:#020617;
 border:1px solid var(--border);
@@ -155,8 +151,6 @@ color:var(--muted);
 text-align:right;
 }
 
-/* EMPTY */
-
 .empty{
 text-align:center;
 margin-top:60px;
@@ -174,7 +168,7 @@ opacity:.6;
 Prompts IA
 </div>
 
-<button class="btn btn-green" onclick="novoPrompt()">
+<button class="btn green" onclick="novoPrompt()">
 Novo Prompt
 </button>
 
@@ -182,7 +176,7 @@ Novo Prompt
 
 <div class="lista" id="lista"></div>
 
-<div class="empty" id="empty" style="display:none">
+<div id="empty" class="empty" style="display:none">
 Nenhum prompt cadastrado
 </div>
 
@@ -196,17 +190,17 @@ Nenhum prompt cadastrado
 
 <textarea id="prompt"></textarea>
 
-<div class="counter" id="counter">
+<div id="counter" class="counter">
 0 caracteres
 </div>
 
 <div style="display:flex;gap:10px">
 
-<button class="btn btn-green" onclick="salvar()">
+<button class="btn green" onclick="salvar()">
 Salvar
 </button>
 
-<button class="btn btn-red" onclick="fechar()">
+<button class="btn red" onclick="fechar()">
 Cancelar
 </button>
 
@@ -220,26 +214,27 @@ Cancelar
 
 /* ===== SUPABASE ===== */
 
-const supabase = window.supabase.createClient(
+const db = window.supabase.createClient(
 "https://dxkszikemntfusfyrzos.supabase.co",
 "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 )
 
 let editId=null
 
-/* ===== CARREGAR ===== */
+/* ===== CARREGAR PROMPTS ===== */
 
 async function carregar(){
 
-const {data,error} = await supabase
+const {data,error} = await db
 .from("prompts_mercatto")
 .select("*")
 .order("ordem",{ascending:true})
 
 if(error){
 
-alert("Erro ao carregar prompts")
 console.error(error)
+alert("Erro ao carregar prompts")
+
 return
 
 }
@@ -247,7 +242,7 @@ return
 const lista=document.getElementById("lista")
 lista.innerHTML=""
 
-if(!data || !data.length){
+if(!data || data.length===0){
 
 document.getElementById("empty").style.display="block"
 return
@@ -258,10 +253,10 @@ document.getElementById("empty").style.display="none"
 
 data.forEach(p=>{
 
-const div=document.createElement("div")
-div.className="card"
+const card=document.createElement("div")
+card.className="card"
 
-div.innerHTML=`
+card.innerHTML=`
 
 <div class="nome">${p.nome}</div>
 
@@ -271,18 +266,15 @@ ${(p.prompt||"").substring(0,300)}
 
 <div class="acoes">
 
-<button class="btn btn-blue"
-onclick="editar('${p.id}')">
+<button class="btn blue" onclick="editar('${p.id}')">
 Editar
 </button>
 
-<button class="btn btn-green"
-onclick="toggle('${p.id}',${p.ativo})">
+<button class="btn green" onclick="toggle('${p.id}',${p.ativo})">
 ${p.ativo?"Ativo":"Inativo"}
 </button>
 
-<button class="btn btn-red"
-onclick="remover('${p.id}')">
+<button class="btn red" onclick="remover('${p.id}')">
 Excluir
 </button>
 
@@ -290,7 +282,7 @@ Excluir
 
 `
 
-lista.appendChild(div)
+lista.appendChild(card)
 
 })
 
@@ -314,11 +306,18 @@ document.getElementById("modal").style.display="flex"
 
 async function editar(id){
 
-const {data} = await supabase
+const {data,error} = await db
 .from("prompts_mercatto")
 .select("*")
 .eq("id",id)
 .single()
+
+if(error){
+
+alert("Erro ao carregar prompt")
+return
+
+}
 
 editId=id
 
@@ -340,21 +339,21 @@ const prompt=document.getElementById("prompt").value.trim()
 
 if(!nome || !prompt){
 
-alert("Preencha nome e prompt")
+alert("Preencha todos os campos")
 return
 
 }
 
 if(editId){
 
-await supabase
+await db
 .from("prompts_mercatto")
 .update({nome,prompt})
 .eq("id",editId)
 
 }else{
 
-await supabase
+await db
 .from("prompts_mercatto")
 .insert({
 nome,
@@ -376,7 +375,7 @@ async function remover(id){
 
 if(!confirm("Excluir prompt?")) return
 
-await supabase
+await db
 .from("prompts_mercatto")
 .delete()
 .eq("id",id)
@@ -389,7 +388,7 @@ carregar()
 
 async function toggle(id,ativo){
 
-await supabase
+await db
 .from("prompts_mercatto")
 .update({ativo:!ativo})
 .eq("id",id)
@@ -398,7 +397,7 @@ carregar()
 
 }
 
-/* ===== FECHAR ===== */
+/* ===== FECHAR MODAL ===== */
 
 function fechar(){
 
@@ -413,7 +412,9 @@ document.getElementById("prompt").addEventListener("input",contar)
 function contar(){
 
 const txt=document.getElementById("prompt").value
-document.getElementById("counter").innerText=txt.length+" caracteres"
+
+document.getElementById("counter").innerText =
+txt.length + " caracteres"
 
 }
 
