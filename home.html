@@ -357,87 +357,189 @@ async function carregar(){
 const inicio = document.getElementById("inicio").value
 const fim = document.getElementById("fim").value
 
-const {data:conv} = await db
+/* CONVERSAS */
+
+const {data:conversas} = await db
 .from("conversas_whatsapp")
 .select("*")
-.gte("created_at",inicio)
-.lte("created_at",fim)
 
-const {data:bot} = await db
+/* CONTROLE BOT */
+
+const {data:controle} = await db
 .from("controle_bot")
 .select("*")
+
+/* RESERVAS */
 
 const {data:reservas} = await db
 .from("reservas_mercatto")
 .select("*")
-.gte("datahora",inicio)
-.lte("datahora",fim+"T23:59:59")
 
-/* conversas únicas */
+/* MEMORIA CLIENTES */
 
-let telefones = new Set(conv.map(c=>c.telefone))
+const {data:memoria} = await db
+.from("memoria_clientes")
+.select("*")
+
+
+/* FILTRAR CONVERSAS POR DATA */
+
+const convFiltradas = conversas.filter(c=>{
+
+const d = new Date(c.created_at)
+
+return d >= new Date(inicio) && d <= new Date(fim)
+
+})
+
+/* TELEFONES ÚNICOS */
+
+const telefones = new Set()
+
+convFiltradas.forEach(c=>{
+if(c.telefone) telefones.add(c.telefone)
+})
 
 document.getElementById("convUnicas").innerText = telefones.size
 
-document.getElementById("mensagens").innerText = conv.length
+document.getElementById("mensagens").innerText = convFiltradas.length
 
-/* bot status */
 
-let pausadas = bot.filter(b=>b.pausado).length
-let ativas = bot.length - pausadas
+/* BOT STATUS */
+
+let pausadas = controle.filter(c=>c.pausado).length
+
+let ativas = controle.length - pausadas
 
 document.getElementById("ativas").innerText = ativas
+
 document.getElementById("pausadas").innerText = pausadas
 
-/* reservas */
 
-let clientes = new Set(reservas.map(r=>r.telefone))
+/* FILTRAR RESERVAS */
 
-document.getElementById("clientesReserva").innerText = clientes.size
+const reservasPeriodo = reservas.filter(r=>{
 
-let taxa = telefones.size ? (clientes.size/telefones.size*100).toFixed(1) : 0
+const d = new Date(r.datahora)
 
-document.getElementById("taxaReserva").innerText = taxa+"%"
+return d >= new Date(inicio) && d <= new Date(fim)
 
-/* pessoas */
+})
 
-let pessoas = reservas.reduce((a,b)=>a+Number(b.pessoas||0),0)
+
+/* CLIENTES QUE RESERVARAM */
+
+const clientesReserva = new Set()
+
+reservasPeriodo.forEach(r=>{
+if(r.telefone) clientesReserva.add(r.telefone)
+})
+
+document.getElementById("clientesReserva").innerText =
+clientesReserva.size
+
+
+/* TAXA CONVERSA → RESERVA */
+
+let taxa = telefones.size
+? ((clientesReserva.size / telefones.size) * 100).toFixed(1)
+: 0
+
+document.getElementById("taxaReserva").innerText =
+taxa + "%"
+
+
+/* PESSOAS RESERVADAS */
+
+let pessoas = reservasPeriodo.reduce((a,r)=>
+a + Number(r.pessoas || 0)
+,0)
+
 document.getElementById("pessoas").innerText = pessoas
 
-/* valores */
 
-let estimado = reservas.reduce((a,b)=>a+Number(b.valorEstimado||0),0)
-let antecipado = reservas.reduce((a,b)=>a+Number(b.pagamentoAntecipado||0),0)
-let final = reservas.reduce((a,b)=>a+Number(b.valorFinalPago||0),0)
+/* VALORES */
 
-document.getElementById("valorEstimado").innerText = money(estimado)
-document.getElementById("valorAntecipado").innerText = money(antecipado)
-document.getElementById("valorFinal").innerText = money(final)
+let estimado = reservasPeriodo.reduce((a,r)=>
+a + Number(r.valorEstimado || 0)
+,0)
 
-/* pico */
+let antecipado = reservasPeriodo.reduce((a,r)=>
+a + Number(r.pagamentoAntecipado || 0)
+,0)
+
+let finalPago = reservasPeriodo.reduce((a,r)=>
+a + Number(r.valorFinalPago || 0)
+,0)
+
+document.getElementById("valorEstimado").innerText =
+money(estimado)
+
+document.getElementById("valorAntecipado").innerText =
+money(antecipado)
+
+document.getElementById("valorFinal").innerText =
+money(finalPago)
+
+
+/* VALOR A RECEBER */
+
+let receber = estimado - antecipado - finalPago
+
+if(receber < 0) receber = 0
+
+document.getElementById("valorReceber").innerText =
+money(receber)
+
+
+/* TICKET MÉDIO */
+
+let ticket = reservasPeriodo.length
+? estimado / reservasPeriodo.length
+: 0
+
+document.getElementById("ticketMedio").innerText =
+money(ticket)
+
+
+/* CLIENTES NOVOS */
+
+let novos = memoria.filter(c=>{
+
+const r = reservasPeriodo.find(x=>x.telefone === c.telefone)
+
+return r
+
+}).length
+
+document.getElementById("clientesNovos").innerText =
+novos
+
+
+/* CLIENTES RECORRENTES */
+
+let recorrentes = clientesReserva.size - novos
+
+document.getElementById("clientesRecorrentes").innerText =
+recorrentes
+
+
+/* HORARIOS DE PICO */
 
 let horas = Array(24).fill(0)
 
-conv.forEach(c=>{
-let h = new Date(c.created_at).getHours()
+convFiltradas.forEach(c=>{
+
+const h = new Date(c.created_at).getHours()
+
 horas[h]++
+
 })
 
-if(graficoPico) graficoPico.destroy()
+renderGraficoPico(horas)
 
-graficoPico = new Chart(
-document.getElementById("graficoPico"),
-{
-type:"bar",
-data:{
-labels:[...Array(24).keys()].map(h=>h+"h"),
-datasets:[{data:horas,backgroundColor:"#3b82f6"}]
-},
-options:{plugins:{legend:{display:false}}}
-}
-)
 
-/* status reservas */
+/* STATUS RESERVAS */
 
 let status = {
 Pendente:0,
@@ -446,33 +548,29 @@ Concluída:0,
 Cancelada:0
 }
 
-reservas.forEach(r=>{
-status[r.status] = (status[r.status]||0)+1
+reservasPeriodo.forEach(r=>{
+
+if(status[r.status] !== undefined){
+
+status[r.status]++
+
+}
+
 })
 
-if(graficoStatus) graficoStatus.destroy()
+renderGraficoStatus(status)
 
-graficoStatus = new Chart(
-document.getElementById("graficoStatus"),
-{
-type:"doughnut",
-data:{
-labels:Object.keys(status),
-datasets:[{
-data:Object.values(status),
-backgroundColor:["#f59e0b","#3b82f6","#22c55e","#ef4444"]
-}]
-},
-options:{plugins:{legend:{position:"bottom"}}}
-}
-)
 
-gerarCalendario(reservas)
+/* CALENDÁRIO */
 
-listarReservas(reservas)
+gerarCalendario(reservasPeriodo)
+
+
+/* LISTA */
+
+listarReservas(reservasPeriodo,memoria)
 
 }
-
 /* calendário */
 
 function gerarCalendario(reservas){
