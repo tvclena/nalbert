@@ -18,8 +18,6 @@ content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 
 <style>
 
-/* BASE */
-
 :root{
 --bg:#020617;
 --card:#0f172a;
@@ -141,7 +139,7 @@ background:#020617;
 border:1px solid var(--border);
 border-radius:16px;
 width:100%;
-max-width:900px;
+max-width:1000px;
 height:85vh;
 display:flex;
 flex-direction:column;
@@ -153,11 +151,12 @@ flex-direction:column;
 flex:1;
 display:flex;
 overflow:hidden;
+background:#000;
 }
 
 .linhas{
-width:55px;
-background:#000;
+width:60px;
+background:#020617;
 color:#64748b;
 font-family:JetBrains Mono;
 font-size:12px;
@@ -167,9 +166,42 @@ overflow:hidden;
 user-select:none;
 }
 
+.editor-wrapper{
+position:relative;
+flex:1;
+}
+
+#highlight{
+position:absolute;
+top:0;
+left:0;
+right:0;
+bottom:0;
+
+pointer-events:none;
+
+white-space:pre-wrap;
+word-break:break-word;
+
+font-family:JetBrains Mono;
+font-size:13px;
+padding:12px;
+line-height:1.6;
+
+color:#e2e8f0;
+overflow:auto;
+}
+
+#highlight mark{
+background:#fde047;
+color:#000;
+padding:1px 3px;
+border-radius:4px;
+}
+
 textarea{
 flex:1;
-background:#000;
+background:transparent;
 border:none;
 outline:none;
 color:#e2e8f0;
@@ -178,6 +210,9 @@ font-size:13px;
 padding:12px;
 resize:none;
 line-height:1.6;
+
+position:relative;
+z-index:2;
 }
 
 /* BUSCA POPUP */
@@ -217,38 +252,7 @@ gap:10px;
 padding:12px;
 border-top:1px solid var(--border);
 }
-.editor-wrapper{
-position:relative;
-flex:1;
-}
 
-#highlight{
-position:absolute;
-top:0;
-left:0;
-right:0;
-bottom:0;
-pointer-events:none;
-
-white-space:pre-wrap;
-
-font-family:JetBrains Mono;
-font-size:13px;
-padding:12px;
-line-height:1.6;
-
-color:transparent;
-}
-
-#highlight mark{
-background:#facc15;
-color:#000;
-border-radius:3px;
-}
-
-#highlight{
-overflow:auto;
-}
 </style>
 </head>
 
@@ -264,8 +268,6 @@ overflow:auto;
 </div>
 
 <div id="lista" class="lista"></div>
-
-<!-- MODAL -->
 
 <div id="modal" class="modal">
 
@@ -309,27 +311,24 @@ overflow:auto;
 
 <script>
 
-/* SUPABASE */
-
 const db=supabase.createClient(
 "https://dxkszikemntfusfyrzos.supabase.co",
 "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 )
 
-/* ELEMENTOS */
-
 const lista=document.getElementById("lista")
 const modal=document.getElementById("modal")
 const nome=document.getElementById("nome")
 const prompt=document.getElementById("prompt")
+const highlightLayer=document.getElementById("highlight")
 const linhas=document.getElementById("linhas")
 const buscar=document.getElementById("buscar")
 const buscarPopup=document.getElementById("buscarPopup")
 
 let editId=null
 let dados=[]
-
-/* LINHAS */
+let resultados=[]
+let index=0
 
 function atualizarLinhas(){
 
@@ -344,7 +343,60 @@ linhas.innerHTML=html
 
 }
 
-/* CONTADORES */
+function atualizarHighlight(){
+
+const termo = buscarPopup.value
+
+if(!termo){
+highlightLayer.textContent = prompt.value
+resultados=[]
+return
+}
+
+const regex = new RegExp(termo,"gi")
+
+resultados=[]
+let match
+
+while((match=regex.exec(prompt.value))){
+resultados.push(match.index)
+}
+
+highlightLayer.innerHTML =
+prompt.value.replace(regex,m=>`<mark>${m}</mark>`)
+
+}
+
+function next(){
+
+if(!resultados.length)return
+
+index++
+if(index>=resultados.length)index=0
+
+irParaResultado()
+
+}
+
+function prev(){
+
+if(!resultados.length)return
+
+index--
+if(index<0)index=resultados.length-1
+
+irParaResultado()
+
+}
+
+function irParaResultado(){
+
+const pos=resultados[index]
+
+prompt.focus()
+prompt.setSelectionRange(pos,pos+buscarPopup.value.length)
+
+}
 
 prompt.addEventListener("input",()=>{
 
@@ -358,14 +410,16 @@ else p=p.split(/\s+/).length
 words.innerText=p+" palavras"
 
 atualizarLinhas()
+atualizarHighlight()
 
 })
 
 prompt.addEventListener("scroll",()=>{
 linhas.scrollTop=prompt.scrollTop
+highlightLayer.scrollTop=prompt.scrollTop
 })
 
-/* CARREGAR */
+buscarPopup.addEventListener("input",atualizarHighlight)
 
 async function carregar(){
 
@@ -378,8 +432,6 @@ dados=data||[]
 render()
 
 }
-
-/* RENDER */
 
 function render(){
 
@@ -433,8 +485,6 @@ ativarDrag()
 
 }
 
-/* DRAG */
-
 function ativarDrag(){
 
 new Sortable(lista,{
@@ -443,8 +493,6 @@ onEnd:salvarOrdem
 })
 
 }
-
-/* SALVAR ORDEM */
 
 async function salvarOrdem(){
 
@@ -465,12 +513,11 @@ carregar()
 
 }
 
-/* CRUD */
-
 function novo(){
 editId=null
 nome.value=""
 prompt.value=""
+highlightLayer.textContent=""
 atualizarLinhas()
 abrir()
 }
@@ -486,6 +533,8 @@ const {data}=await db
 editId=id
 nome.value=data.nome
 prompt.value=data.prompt
+
+highlightLayer.textContent=data.prompt
 
 atualizarLinhas()
 
@@ -556,65 +605,10 @@ function copiar(t){
 navigator.clipboard.writeText(t)
 }
 
-/* MODAL */
-
 function abrir(){modal.style.display="flex"}
 function fechar(){modal.style.display="none"}
 
-/* BUSCA INTERNA */
-
-/* BUSCA INTERNA */
-
-const highlightLayer = document.getElementById("highlight")
-
-function atualizarHighlight(){
-
-const termo = buscarPopup.value
-
-if(!termo){
-highlightLayer.textContent = prompt.value
-return
-}
-
-const regex = new RegExp(termo,"gi")
-
-highlightLayer.innerHTML =
-prompt.value.replace(regex,m=>`<mark>${m}</mark>`)
-
-}
-
-/* ATUALIZA HIGHLIGHT */
-
-buscarPopup.addEventListener("input", atualizarHighlight)
-prompt.addEventListener("input", atualizarHighlight)
-
-function next(){
-
-if(!resultados.length)return
-
-index++
-if(index>=resultados.length)index=0
-
-highlight()
-
-}
-
-function prev(){
-
-if(!resultados.length)return
-
-index--
-if(index<0)index=resultados.length-1
-
-highlight()
-
-}
-
-/* BUSCA */
-
 buscar.addEventListener("input",render)
-
-/* CTRL S */
 
 document.addEventListener("keydown",e=>{
 
@@ -627,11 +621,7 @@ salvar()
 
 })
 
-/* INIT */
-
 carregar()
-
-/* PWA */
 
 if("serviceWorker" in navigator){
 navigator.serviceWorker.register("sw.js")
