@@ -286,16 +286,7 @@ src="dashboard.html">
 
 </div>
 
-<iframe
-id="frameSistema"
-src="dashboard.html"
-style="
-width:100%;
-height:100%;
-border:none;
-background:#020617;
-">
-</iframe>
+
  
 <div class="kpis">
 
@@ -680,9 +671,12 @@ defaultDates()
 window.addEventListener("DOMContentLoaded",carregar)
 function abrirPagina(pagina,titulo){
 
-document.getElementById("frameSistema").src = pagina
+if(pagina==="dashboard.html"){
+location.href="home.html"
+return
+}
 
-document.getElementById("tituloPagina").innerText = titulo
+location.href=pagina
 
 }
 </script>
