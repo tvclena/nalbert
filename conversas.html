@@ -3,7 +3,7 @@
 <head>
 
 <meta charset="UTF-8">
-<title>Gestor de Conversas • Mercatto</title>
+<title>Gestor de Conversas • Mercatto Delícia</title>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -14,19 +14,15 @@
 <style>
 
 :root{
---bg:#0b1220;
---sidebar:#0f172a;
---chat:#0b1323;
-
---border:#1e293b;
-
+--bg:#0f172a;
+--sidebar:#111827;
+--chat:#020617;
+--card:#1e293b;
+--border:#334155;
 --text:#f1f5f9;
 --muted:#94a3b8;
-
---green:#22c55e;
---yellow:#f59e0b;
---blue:#3b82f6;
---red:#ef4444;
+--brand:#22c55e;
+--danger:#ef4444;
 }
 
 *{box-sizing:border-box}
@@ -44,7 +40,7 @@ overflow:hidden;
 /* SIDEBAR */
 
 .sidebar{
-width:360px;
+width:380px;
 background:var(--sidebar);
 border-right:1px solid var(--border);
 display:flex;
@@ -52,37 +48,28 @@ flex-direction:column;
 }
 
 .header{
-padding:18px;
-font-weight:700;
+padding:20px;
+font-weight:800;
 font-size:18px;
 border-bottom:1px solid var(--border);
+letter-spacing:.5px;
 }
-
-/* SEARCH */
 
 .search{
 padding:14px;
-display:flex;
-flex-direction:column;
-gap:10px;
 border-bottom:1px solid var(--border);
 }
 
-.search input,
-.search select{
-
+.search input{
+width:100%;
+padding:12px 14px;
+border-radius:10px;
+border:none;
 background:#020617;
-border:1px solid var(--border);
 color:white;
-
-padding:10px;
-border-radius:8px;
-
 font-size:14px;
-
+outline:none;
 }
-
-/* CLIENTS */
 
 .clients{
 flex:1;
@@ -90,110 +77,42 @@ overflow:auto;
 }
 
 .client{
-
 display:flex;
-align-items:center;
 gap:12px;
-
+align-items:center;
 padding:14px;
-
 border-bottom:1px solid var(--border);
-
 cursor:pointer;
-
 transition:.2s;
-
 }
 
 .client:hover{
 background:#020617;
 }
 
-.client.pausado{
-background:#321717;
-}
-
 .avatar{
-
-width:42px;
-height:42px;
-
+width:40px;
+height:40px;
 border-radius:50%;
-
 background:#1e293b;
-
 display:flex;
 align-items:center;
 justify-content:center;
-
 font-weight:700;
-
 }
 
-.client-info{
-flex:1;
-}
-
-.client-name{
+.phone{
 font-weight:600;
 font-size:14px;
 }
 
 .preview{
-
 font-size:12px;
 color:var(--muted);
-
 white-space:nowrap;
 overflow:hidden;
 text-overflow:ellipsis;
-
-}
-
-/* ACTION BUTTONS */
-
-.actions{
-display:flex;
-gap:6px;
-}
-
-.btn{
-
-border:none;
-
-border-radius:8px;
-
-padding:6px 8px;
-
-font-size:12px;
-
-cursor:pointer;
-
-display:flex;
-align-items:center;
-justify-content:center;
-
-transition:.2s;
-
-}
-
-.btn:hover{
-transform:scale(1.08);
-}
-
-.pause{
-background:var(--yellow);
-color:white;
-}
-
-.play{
-background:var(--green);
-color:white;
-}
-
-.wa{
-background:#25D366;
-color:white;
+max-width:220px;
 }
 
 /* CHAT */
@@ -205,140 +124,166 @@ flex-direction:column;
 background:var(--chat);
 }
 
-/* HEADER CHAT */
-
 .chat-header{
-
-padding:16px 20px;
-
+padding:18px 22px;
 border-bottom:1px solid var(--border);
-
 display:flex;
-
 justify-content:space-between;
-
 align-items:center;
-
 }
 
 .chat-title{
-font-weight:600;
+font-weight:700;
+font-size:15px;
 }
 
-/* HEADER ACTIONS */
-
-.chat-actions{
+/*.actions{
 display:flex;
-gap:8px;
+gap:10px;
+}*/
+
+
+.actions{
+display:none;
 }
 
-.btn-header{
 
+
+  
+button{
+padding:8px 14px;
 border:none;
-
 border-radius:8px;
-
-padding:8px 12px;
-
-font-size:13px;
-
 cursor:pointer;
-
+font-weight:600;
+font-size:13px;
 }
 
-.btn-blue{
-background:var(--blue);
+.delete{
+background:var(--danger);
 color:white;
 }
-
-.btn-green{
-background:var(--green);
-color:white;
-}
-
-.btn-yellow{
-background:var(--yellow);
-color:white;
-}
-
-/* MESSAGES */
 
 .messages{
-
 flex:1;
-
 overflow:auto;
-
-padding:30px;
-
+padding:28px;
 display:flex;
-
 flex-direction:column;
-
 gap:16px;
-
 }
 
-/* BUBBLES */
+/* MENSAGENS */
 
 .msg{
-
-max-width:65%;
-
+max-width:60%;
 padding:14px 16px;
-
-border-radius:16px;
-
+border-radius:14px;
 font-size:14px;
-
-line-height:1.4;
-
+line-height:1.5;
+position:relative;
 animation:fade .2s ease;
-
 }
 
 .user{
-
 background:#1e293b;
-
 align-self:flex-start;
-
 }
 
 .assistant{
-
 background:#16a34a;
-
 align-self:flex-end;
-
 }
 
 .time{
-
 font-size:11px;
-
 margin-top:6px;
-
-opacity:.7;
-
+opacity:.6;
 text-align:right;
+}
 
+.checkbox{
+position:absolute;
+top:-10px;
+left:-28px;
+}
+
+.empty{
+margin:auto;
+opacity:.5;
+font-size:14px;
 }
 
 @keyframes fade{
-
-from{
-opacity:0;
-transform:translateY(8px);
+from{opacity:0;transform:translateY(6px)}
+to{opacity:1}
+}
+.waBtn{
+margin-left:12px;
+display:inline-flex;
+align-items:center;
+justify-content:center;
+background:#22c55e;
+border-radius:8px;
+padding:6px;
 }
 
-to{
+/* MENU 3 PONTOS */
+
+.menuDots{
+margin-left:auto;
+cursor:pointer;
+font-size:18px;
+opacity:.6;
+}
+
+.menuDots:hover{
 opacity:1;
-transform:none;
 }
 
+.menu{
+position:absolute;
+background:#020617;
+border:1px solid #334155;
+border-radius:8px;
+padding:6px;
+display:none;
+flex-direction:column;
+z-index:1000;
 }
 
+.menu button{
+background:none;
+border:none;
+color:white;
+padding:8px 12px;
+text-align:left;
+cursor:pointer;
+}
+
+.menu button:hover{
+background:#1e293b;
+}
+
+/* conversa pausada */
+
+.client.pausado{
+background:#3b1212;
+}
+
+
+.status{
+font-size:11px;
+margin-top:2px;
+}
+
+.status.on{
+color:#22c55e;
+}
+
+.status.off{
+color:#ef4444;
+}
 </style>
 </head>
 
@@ -351,15 +296,7 @@ Conversas
 </div>
 
 <div class="search">
-
-<input id="buscar" placeholder="Buscar nome ou telefone">
-
-<select id="filtroStatus">
-<option value="todos">Todos</option>
-<option value="ativo">Bot ativo</option>
-<option value="pausado">Bot pausado</option>
-</select>
-
+<input id="buscar" placeholder="Buscar telefone...">
 </div>
 
 <div class="clients" id="clientes"></div>
@@ -367,36 +304,24 @@ Conversas
 </div>
 
 <div class="chat">
-
 <div class="chat-header">
 
 <div class="chat-title" id="clienteAtual">
-Selecione uma conversa
+Selecione um cliente
 </div>
 
-<div class="chat-actions">
+<div style="display:flex;gap:10px">
 
-<button class="btn-header btn-blue" onclick="abrirRepertorio()">
-Repertórios
-</button>
-
-<button class="btn-header btn-yellow" id="btnPause" onclick="toggleBot()" style="display:none">
-Pausar Bot
-</button>
-
-<button class="btn-header btn-green" id="btnPlay" onclick="toggleBot()" style="display:none">
-Reativar Bot
-</button>
-
-<button class="btn-header btn-green" id="btnWhats" onclick="abrirWhats(clienteSelecionado)" style="display:none">
-WhatsApp
+<button onclick="abrirRepertorio()" style="background:#2563eb;color:white">
+Controle
 </button>
 
 </div>
-
 </div>
 
-<div class="messages" id="mensagens"></div>
+<div class="messages" id="mensagens">
+<div class="empty">Nenhuma conversa selecionada</div>
+</div>
 
 </div>
 
@@ -407,103 +332,89 @@ const db = supabase.createClient(
 "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 )
 
+/* realtime bot */
+
+db
+.channel("controle_bot_changes")
+.on(
+"postgres_changes",
+{
+event:"*",
+schema:"public",
+table:"controle_bot"
+},
+payload=>{
+carregarClientes()
+}
+)
+.subscribe()
+
 let clienteSelecionado=null
-let botPausado=false
+let selecionadas=[]
 
 async function carregarClientes(){
 
-const {data:conversas}=await db
+const {data} = await db
 .from("conversas_whatsapp")
 .select("*")
 .order("created_at",{ascending:false})
 
-const {data:memoria}=await db
+const {data:memoria} = await db
 .from("memoria_clientes")
 .select("telefone,nome")
 
-const {data:controle}=await db
-.from("controle_bot")
-.select("telefone,pausado")
-
 const nomes={}
-memoria?.forEach(c=>nomes[c.telefone]=c.nome)
 
-const pausados={}
-controle?.forEach(c=>{
-if(c.pausado) pausados[c.telefone]=true
+memoria.forEach(c=>{
+nomes[c.telefone]=c.nome
 })
 
 const map={}
 
-conversas?.forEach(m=>{
+data.forEach(m=>{
 if(!map[m.telefone]) map[m.telefone]=m
 })
 
-let clientes=Object.values(map)
-
-const busca=document.getElementById("buscar").value.toLowerCase()
-
-if(busca){
-
-clientes=clientes.filter(c=>{
-
-const nome=nomes[c.telefone]||""
-
-return nome.toLowerCase().includes(busca) ||
-c.telefone.includes(busca)
-
-})
-
-}
-
-const filtro=document.getElementById("filtroStatus").value
-
-if(filtro==="pausado"){
-clientes=clientes.filter(c=>pausados[c.telefone])
-}
-
-if(filtro==="ativo"){
-clientes=clientes.filter(c=>!pausados[c.telefone])
-}
+const clientes = Object.values(map)
 
 const container=document.getElementById("clientes")
-
 container.innerHTML=""
 
-clientes.forEach(c=>{
-
-const nome=nomes[c.telefone]||c.telefone
-
-const inicial=nome[0].toUpperCase()
-
-const pausado=pausados[c.telefone]
+for (const c of clientes){
 
 const div=document.createElement("div")
 
-div.className="client"
+const inicial = c.telefone.slice(-2)
 
-if(pausado) div.classList.add("pausado")
+const pausado = await verificarPausa(c.telefone)
+
+div.className = pausado ? "client pausado" : "client"
 
 div.innerHTML=`
 
 <div class="avatar">${inicial}</div>
 
-<div class="client-info">
-
-<div class="client-name">${nome}</div>
-
-<div class="preview">${c.mensagem}</div>
-
+<div>
+<div class="phone">
+${nomes[c.telefone] ? nomes[c.telefone] : c.telefone}
 </div>
 
-<div class="actions">
+<div class="preview">${c.mensagem}</div>
+<div class="status ${pausado?'off':'on'}">
+● ${pausado?'BOT PAUSADO':'BOT ATIVO'}
+</div></div>
 
-<button class="btn pause" onclick="pausarBot('${c.telefone}')">⏸</button>
-
-<button class="btn play" onclick="despausarBot('${c.telefone}')">▶</button>
-
-<button class="btn wa" onclick="abrirWhats('${c.telefone}')">WA</button>
-
+<div class="menuDots" onclick="abrirMenu(event,'${c.telefone}')">⋮</div>
+<div class="menu" id="menu-${c.telefone}">
+<button onclick="toggleBot('${c.telefone}')" style="
+background:${pausado?'#22c55e':'#ef4444'};
+color:white;
+padding:6px 10px;
+border-radius:6px;
+font-size:12px;
+">
+${pausado ? "ATIVAR BOT" : "DESATIVAR BOT"}
+</button>
 </div>
 
 `
@@ -512,61 +423,65 @@ div.onclick=()=>abrirConversa(c.telefone)
 
 container.appendChild(div)
 
-})
-
 }
 
+}
 async function abrirConversa(telefone){
 
 clienteSelecionado=telefone
+selecionadas=[]
 
-const {data:cliente}=await db
+const {data:cliente} = await db
 .from("memoria_clientes")
 .select("nome")
 .eq("telefone",telefone)
 .single()
 
-document.getElementById("clienteAtual").innerText=
-(cliente?.nome||telefone)+" • "+telefone
+const nomeCliente = cliente?.nome || telefone
 
-document.getElementById("btnWhats").style.display="block"
+document.getElementById("clienteAtual").innerHTML =
+`
+${nomeCliente} • ${telefone}
 
-const {data:controle}=await db
-.from("controle_bot")
-.select("pausado")
-.eq("telefone",telefone)
-.maybeSingle()
+<span class="menuDots" onclick="abrirMenu(event,'${telefone}')">⋮</span>
 
-botPausado=controle?.pausado||false
+<div class="menu" id="menu-${telefone}">
+<button onclick="toggleBot('${telefone}')">Pausar / Reativar</button>
+</div>
 
-document.getElementById("btnPause").style.display=botPausado?"none":"block"
-document.getElementById("btnPlay").style.display=botPausado?"block":"none"
+<a href="https://wa.me/${telefone}" target="_blank" class="waBtn">
+<svg viewBox="0 0 32 32" width="18">
+<path fill="#25D366" d="M16 3C9 3 3.5 8.5 3.5 15.3c0 2.4.7 4.6 2 6.6L4 29l7.3-1.9c1.9 1 4 1.5 6.2 1.5 7 0 12.5-5.5 12.5-12.3C30 8.5 23 3 16 3z"/>
+</svg>
+</a>
+`
 
-const {data}=await db
+const {data} = await db
 .from("conversas_whatsapp")
 .select("*")
 .eq("telefone",telefone)
 .order("created_at",{ascending:true})
 
 const container=document.getElementById("mensagens")
-
 container.innerHTML=""
 
-data?.forEach(m=>{
+data.forEach(m=>{
 
 const div=document.createElement("div")
-
 div.className="msg "+(m.role==="assistant"?"assistant":"user")
 
-const hora=new Date(m.created_at).toLocaleString("pt-BR")
+const date = new Date(m.created_at)
+.toLocaleString("pt-BR",{hour:"2-digit",minute:"2-digit"})
 
 div.innerHTML=`
 
 <div>${m.mensagem}</div>
 
-<div class="time">${hora}</div>
+<div class="time">${date}</div>
+
 
 `
+
 
 container.appendChild(div)
 
@@ -576,74 +491,223 @@ container.scrollTop=container.scrollHeight
 
 }
 
-async function toggleBot(){
+async function excluirSelecionadas(){
+
+if(selecionadas.length===0){
+alert("Selecione mensagens")
+return
+}
+
+if(!confirm("Excluir mensagens selecionadas?")) return
+
+await db
+.from("conversas_whatsapp")
+.delete()
+.in("id",selecionadas)
+
+abrirConversa(clienteSelecionado)
+
+}
+
+async function excluirConversa(){
 
 if(!clienteSelecionado) return
 
-botPausado=!botPausado
+if(!confirm("Excluir conversa completa?")) return
 
 await db
-.from("controle_bot")
-.upsert({
+.from("conversas_whatsapp")
+.delete()
+.eq("telefone",clienteSelecionado)
 
-telefone:clienteSelecionado,
-pausado:botPausado
-
-})
-
-abrirConversa(clienteSelecionado)
+document.getElementById("mensagens").innerHTML='<div class="empty">Conversa excluída</div>'
 
 carregarClientes()
 
 }
 
-async function pausarBot(telefone){
+document.getElementById("buscar").addEventListener("input",function(){
+
+const filtro=this.value.toLowerCase()
+
+document.querySelectorAll(".client").forEach(c=>{
+
+const texto=c.innerText.toLowerCase()
+
+c.style.display=texto.includes(filtro)?"flex":"none"
+
+})
+
+})
+
+
+carregarClientes()
+function abrirRepertorio(){
+document.getElementById("popupRepertorio").style.display="flex"
+}
+
+function fecharRepertorio(){
+document.getElementById("popupRepertorio").style.display="none"
+}
+
+function abrirIframe(url){
+document.getElementById("frameRepertorio").src=url
+}
+
+
+/* MENU */
+
+function abrirMenu(e,telefone){
+
+e.stopPropagation()
+
+document.querySelectorAll(".menu").forEach(m=>{
+m.style.display="none"
+})
+
+const menu=document.getElementById("menu-"+telefone)
+
+menu.style.display="flex"
+
+menu.style.top=e.clientY+"px"
+menu.style.left=e.clientX+"px"
+
+}
+
+/* FECHAR MENU */
+
+document.addEventListener("click",()=>{
+document.querySelectorAll(".menu").forEach(m=>{
+m.style.display="none"
+})
+})
+
+/* VERIFICAR PAUSA */
+
+async function verificarPausa(telefone){
+
+const {data,error} = await db
+.from("controle_bot")
+.select("pausado")
+.eq("telefone",telefone)
+.limit(1)
+.maybeSingle()
+
+if(error) return false
+
+return data?.pausado === true
+
+}
+
+/* TOGGLE BOT */
+
+async function toggleBot(telefone){
+
+const {data,error} = await db
+.from("controle_bot")
+.select("pausado")
+.eq("telefone",telefone)
+.limit(1)
+.maybeSingle()
+
+if(error){
+console.error(error)
+return
+}
+
+const novoStatus = !(data?.pausado === true)
+
+if(data){
 
 await db
 .from("controle_bot")
-.upsert({
+.update({pausado:novoStatus})
+.eq("telefone",telefone)
+
+}else{
+
+await db
+.from("controle_bot")
+.insert({
 telefone:telefone,
 pausado:true
 })
 
-carregarClientes()
-
 }
-
-async function despausarBot(telefone){
-
-await db
-.from("controle_bot")
-.upsert({
-telefone:telefone,
-pausado:false
-})
 
 carregarClientes()
 
 }
-
-function abrirWhats(telefone){
-
-window.open("https://wa.me/"+telefone,"_blank")
-
-}
-
-document.getElementById("buscar").addEventListener("input",carregarClientes)
-
-document.getElementById("filtroStatus").addEventListener("change",carregarClientes)
-
-setInterval(carregarClientes,4000)
-
-carregarClientes()
-
-function abrirRepertorio(){
-
-alert("Abrir painel de repertórios")
-
-}
-
 </script>
+<div id="popupRepertorio" style="
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,.7);
+display:none;
+align-items:center;
+justify-content:center;
+z-index:999;
+">
 
+<div style="
+width:90%;
+height:85%;
+background:#020617;
+border-radius:14px;
+display:flex;
+flex-direction:column;
+overflow:hidden;
+">
+
+<div style="
+padding:14px;
+border-bottom:1px solid #334155;
+display:flex;
+justify-content:space-between;
+align-items:center;
+">
+
+<b>Repertórios</b>
+
+<button onclick="fecharRepertorio()" style="
+background:#ef4444;
+color:white;
+border:none;
+border-radius:6px;
+padding:6px 12px;
+cursor:pointer;
+">Fechar</button>
+
+</div>
+
+<div style="
+display:flex;
+gap:10px;
+padding:12px;
+border-bottom:1px solid #334155;
+flex-wrap:wrap;
+">
+<button onclick="abrirIframe('home.html')">Home</button>
+
+<button onclick="abrirIframe('prompt.html')">Prompt de comando</button>
+
+
+<button onclick="abrirIframe('reservas.html')">Reservas</button>
+
+
+</div>
+
+<iframe id="frameRepertorio"
+style="
+flex:1;
+border:none;
+background:white;
+"></iframe>
+
+</div>
+</div>
 </body>
 </html>
