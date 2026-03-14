@@ -332,6 +332,23 @@ const db = supabase.createClient(
 "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 )
 
+/* realtime bot */
+
+db
+.channel("controle_bot_changes")
+.on(
+"postgres_changes",
+{
+event:"*",
+schema:"public",
+table:"controle_bot"
+},
+payload=>{
+carregarClientes()
+}
+)
+.subscribe()
+
 let clienteSelecionado=null
 let selecionadas=[]
 
