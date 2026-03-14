@@ -14,20 +14,24 @@
 <style>
 
 :root{
---bg:#0f172a;
---sidebar:#111827;
---chat:#020617;
---border:#334155;
+--bg:#0b1320;
+--sidebar:#0f1b2d;
+--chat:#0c1626;
+
+--border:#1f2a3c;
+
 --text:#f1f5f9;
 --muted:#94a3b8;
 
 --green:#22c55e;
---red:#ef4444;
 --yellow:#f59e0b;
 --blue:#3b82f6;
+--red:#ef4444;
 }
 
-*{box-sizing:border-box}
+*{
+box-sizing:border-box;
+}
 
 body{
 margin:0;
@@ -36,13 +40,12 @@ background:var(--bg);
 color:var(--text);
 height:100vh;
 display:flex;
-overflow:hidden;
 }
 
 /* SIDEBAR */
 
 .sidebar{
-width:380px;
+width:340px;
 background:var(--sidebar);
 border-right:1px solid var(--border);
 display:flex;
@@ -50,16 +53,16 @@ flex-direction:column;
 }
 
 .header{
-padding:18px;
-font-weight:800;
-border-bottom:1px solid var(--border);
+padding:18px 20px;
+font-weight:700;
 font-size:18px;
+border-bottom:1px solid var(--border);
 }
 
 /* SEARCH */
 
 .search{
-padding:12px;
+padding:14px;
 display:flex;
 flex-direction:column;
 gap:10px;
@@ -68,11 +71,14 @@ border-bottom:1px solid var(--border);
 
 .search input,
 .search select{
-padding:10px;
-border-radius:8px;
-border:none;
-background:#020617;
+
+background:#091322;
+border:1px solid var(--border);
 color:white;
+padding:10px 12px;
+border-radius:8px;
+font-size:14px;
+
 }
 
 /* CLIENTS */
@@ -83,17 +89,23 @@ overflow:auto;
 }
 
 .client{
+
 display:flex;
-gap:10px;
+gap:12px;
 align-items:center;
-padding:12px;
+
+padding:14px;
+
 border-bottom:1px solid var(--border);
+
 cursor:pointer;
+
 transition:.2s;
+
 }
 
 .client:hover{
-background:#020617;
+background:#091322;
 }
 
 .client.pausado{
@@ -101,73 +113,43 @@ background:#2b1212;
 }
 
 .avatar{
-width:36px;
-height:36px;
+
+width:42px;
+height:42px;
+
 border-radius:50%;
-background:#1e293b;
+
+background:#1f2a3c;
+
 display:flex;
 align-items:center;
 justify-content:center;
+
 font-weight:700;
+
 }
 
-/* CHAT */
-
-.chat{
+.client-info{
 flex:1;
-display:flex;
-flex-direction:column;
 }
 
-.chat-header{
-padding:16px;
-border-bottom:1px solid var(--border);
-display:flex;
-justify-content:space-between;
-align-items:center;
-}
-
-.messages{
-flex:1;
-overflow:auto;
-padding:20px;
-display:flex;
-flex-direction:column;
-gap:12px;
-}
-
-/* MESSAGES */
-
-.msg{
-max-width:60%;
-padding:12px;
-border-radius:12px;
+.client-name{
+font-weight:600;
 font-size:14px;
-animation:fade .2s ease;
 }
 
-.user{
-background:#1e293b;
-align-self:flex-start;
+.preview{
+
+font-size:12px;
+color:var(--muted);
+
+white-space:nowrap;
+overflow:hidden;
+text-overflow:ellipsis;
+
 }
 
-.assistant{
-background:#16a34a;
-align-self:flex-end;
-}
-
-.time{
-font-size:11px;
-opacity:.6;
-margin-top:4px;
-}
-
-@keyframes fade{
-from{opacity:0;transform:translateY(6px)}
-to{opacity:1}
-}
-
-/* BUTTONS */
+/* ACTION BUTTONS */
 
 .actions{
 display:flex;
@@ -175,33 +157,190 @@ gap:6px;
 }
 
 .btn{
+
 border:none;
-border-radius:6px;
-padding:6px 10px;
+
+border-radius:8px;
+
+padding:6px 8px;
+
 font-size:12px;
+
 cursor:pointer;
+
 display:flex;
 align-items:center;
-gap:4px;
+justify-content:center;
+
 transition:.2s;
+
 }
 
 .btn:hover{
-transform:scale(1.05);
+transform:scale(1.08);
 }
 
-.pause{background:var(--yellow);color:white}
-.play{background:var(--green);color:white}
-.wa{background:#25D366;color:white}
-.rep{background:var(--blue);color:white}
+.pause{
+background:var(--yellow);
+color:white;
+}
 
-.preview{
-font-size:12px;
-color:var(--muted);
-white-space:nowrap;
-overflow:hidden;
-text-overflow:ellipsis;
-max-width:180px;
+.play{
+background:var(--green);
+color:white;
+}
+
+.wa{
+background:#25D366;
+color:white;
+}
+
+/* CHAT */
+
+.chat{
+
+flex:1;
+
+display:flex;
+
+flex-direction:column;
+
+background:var(--chat);
+
+}
+
+.chat-header{
+
+padding:16px 20px;
+
+border-bottom:1px solid var(--border);
+
+display:flex;
+
+justify-content:space-between;
+
+align-items:center;
+
+}
+
+.chat-title{
+font-weight:600;
+}
+
+/* MESSAGES */
+
+.messages{
+
+flex:1;
+
+overflow:auto;
+
+padding:30px;
+
+display:flex;
+
+flex-direction:column;
+
+gap:16px;
+
+}
+
+/* BUBBLES */
+
+.msg{
+
+max-width:65%;
+
+padding:14px 16px;
+
+border-radius:16px;
+
+font-size:14px;
+
+line-height:1.4;
+
+animation:fade .2s ease;
+
+}
+
+.user{
+
+background:#1f2a3c;
+
+align-self:flex-start;
+
+}
+
+.assistant{
+
+background:#16a34a;
+
+align-self:flex-end;
+
+}
+
+.time{
+
+font-size:11px;
+
+margin-top:6px;
+
+opacity:.7;
+
+text-align:right;
+
+}
+
+@keyframes fade{
+
+from{
+opacity:0;
+transform:translateY(8px);
+}
+
+to{
+opacity:1;
+transform:none;
+}
+
+}
+
+/* BUTTON HEADER */
+
+.header-actions{
+
+display:flex;
+gap:8px;
+
+}
+
+.btn-header{
+
+border:none;
+
+border-radius:8px;
+
+padding:8px 12px;
+
+font-size:13px;
+
+cursor:pointer;
+
+}
+
+.btn-blue{
+background:var(--blue);
+color:white;
+}
+
+.btn-yellow{
+background:var(--yellow);
+color:white;
+}
+
+.btn-green{
+background:var(--green);
+color:white;
 }
 
 </style>
@@ -235,11 +374,17 @@ Conversas
 
 <div class="chat-header">
 
-<div id="clienteAtual">
+<div class="chat-title" id="clienteAtual">
 Selecione uma conversa
 </div>
 
-<button class="btn rep" onclick="abrirRepertorio()">📚 Repertórios</button>
+<div class="header-actions">
+
+<button class="btn-header btn-blue" onclick="abrirRepertorio()">
+Repertórios
+</button>
+
+</div>
 
 </div>
 
@@ -255,9 +400,6 @@ const db = supabase.createClient(
 )
 
 let clienteSelecionado=null
-let statusBotAtual=false
-
-/* ================= CLIENTES ================= */
 
 async function carregarClientes(){
 
@@ -278,8 +420,8 @@ const nomes={}
 memoria?.forEach(c=>nomes[c.telefone]=c.nome)
 
 const pausados={}
-controle?.forEach(p=>{
-if(p.pausado) pausados[p.telefone]=true
+controle?.forEach(c=>{
+if(c.pausado) pausados[c.telefone]=true
 })
 
 const map={}
@@ -290,48 +432,46 @@ if(!map[m.telefone]) map[m.telefone]=m
 
 let clientes=Object.values(map)
 
-const filtro=document.getElementById("filtroStatus").value
-
-if(filtro==="pausado"){
-clientes=clientes.filter(c=>pausados[c.telefone])
-}
-
-if(filtro==="ativo"){
-clientes=clientes.filter(c=>!pausados[c.telefone])
-}
-
 const busca=document.getElementById("buscar").value.toLowerCase()
 
 if(busca){
+
 clientes=clientes.filter(c=>{
+
 const nome=nomes[c.telefone]||""
+
 return nome.toLowerCase().includes(busca) ||
 c.telefone.includes(busca)
+
 })
+
 }
 
 const container=document.getElementById("clientes")
+
 container.innerHTML=""
 
 clientes.forEach(c=>{
 
+const nome=nomes[c.telefone]||c.telefone
+const inicial=nome[0].toUpperCase()
+
 const pausado=pausados[c.telefone]
 
 const div=document.createElement("div")
+
 div.className="client"
 
 if(pausado) div.classList.add("pausado")
-
-const nome=nomes[c.telefone]||c.telefone
-const inicial=c.telefone.slice(-2)
 
 div.innerHTML=`
 
 <div class="avatar">${inicial}</div>
 
-<div style="flex:1">
+<div class="client-info">
 
-<div>${nome}</div>
+<div class="client-name">${nome}</div>
+
 <div class="preview">${c.mensagem}</div>
 
 </div>
@@ -356,8 +496,6 @@ container.appendChild(div)
 
 }
 
-/* ================= CONVERSA ================= */
-
 async function abrirConversa(telefone){
 
 clienteSelecionado=telefone
@@ -368,25 +506,8 @@ const {data:cliente}=await db
 .eq("telefone",telefone)
 .single()
 
-const {data:controle}=await db
-.from("controle_bot")
-.select("pausado")
-.eq("telefone",telefone)
-.maybeSingle()
-
-statusBotAtual = controle?.pausado || false
-
-document.getElementById("clienteAtual").innerHTML=
-
-`
-${cliente?.nome||telefone} • ${telefone}
-
-<button class="btn ${statusBotAtual?'play':'pause'}" onclick="toggleBot()">
-${statusBotAtual?'▶ Reativar':'⏸ Pausar'}
-</button>
-
-<button class="btn wa" onclick="abrirWhats('${telefone}')">WhatsApp</button>
-`
+document.getElementById("clienteAtual").innerText=
+(cliente?.nome||telefone)+" • "+telefone
 
 const {data}=await db
 .from("conversas_whatsapp")
@@ -395,6 +516,7 @@ const {data}=await db
 .order("created_at",{ascending:true})
 
 const container=document.getElementById("mensagens")
+
 container.innerHTML=""
 
 data?.forEach(m=>{
@@ -406,8 +528,11 @@ div.className="msg "+(m.role==="assistant"?"assistant":"user")
 const hora=new Date(m.created_at).toLocaleString("pt-BR")
 
 div.innerHTML=`
+
 <div>${m.mensagem}</div>
+
 <div class="time">${hora}</div>
+
 `
 
 container.appendChild(div)
@@ -418,36 +543,13 @@ container.scrollTop=container.scrollHeight
 
 }
 
-/* ================= CONTROLE BOT ================= */
-
-async function toggleBot(){
-
-if(!clienteSelecionado) return
-
-const novo=!statusBotAtual
-
-await db
-.from("controle_bot")
-upsert({
-telefone:clienteSelecionado,
-pausado:novo
-})
-
-statusBotAtual=novo
-
-abrirConversa(clienteSelecionado)
-
-carregarClientes()
-
-}
-
 async function pausarBot(telefone){
 
-await db
-.from("controle_bot")
-.upsert({
+await db.from("controle_bot").upsert({
+
 telefone:telefone,
 pausado:true
+
 })
 
 carregarClientes()
@@ -456,18 +558,16 @@ carregarClientes()
 
 async function despausarBot(telefone){
 
-await db
-.from("controle_bot")
-.upsert({
+await db.from("controle_bot").upsert({
+
 telefone:telefone,
 pausado:false
+
 })
 
 carregarClientes()
 
 }
-
-/* ================= WHATSAPP ================= */
 
 function abrirWhats(telefone){
 
@@ -475,96 +575,13 @@ window.open("https://wa.me/"+telefone,"_blank")
 
 }
 
-/* ================= FILTROS ================= */
-
 document.getElementById("buscar").addEventListener("input",carregarClientes)
-document.getElementById("filtroStatus").addEventListener("change",carregarClientes)
 
-setInterval(carregarClientes,5000)
+setInterval(carregarClientes,4000)
 
 carregarClientes()
 
-/* ================= REPERTORIO ================= */
-
-function abrirRepertorio(){
-document.getElementById("popupRepertorio").style.display="flex"
-}
-
-function fecharRepertorio(){
-document.getElementById("popupRepertorio").style.display="none"
-}
-
-function abrirIframe(url){
-document.getElementById("frameRepertorio").src=url
-}
-
 </script>
-
-
-<div id="popupRepertorio" style="
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:rgba(0,0,0,.7);
-display:none;
-align-items:center;
-justify-content:center;
-z-index:999;
-">
-
-<div style="
-width:90%;
-height:85%;
-background:#020617;
-border-radius:14px;
-display:flex;
-flex-direction:column;
-overflow:hidden;
-">
-
-<div style="
-padding:14px;
-border-bottom:1px solid #334155;
-display:flex;
-justify-content:space-between;
-align-items:center;
-">
-
-<b>Repertórios</b>
-
-<button onclick="fecharRepertorio()" class="btn pause">Fechar</button>
-
-</div>
-
-<div style="
-display:flex;
-gap:10px;
-padding:12px;
-border-bottom:1px solid #334155;
-flex-wrap:wrap;
-">
-
-<button class="btn rep" onclick="abrirIframe('prompt.html')">Prompt</button>
-
-<button class="btn rep" onclick="abrirIframe('conversas.html')">Conversas Pausadas</button>
-
-<button class="btn rep" onclick="abrirIframe('reservas.html')">Reservas</button>
-
-<button class="btn rep" onclick="abrirIframe('repertorio4.html')">Promoções</button>
-
-</div>
-
-<iframe id="frameRepertorio"
-style="
-flex:1;
-border:none;
-background:white;
-"></iframe>
-
-</div>
-</div>
 
 </body>
 </html>
