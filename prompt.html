@@ -559,29 +559,7 @@ function fechar(){modal.style.display="none"}
 
 /* BUSCA INTERNA */
 
-let resultados=[]
-let index=0
-
-buscarPopup.addEventListener("input",atualizarHighlight)
-prompt.addEventListener("input",atualizarHighlight)
-const termo=buscarPopup.value.toLowerCase()
-if(!termo)return
-
-const texto=prompt.value.toLowerCase()
-
-resultados=[]
-index=0
-
-let pos=texto.indexOf(termo)
-
-while(pos!=-1){
-resultados.push(pos)
-pos=texto.indexOf(termo,pos+1)
-}
-
-if(resultados.length)highlight()
-
-})
+/* BUSCA INTERNA */
 
 const highlightLayer = document.getElementById("highlight")
 
@@ -590,10 +568,8 @@ function atualizarHighlight(){
 const termo = buscarPopup.value
 
 if(!termo){
-
-highlightLayer.innerText = prompt.value
+highlightLayer.textContent = prompt.value
 return
-
 }
 
 const regex = new RegExp(termo,"gi")
@@ -602,6 +578,11 @@ highlightLayer.innerHTML =
 prompt.value.replace(regex,m=>`<mark>${m}</mark>`)
 
 }
+
+/* ATUALIZA HIGHLIGHT */
+
+buscarPopup.addEventListener("input", atualizarHighlight)
+prompt.addEventListener("input", atualizarHighlight)
 
 function next(){
 
