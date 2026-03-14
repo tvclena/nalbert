@@ -32,7 +32,9 @@ viewport-fit=cover">
 --radius:16px;
 }
 
-*{box-sizing:border-box}
+*{
+box-sizing:border-box
+}
 
 body{
 margin:0;
@@ -48,13 +50,31 @@ padding:16px;
 display:flex;
 justify-content:space-between;
 align-items:center;
-margin-bottom:20px;
+margin-bottom:14px;
 }
 
 .title{
 font-size:20px;
 font-weight:800;
 }
+
+/* SEARCH */
+
+.search{
+margin-bottom:16px;
+}
+
+.search input{
+width:100%;
+padding:12px;
+border-radius:10px;
+border:1px solid var(--border);
+background:#020617;
+color:white;
+font-size:14px;
+}
+
+/* BUTTON */
 
 .btn{
 border:none;
@@ -68,7 +88,7 @@ font-weight:600;
 .red{background:var(--red);color:white}
 .blue{background:var(--blue);color:white}
 
-/* LISTA */
+/* LIST */
 
 .lista{
 display:flex;
@@ -80,12 +100,13 @@ gap:12px;
 background:var(--card);
 border:1px solid var(--border);
 border-radius:var(--radius);
-padding:14px;
+padding:16px;
 cursor:grab;
 }
 
 .nome{
 font-weight:700;
+font-size:15px;
 margin-bottom:6px;
 }
 
@@ -100,7 +121,7 @@ overflow:hidden;
 .acoes{
 display:flex;
 gap:8px;
-margin-top:10px;
+margin-top:12px;
 }
 
 .acoes button{
@@ -112,7 +133,7 @@ flex:1;
 .modal{
 position:fixed;
 inset:0;
-background:rgba(0,0,0,.8);
+background:rgba(0,0,0,.85);
 display:none;
 align-items:center;
 justify-content:center;
@@ -125,7 +146,7 @@ border:1px solid var(--border);
 border-radius:16px;
 padding:16px;
 width:100%;
-max-width:520px;
+max-width:560px;
 display:flex;
 flex-direction:column;
 gap:10px;
@@ -143,16 +164,11 @@ font-family:Inter;
 }
 
 textarea{
-height:240px;
+height:260px;
 resize:none;
 }
 
-.counter{
-font-size:12px;
-color:var(--muted);
-display:flex;
-justify-content:space-between;
-}
+/* EMPTY */
 
 .empty{
 text-align:center;
@@ -177,29 +193,27 @@ Novo Prompt
 
 </div>
 
+<div class="search">
+
+<input id="buscar" placeholder="Buscar prompt...">
+
+</div>
+
 <div id="lista" class="lista"></div>
 
 <div id="empty" class="empty" style="display:none">
-Nenhum prompt cadastrado
+Nenhum prompt encontrado
 </div>
 
 <!-- MODAL -->
 
-<div class="modal" id="modal">
+<div id="modal" class="modal">
 
 <div class="modal-box">
 
 <input id="nome" placeholder="Nome do prompt">
 
 <textarea id="prompt"></textarea>
-
-<div class="counter">
-
-<span id="chars">0 caracteres</span>
-
-<span id="tokens">0 tokens</span>
-
-</div>
 
 <div style="display:flex;gap:10px">
 
@@ -228,30 +242,6 @@ const db = window.supabase.createClient(
 
 let editId=null
 let listaGlobal=[]
-
-/* TOKEN ESTIMATE */
-
-function contarTokens(texto){
-
-if(!texto) return 0
-
-return Math.ceil(texto.length / 4)
-
-}
-
-/* CONTADORES */
-
-document.getElementById("prompt").addEventListener("input",()=>{
-
-const txt=document.getElementById("prompt").value
-
-document.getElementById("chars").innerText =
-txt.length+" caracteres"
-
-document.getElementById("tokens").innerText =
-contarTokens(txt)+" tokens"
-
-})
 
 /* CARREGAR */
 
@@ -284,7 +274,20 @@ const lista=document.getElementById("lista")
 
 lista.innerHTML=""
 
-if(!listaGlobal || listaGlobal.length===0){
+let filtrados=listaGlobal
+
+const busca=document.getElementById("buscar").value.toLowerCase()
+
+if(busca){
+
+filtrados=listaGlobal.filter(p=>
+p.nome.toLowerCase().includes(busca) ||
+p.prompt.toLowerCase().includes(busca)
+)
+
+}
+
+if(filtrados.length===0){
 
 document.getElementById("empty").style.display="block"
 return
@@ -293,20 +296,18 @@ return
 
 document.getElementById("empty").style.display="none"
 
-listaGlobal.forEach(p=>{
+filtrados.forEach(p=>{
 
-const div=document.createElement("div")
-div.className="card"
-div.dataset.id=p.id
+const card=document.createElement("div")
+card.className="card"
+card.dataset.id=p.id
 
-div.innerHTML=`
+card.innerHTML=`
 
 <div class="nome">${p.nome}</div>
 
 <div class="preview">
-
-${(p.prompt||"").substring(0,400)}
-
+${(p.prompt||"").substring(0,350)}
 </div>
 
 <div class="acoes">
@@ -327,7 +328,7 @@ Excluir
 
 `
 
-lista.appendChild(div)
+lista.appendChild(card)
 
 })
 
@@ -367,17 +368,18 @@ carregar()
 
 }
 
+/* SEARCH */
+
+buscar.addEventListener("input",render)
+
 /* NOVO */
 
 function novoPrompt(){
 
 editId=null
 
-document.getElementById("nome").value=""
-document.getElementById("prompt").value=""
-
-document.getElementById("chars").innerText="0 caracteres"
-document.getElementById("tokens").innerText="0 tokens"
+nome.value=""
+prompt.value=""
 
 modal.style.display="flex"
 
@@ -398,12 +400,6 @@ editId=id
 nome.value=data.nome
 prompt.value=data.prompt
 
-document.getElementById("chars").innerText =
-data.prompt.length+" caracteres"
-
-document.getElementById("tokens").innerText =
-contarTokens(data.prompt)+" tokens"
-
 modal.style.display="flex"
 
 }
@@ -412,10 +408,10 @@ modal.style.display="flex"
 
 async function salvar(){
 
-const nome=document.getElementById("nome").value.trim()
-const prompt=document.getElementById("prompt").value.trim()
+const n=nome.value.trim()
+const p=prompt.value.trim()
 
-if(!nome || !prompt){
+if(!n || !p){
 
 alert("Preencha todos os campos")
 return
@@ -426,7 +422,7 @@ if(editId){
 
 await db
 .from("prompts_mercatto")
-.update({nome,prompt})
+.update({nome:n,prompt:p})
 .eq("id",editId)
 
 }else{
@@ -434,8 +430,8 @@ await db
 await db
 .from("prompts_mercatto")
 .insert({
-nome,
-prompt,
+nome:n,
+prompt:p,
 ativo:true,
 ordem:listaGlobal.length
 })
