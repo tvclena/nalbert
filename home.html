@@ -567,10 +567,7 @@ type:"bar",
 data:{labels:Object.keys(clientes).slice(0,5),
 datasets:[{data:Object.values(clientes).slice(0,5)}]}
 })
-function dataReserva(data){
-return new Date(data.replace(" ","T"))
-}
-gerarCalendario(reservas,inicio)
+gerarCalendario(res,inicio)
 listarReservas(res)
 }
 
