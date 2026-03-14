@@ -32,9 +32,7 @@ viewport-fit=cover">
 --radius:16px;
 }
 
-*{
-box-sizing:border-box
-}
+*{box-sizing:border-box}
 
 body{
 margin:0;
@@ -42,6 +40,10 @@ font-family:Inter;
 background:var(--bg);
 color:var(--text);
 padding:16px;
+}
+
+body.modal-open{
+overflow:hidden;
 }
 
 /* HEADER */
@@ -184,11 +186,13 @@ gap:6px;
 flex:1;
 }
 
+.popup-search button{
+width:40px;
+}
+
 .highlight{
 background:var(--yellow);
 color:black;
-padding:1px 2px;
-border-radius:3px;
 }
 
 /* EMPTY */
@@ -231,18 +235,26 @@ Nenhum prompt encontrado
 <input id="nome" placeholder="Nome do prompt">
 
 <div class="popup-search">
+
 <input id="buscarPopup" placeholder="Buscar dentro do prompt">
-<button class="btn blue" onclick="limparBuscaPopup()">Limpar</button>
+
+<button class="btn blue" onclick="prevResult()">↑</button>
+<button class="btn blue" onclick="nextResult()">↓</button>
+
 </div>
 
 <textarea id="prompt"></textarea>
 
 <div style="display:flex;gap:10px">
+
 <button class="btn green" onclick="salvar()">Salvar</button>
+
 <button class="btn red" onclick="fechar()">Cancelar</button>
+
 </div>
 
 </div>
+
 </div>
 
 <script>
@@ -258,7 +270,6 @@ const db = supabase.createClient(
 
 let editId=null
 let listaGlobal=[]
-let textoOriginal=""
 
 const lista=document.getElementById("lista")
 const modal=document.getElementById("modal")
@@ -266,6 +277,9 @@ const nome=document.getElementById("nome")
 const prompt=document.getElementById("prompt")
 const buscar=document.getElementById("buscar")
 const buscarPopup=document.getElementById("buscarPopup")
+
+let resultados=[]
+let indice=0
 
 /* CARREGAR */
 
@@ -351,7 +365,7 @@ ativarDrag()
 
 }
 
-/* DRAG MOBILE + DESKTOP */
+/* DRAG MOBILE */
 
 function ativarDrag(){
 
@@ -364,15 +378,10 @@ forceFallback:true,
 fallbackTolerance:5,
 
 onStart:()=>{
-
-if(navigator.vibrate){
-navigator.vibrate(80)
-}
-
+if(navigator.vibrate) navigator.vibrate(80)
 },
 
 onEnd:salvarOrdem
-
 })
 
 }
@@ -409,8 +418,8 @@ function novoPrompt(){
 editId=null
 nome.value=""
 prompt.value=""
-buscarPopup.value=""
-modal.style.display="flex"
+
+abrirModal()
 
 }
 
@@ -427,10 +436,8 @@ const {data}=await db
 editId=id
 nome.value=data.nome
 prompt.value=data.prompt
-textoOriginal=data.prompt
-buscarPopup.value=""
 
-modal.style.display="flex"
+abrirModal()
 
 }
 
@@ -499,33 +506,72 @@ carregar()
 
 }
 
-/* BUSCA POPUP */
+/* MODAL */
 
-buscarPopup.addEventListener("input",()=>{
-
-const termo=buscarPopup.value.toLowerCase()
-
-if(!termo){
-prompt.value=textoOriginal
-return
+function abrirModal(){
+modal.style.display="flex"
+document.body.classList.add("modal-open")
 }
-
-const regex=new RegExp(`(${termo})`,"gi")
-prompt.value=textoOriginal.replace(regex,"[$1]")
-
-})
-
-function limparBuscaPopup(){
-
-buscarPopup.value=""
-prompt.value=textoOriginal
-
-}
-
-/* FECHAR */
 
 function fechar(){
 modal.style.display="none"
+document.body.classList.remove("modal-open")
+}
+
+/* BUSCA DENTRO DO PROMPT */
+
+buscarPopup.addEventListener("input",buscarInterno)
+
+function buscarInterno(){
+
+const termo=buscarPopup.value.toLowerCase()
+const texto=prompt.value.toLowerCase()
+
+resultados=[]
+indice=0
+
+let pos=texto.indexOf(termo)
+
+while(pos!==-1){
+
+resultados.push(pos)
+pos=texto.indexOf(termo,pos+1)
+
+}
+
+if(resultados.length) irParaResultado()
+
+}
+
+function irParaResultado(){
+
+const pos=resultados[indice]
+
+prompt.focus()
+prompt.setSelectionRange(pos,pos+buscarPopup.value.length)
+
+}
+
+function nextResult(){
+
+if(!resultados.length) return
+
+indice++
+if(indice>=resultados.length) indice=0
+
+irParaResultado()
+
+}
+
+function prevResult(){
+
+if(!resultados.length) return
+
+indice--
+if(indice<0) indice=resultados.length-1
+
+irParaResultado()
+
 }
 
 /* INIT */
