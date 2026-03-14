@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Dashboard</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+
+<style>
+
+:root{
+--bg:#070b14;
+--card:#0f1625;
+--line:#1f2937;
+--text:#f1f5f9;
+--muted:#94a3b8;
+--accent:#7c3aed;
+}
+
+*{
+box-sizing:border-box;
+margin:0;
+padding:0;
+font-family:Inter,sans-serif;
+}
+
+body{
+background:var(--bg);
+height:100vh;
+overflow:hidden;
+}
+
+/* SEARCH */
+
+.search-box{
+position:fixed;
+top:16px;
+left:16px;
+width:240px;
+z-index:50;
+}
+
+.search-box input{
+width:100%;
+padding:10px 12px;
+border-radius:10px;
+border:1px solid var(--line);
+background:#020617;
+color:white;
+font-size:13px;
+outline:none;
+}
+
+/* RESULTS */
+
+.results{
+margin-top:6px;
+background:#020617;
+border:1px solid var(--line);
+border-radius:10px;
+display:none;
+max-height:220px;
+overflow:auto;
+}
+
+.result{
+padding:10px 12px;
+font-size:13px;
+cursor:pointer;
+border-bottom:1px solid var(--line);
+color:var(--muted);
+}
+
+.result:hover{
+background:#111827;
+color:white;
+}
+
+/* IFRAME */
+
+iframe{
+position:absolute;
+top:0;
+left:0;
+width:100%;
+height:100%;
+border:0;
+background:white;
+}
+
+/* WELCOME */
+
+.welcome{
+position:absolute;
+inset:0;
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+gap:10px;
+color:white;
+background:#020617;
+}
+
+.welcome h1{
+font-size:24px;
+font-weight:800;
+}
+
+.welcome p{
+font-size:13px;
+color:var(--muted);
+}
+
+.hidden{
+display:none;
+}
+
+/* LOGIN */
+
+.login{
+position:fixed;
+inset:0;
+background:#020617;
+display:flex;
+align-items:center;
+justify-content:center;
+z-index:100;
+}
+
+.login-card{
+background:#020617;
+border:1px solid var(--line);
+padding:36px;
+border-radius:16px;
+width:300px;
+text-align:center;
+}
+
+.login-avatar{
+width:80px;
+height:80px;
+border-radius:50%;
+margin:auto;
+margin-bottom:14px;
+object-fit:cover;
+border:3px solid #1f2937;
+}
+
+.login-title{
+font-size:18px;
+font-weight:700;
+margin-bottom:6px;
+}
+
+.login-sub{
+font-size:12px;
+color:var(--muted);
+margin-bottom:20px;
+}
+
+.login input{
+width:100%;
+padding:12px;
+border-radius:10px;
+border:1px solid var(--line);
+background:#020617;
+color:white;
+margin-bottom:12px;
+}
+
+.login button{
+width:100%;
+padding:12px;
+border-radius:10px;
+border:none;
+background:var(--accent);
+color:white;
+font-weight:700;
+cursor:pointer;
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+
+<div class="login" id="login">
+
+<div class="login-card">
+
+<img class="login-avatar"
+src="https://dxkszikemntfusfyrzos.supabase.co/storage/v1/object/sign/avatars/WhatsApp%20Image%202026-03-12%20at%2016.15.14.jpeg?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9mYTE3NDc4OC02OTE0LTQ5NDYtYTEyYi04ZWRhYzAxNDRhNDEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJhdmF0YXJzL1doYXRzQXBwIEltYWdlIDIwMjYtMDMtMTIgYXQgMTYuMTUuMTQuanBlZyIsImlhdCI6MTc3MzM0Mjk1MywiZXhwIjoxODA0ODc4OTUzfQ.NSBf2rVIsZdCB1ORasm21y73W4r8TG6X8Yhk3ks39h0"
+/>
+
+<div class="login-title">Sr. Nalbert Souza</div>
+
+<div class="login-sub">Digite sua senha</div>
+
+<input type="password" id="senha" placeholder="Senha">
+
+<button onclick="login()">Entrar</button>
+
+</div>
+
+</div>
+
+<!-- SEARCH -->
+
+<div class="search-box">
+
+<input 
+id="search"
+type="search"
+name="dashboard_search"
+placeholder="Buscar painel..."
+autocomplete="new-password"
+autocorrect="off"
+autocapitalize="off"
+spellcheck="false"
+>
+<div class="results" id="results"></div>
+
+</div>
+
+<!-- WELCOME -->
+
+<div class="welcome" id="welcome">
+
+<h1>Dashboard Central</h1>
+<p>Digite o nome de um painel</p>
+
+</div>
+
+<!-- IFRAME -->
+
+<iframe id="frame"></iframe>
+
+<script>
+
+/* ENTER LOGIN */
+
+document.getElementById("senha").addEventListener("keypress",e=>{
+if(e.key==="Enter") login()
+})
+
+/* DASHBOARDS */
+
+const dashboards=[
+
+{nome:"Reservas Villa e Churrascada",url:"https://grupodvbr.github.io/reserva-villa/"},
+{nome:"Reservas Mercatto",url:"https://reservas-mercatto.vercel.app/novo-agendamento.html"},
+{nome:"Importação de vendas",url:"https://clenastore.github.io/leonardo/entradasanexo.html"},
+{nome:"Chat Mercatto",url:"https://tvclena.github.io/nalbert/chatmercatto.html"},
+{nome:"Análise Buffet",url:"https://grupodvbr.github.io/reserva-villa/analise.html"},
+{nome:"Painel dos gerentes Mercatto",url:"https://grupodvbr.github.io/admmercatto/"},
+{nome:"Painel dos gerentes Villa",url:"https://grupodvbr.github.io/admlem/"},
+{nome:"Prompt do Pedrinho Mercatto",url:"https://tvclena.github.io/nalbert/prompt.html"},
+
+{nome:"Adm Requisições Mercatto",url:"https://grupodvbr.github.io/requisicoes-mercatto/adm.html"},
+{nome:"Resumo de vendas",url:"https://clenastore.github.io/leonardo/oi.html"},
+
+{nome:"Restauração de Reservas",url:"https://grupodvbr.github.io/reservas-mercatto/reset.html"}
+
+]
+
+
+  
+const search=document.getElementById("search")
+const results=document.getElementById("results")
+
+search.addEventListener("input",()=>{
+
+const v=search.value.toLowerCase()
+
+results.innerHTML=""
+
+if(!v){
+results.style.display="none"
+return
+}
+
+dashboards
+.filter(d=>d.nome.toLowerCase().includes(v))
+.forEach(d=>{
+
+const el=document.createElement("div")
+
+el.className="result"
+
+el.innerText=d.nome
+
+el.onclick=()=>{
+abrir(d.url)
+results.style.display="none"
+}
+
+results.appendChild(el)
+
+})
+
+results.style.display="block"
+
+})
+
+function abrir(url){
+
+document.getElementById("frame").src=url
+
+document.getElementById("welcome").classList.add("hidden")
+
+}
+
+/* LOGIN */
+
+const senhaCorreta="848663"
+const tempo=23*60*60*1000+59*60*1000
+
+function login(){
+
+const s=document.getElementById("senha").value
+
+if(s!==senhaCorreta){
+alert("Senha incorreta")
+return
+}
+
+localStorage.setItem("dashboard_auth",Date.now())
+
+document.getElementById("login").style.display="none"
+
+}
+
+function checkLogin(){
+
+const t=localStorage.getItem("dashboard_auth")
+
+if(!t) return
+
+if(Date.now()-t>tempo){
+
+localStorage.removeItem("dashboard_auth")
+return
+
+}
+
+document.getElementById("login").style.display="none"
+
+}
+
+checkLogin()
+
+</script>
+
+</body>
+</html>
