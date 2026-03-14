@@ -342,6 +342,8 @@ linhas.innerHTML=html
 
 /* CONTADORES */
 
+let timer
+
 prompt.addEventListener("input",()=>{
 
 chars.innerText=prompt.value.length+" caracteres"
@@ -355,6 +357,12 @@ words.innerText=p+" palavras"
 
 atualizarLinhas()
 
+clearTimeout(timer)
+
+timer=setTimeout(()=>{
+atualizarHighlight()
+},250)
+
 })
 
 prompt.addEventListener("scroll",()=>{
@@ -367,7 +375,7 @@ async function carregar(){
 
 const {data}=await db
 .from("prompts_mercatto")
-.select("*")
+.select("id,nome,prompt,ativo,ordem")
 .order("ordem",{ascending:true})
 
 dados=data||[]
@@ -446,16 +454,14 @@ async function salvarOrdem(){
 
 const cards=[...document.querySelectorAll(".card")]
 
-for(let i=0;i<cards.length;i++){
-
-const id=cards[i].dataset.id
+const updates = cards.map((c,i)=>({
+id:c.dataset.id,
+ordem:i
+}))
 
 await db
 .from("prompts_mercatto")
-.update({ordem:i})
-.eq("id",id)
-
-}
+.upsert(updates)
 
 carregar()
 
@@ -475,7 +481,7 @@ async function editar(id){
 
 const {data}=await db
 .from("prompts_mercatto")
-.select("*")
+.select("id,nome,prompt,ativo,ordem")
 .eq("id",id)
 .single()
 
@@ -598,9 +604,17 @@ return
 
 }
 
+const texto = prompt.value
+
+if(texto.length > 20000){
+highlightLayer.innerText = texto
+return
+}
+
 const regex = new RegExp(termo,"gi")
 
 highlightLayer.innerHTML =
+texto.replace(regex,m=>`<mark>${m}</mark>`)
 prompt.value.replace(regex,m=>`<mark>${m}</mark>`)
 
 }
