@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+
+<meta charset="UTF-8">
+<title>Gestor de Conversas • Mercatto</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+
+:root{
+--bg:#0f172a;
+--sidebar:#111827;
+--chat:#020617;
+--border:#334155;
+--text:#f1f5f9;
+--muted:#94a3b8;
+--green:#22c55e;
+--red:#ef4444;
+--yellow:#f59e0b;
+}
+
+*{box-sizing:border-box}
+
+body{
+margin:0;
+font-family:Inter;
+background:var(--bg);
+color:var(--text);
+height:100vh;
+display:flex;
+overflow:hidden;
+}
+
+/* SIDEBAR */
+
+.sidebar{
+width:380px;
+background:var(--sidebar);
+border-right:1px solid var(--border);
+display:flex;
+flex-direction:column;
+}
+
+.header{
+padding:18px;
+font-weight:800;
+border-bottom:1px solid var(--border);
+}
+
+/* SEARCH */
+
+.search{
+padding:12px;
+display:flex;
+flex-direction:column;
+gap:10px;
+border-bottom:1px solid var(--border);
+}
+
+.search input,
+.search select{
+padding:10px;
+border-radius:8px;
+border:none;
+background:#020617;
+color:white;
+}
+
+/* CLIENTS */
+
+.clients{
+flex:1;
+overflow:auto;
+}
+
+.client{
+display:flex;
+gap:10px;
+align-items:center;
+padding:12px;
+border-bottom:1px solid var(--border);
+cursor:pointer;
+}
+
+.client:hover{
+background:#020617;
+}
+
+.client.pausado{
+background:#2b1212;
+}
+
+.avatar{
+width:36px;
+height:36px;
+border-radius:50%;
+background:#1e293b;
+display:flex;
+align-items:center;
+justify-content:center;
+font-weight:700;
+}
+
+/* CHAT */
+
+.chat{
+flex:1;
+display:flex;
+flex-direction:column;
+}
+
+.chat-header{
+padding:16px;
+border-bottom:1px solid var(--border);
+font-weight:700;
+}
+
+.messages{
+flex:1;
+overflow:auto;
+padding:20px;
+display:flex;
+flex-direction:column;
+gap:12px;
+}
+
+.msg{
+max-width:60%;
+padding:12px;
+border-radius:12px;
+font-size:14px;
+}
+
+.user{
+background:#1e293b;
+align-self:flex-start;
+}
+
+.assistant{
+background:#16a34a;
+align-self:flex-end;
+}
+
+.time{
+font-size:11px;
+opacity:.6;
+margin-top:4px;
+}
+
+/* ACTION BUTTONS */
+
+.actions{
+display:flex;
+gap:6px;
+}
+
+button{
+border:none;
+border-radius:6px;
+padding:4px 8px;
+font-size:12px;
+cursor:pointer;
+}
+
+.pause{background:var(--yellow);color:white}
+.play{background:var(--green);color:white}
+.wa{background:#22c55e;color:white}
+
+.preview{
+font-size:12px;
+color:var(--muted);
+white-space:nowrap;
+overflow:hidden;
+text-overflow:ellipsis;
+max-width:180px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="sidebar">
+
+<div class="header">
+Conversas
+</div>
+
+<div class="search">
+
+<input id="buscar" placeholder="Buscar nome ou telefone">
+
+<select id="filtroStatus">
+<option value="todos">Todos</option>
+<option value="ativo">Bot ativo</option>
+<option value="pausado">Bot pausado</option>
+</select>
+
+</div>
+
+<div class="clients" id="clientes"></div>
+
+</div>
+
+<div class="chat">
+
+<div class="chat-header" id="clienteAtual">
+Selecione uma conversa
+</div>
+
+<div class="messages" id="mensagens"></div>
+
+</div>
+
+<script>
+
+const db = supabase.createClient(
+"https://dxkszikemntfusfyrzos.supabase.co",
+"sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
+)
+
+let clienteSelecionado=null
+
+async function carregarClientes(){
+
+const {data:conversas}=await db
+.from("conversas_whatsapp")
+.select("*")
+.order("created_at",{ascending:false})
+
+const {data:memoria}=await db
+.from("memoria_clientes")
+.select("telefone,nome")
+
+const {data:controle}=await db
+.from("controle_bot")
+.select("telefone,pausado")
+
+const nomes={}
+memoria?.forEach(c=>nomes[c.telefone]=c.nome)
+
+const pausados={}
+controle?.forEach(p=>{
+if(p.pausado) pausados[p.telefone]=true
+})
+
+const map={}
+
+conversas?.forEach(m=>{
+if(!map[m.telefone]) map[m.telefone]=m
+})
+
+let clientes=Object.values(map)
+
+const filtro=document.getElementById("filtroStatus").value
+
+if(filtro==="pausado"){
+clientes=clientes.filter(c=>pausados[c.telefone])
+}
+
+if(filtro==="ativo"){
+clientes=clientes.filter(c=>!pausados[c.telefone])
+}
+
+const busca=document.getElementById("buscar").value.toLowerCase()
+
+if(busca){
+clientes=clientes.filter(c=>{
+const nome=nomes[c.telefone]||""
+return nome.toLowerCase().includes(busca) ||
+c.telefone.includes(busca)
+})
+}
+
+const container=document.getElementById("clientes")
+container.innerHTML=""
+
+clientes.forEach(c=>{
+
+const pausado=pausados[c.telefone]
+
+const div=document.createElement("div")
+div.className="client"
+
+if(pausado) div.classList.add("pausado")
+
+const nome=nomes[c.telefone]||c.telefone
+const inicial=c.telefone.slice(-2)
+
+div.innerHTML=`
+
+<div class="avatar">${inicial}</div>
+
+<div style="flex:1">
+
+<div>${nome}</div>
+
+<div class="preview">${c.mensagem}</div>
+
+</div>
+
+<div class="actions">
+
+<button class="pause" onclick="pausarBot('${c.telefone}')">⏸</button>
+
+<button class="play" onclick="despausarBot('${c.telefone}')">▶</button>
+
+<button class="wa" onclick="abrirWhats('${c.telefone}')">WA</button>
+
+</div>
+
+`
+
+div.onclick=()=>abrirConversa(c.telefone)
+
+container.appendChild(div)
+
+})
+
+}
+
+async function abrirConversa(telefone){
+
+clienteSelecionado=telefone
+
+const {data:cliente}=await db
+.from("memoria_clientes")
+.select("nome")
+.eq("telefone",telefone)
+.single()
+
+document.getElementById("clienteAtual").innerText=
+(cliente?.nome||telefone)+" • "+telefone
+
+const {data}=await db
+.from("conversas_whatsapp")
+.select("*")
+.eq("telefone",telefone)
+.order("created_at",{ascending:true})
+
+const container=document.getElementById("mensagens")
+container.innerHTML=""
+
+data?.forEach(m=>{
+
+const div=document.createElement("div")
+div.className="msg "+(m.role==="assistant"?"assistant":"user")
+
+const hora=new Date(m.created_at)
+.toLocaleString("pt-BR")
+
+div.innerHTML=`
+<div>${m.mensagem}</div>
+<div class="time">${hora}</div>
+`
+
+container.appendChild(div)
+
+})
+
+container.scrollTop=container.scrollHeight
+
+}
+
+async function pausarBot(telefone){
+
+await db
+.from("controle_bot")
+.upsert({
+telefone:telefone,
+pausado:true
+})
+
+carregarClientes()
+
+}
+
+async function despausarBot(telefone){
+
+await db
+.from("controle_bot")
+.upsert({
+telefone:telefone,
+pausado:false
+})
+
+carregarClientes()
+
+}
+
+function abrirWhats(telefone){
+
+window.open("https://wa.me/"+telefone,"_blank")
+
+}
+
+document.getElementById("buscar").addEventListener("input",carregarClientes)
+
+document.getElementById("filtroStatus").addEventListener("change",carregarClientes)
+
+setInterval(carregarClientes,5000)
+
+carregarClientes()
+
+</script>
+
+</body>
+</html>
