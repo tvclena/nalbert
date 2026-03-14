@@ -2,7 +2,7 @@ const CACHE="mercatto-prompts-v1"
 
 const ASSETS=[
 "/",
-"/index.html",
+"/prompt.html",
 "/manifest.json"
 ]
 
