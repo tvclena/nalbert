@@ -4,7 +4,7 @@
 
 <meta charset="UTF-8">
 
-<title>Gerenciar Prompts • Mercatto IA</title>
+<title>CMS de Prompts • Mercatto IA</title>
 
 <meta name="viewport"
 content="width=device-width,
@@ -13,7 +13,7 @@ maximum-scale=1,
 user-scalable=no,
 viewport-fit=cover">
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -22,99 +22,93 @@ viewport-fit=cover">
 /* ===== BASE ===== */
 
 :root{
---bg:#0f172a;
---card:#1e293b;
---border:#334155;
---text:#ffffff;
+--bg:#020617;
+--card:#0f172a;
+--border:#1e293b;
+--text:#f1f5f9;
 --muted:#94a3b8;
---accent:#22c55e;
---danger:#ef4444;
+--green:#22c55e;
+--red:#ef4444;
+--blue:#3b82f6;
 --radius:16px;
 }
 
-*{
-box-sizing:border-box;
-}
+*{box-sizing:border-box}
 
 body{
 margin:0;
 font-family:Inter;
-background:linear-gradient(180deg,#020617,#0f172a);
+background:linear-gradient(180deg,#020617,#020617);
 color:var(--text);
 padding:16px;
 }
 
-/* ===== HEADER ===== */
+/* HEADER */
 
 .header{
 display:flex;
 justify-content:space-between;
 align-items:center;
-margin-bottom:16px;
+margin-bottom:20px;
 }
 
-.header h1{
+.title{
 font-size:20px;
-margin:0;
 font-weight:800;
 }
 
-/* ===== BOTÃO ===== */
-
 .btn{
 border:none;
-background:var(--accent);
-color:white;
 padding:10px 14px;
 border-radius:10px;
-font-weight:600;
 cursor:pointer;
+font-weight:600;
 }
 
-/* ===== CARD ===== */
+.btn-green{background:var(--green);color:white}
+.btn-red{background:var(--red);color:white}
+.btn-blue{background:var(--blue);color:white}
+
+/* LISTA */
+
+.lista{
+display:flex;
+flex-direction:column;
+gap:12px;
+}
 
 .card{
 background:var(--card);
 border:1px solid var(--border);
 border-radius:var(--radius);
 padding:14px;
-margin-bottom:12px;
 }
 
-.card h3{
-margin:0 0 6px 0;
-font-size:16px;
+.nome{
+font-weight:700;
+font-size:15px;
+margin-bottom:6px;
 }
 
-.card p{
-margin:0;
-font-size:13px;
+.preview{
+font-size:12px;
 color:var(--muted);
 white-space:pre-wrap;
+max-height:80px;
+overflow:hidden;
 }
 
-/* ===== AÇÕES ===== */
-
-.actions{
+.acoes{
 display:flex;
 gap:8px;
 margin-top:10px;
 }
 
-.actions button{
+.acoes button{
 flex:1;
-padding:8px;
-border-radius:8px;
-border:none;
-font-weight:600;
-cursor:pointer;
 }
 
-.edit{background:#2563eb;color:white}
-.delete{background:var(--danger);color:white}
-.toggle{background:#475569;color:white}
-
-/* ===== MODAL ===== */
+/* MODAL */
 
 .modal{
 position:fixed;
@@ -126,37 +120,47 @@ justify-content:center;
 padding:16px;
 }
 
-.modal-content{
-background:var(--card);
+.modal-box{
+background:#020617;
+border:1px solid var(--border);
 border-radius:16px;
 padding:16px;
 width:100%;
-max-width:420px;
+max-width:520px;
+display:flex;
+flex-direction:column;
+gap:10px;
+max-height:90vh;
 }
 
 .modal input,
 .modal textarea{
 width:100%;
-margin-bottom:10px;
-padding:10px;
-border-radius:10px;
-border:1px solid var(--border);
 background:#020617;
+border:1px solid var(--border);
+border-radius:10px;
+padding:10px;
 color:white;
 font-family:Inter;
 }
 
-.modal textarea{
-height:180px;
+textarea{
+height:220px;
 resize:none;
 }
 
-/* ===== EMPTY ===== */
+.counter{
+font-size:11px;
+color:var(--muted);
+text-align:right;
+}
+
+/* EMPTY */
 
 .empty{
 text-align:center;
-color:var(--muted);
-margin-top:40px;
+margin-top:60px;
+opacity:.6;
 }
 
 </style>
@@ -165,25 +169,51 @@ margin-top:40px;
 <body>
 
 <div class="header">
-<h1>Prompts IA</h1>
-<button class="btn" onclick="abrirNovo()">Novo</button>
+
+<div class="title">
+Prompts IA
 </div>
 
-<div id="lista"></div>
+<button class="btn btn-green" onclick="novoPrompt()">
+Novo Prompt
+</button>
 
-<div id="modal" class="modal">
+</div>
 
-<div class="modal-content">
+<div class="lista" id="lista"></div>
 
-<h3 id="tituloModal">Novo Prompt</h3>
+<div class="empty" id="empty" style="display:none">
+Nenhum prompt cadastrado
+</div>
+
+<!-- MODAL -->
+
+<div class="modal" id="modal">
+
+<div class="modal-box">
 
 <input id="nome" placeholder="Nome do prompt">
 
-<textarea id="prompt" placeholder="Escreva o prompt aqui..."></textarea>
+<textarea id="prompt"></textarea>
 
-<button class="btn" onclick="salvar()">Salvar</button>
+<div class="counter" id="counter">
+0 caracteres
+</div>
+
+<div style="display:flex;gap:10px">
+
+<button class="btn btn-green" onclick="salvar()">
+Salvar
+</button>
+
+<button class="btn btn-red" onclick="fechar()">
+Cancelar
+</button>
 
 </div>
+
+</div>
+
 </div>
 
 <script>
@@ -195,9 +225,6 @@ const supabase = window.supabase.createClient(
 "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 )
 
-
-
-  
 let editId=null
 
 /* ===== CARREGAR ===== */
@@ -209,43 +236,61 @@ const {data,error} = await supabase
 .select("*")
 .order("ordem",{ascending:true})
 
-const lista=document.getElementById("lista")
+if(error){
 
-lista.innerHTML=""
-
-if(!data || !data.length){
-
-lista.innerHTML='<div class="empty">Nenhum prompt cadastrado</div>'
+alert("Erro ao carregar prompts")
+console.error(error)
 return
 
 }
 
+const lista=document.getElementById("lista")
+lista.innerHTML=""
+
+if(!data || !data.length){
+
+document.getElementById("empty").style.display="block"
+return
+
+}
+
+document.getElementById("empty").style.display="none"
+
 data.forEach(p=>{
 
-const card=document.createElement("div")
-card.className="card"
+const div=document.createElement("div")
+div.className="card"
 
-card.innerHTML=`
+div.innerHTML=`
 
-<h3>${p.nome || "Sem nome"}</h3>
+<div class="nome">${p.nome}</div>
 
-<p>${(p.prompt || "").substring(0,200)}...</p>
+<div class="preview">
+${(p.prompt||"").substring(0,300)}
+</div>
 
-<div class="actions">
+<div class="acoes">
 
-<button class="edit" onclick="editar('${p.id}')">Editar</button>
+<button class="btn btn-blue"
+onclick="editar('${p.id}')">
+Editar
+</button>
 
-<button class="delete" onclick="remover('${p.id}')">Excluir</button>
+<button class="btn btn-green"
+onclick="toggle('${p.id}',${p.ativo})">
+${p.ativo?"Ativo":"Inativo"}
+</button>
 
-<button class="toggle" onclick="toggle('${p.id}',${p.ativo})">
-${p.ativo ? "Desativar":"Ativar"}
+<button class="btn btn-red"
+onclick="remover('${p.id}')">
+Excluir
 </button>
 
 </div>
 
 `
 
-lista.appendChild(card)
+lista.appendChild(div)
 
 })
 
@@ -253,12 +298,13 @@ lista.appendChild(card)
 
 /* ===== NOVO ===== */
 
-function abrirNovo(){
+function novoPrompt(){
 
 editId=null
 
 document.getElementById("nome").value=""
 document.getElementById("prompt").value=""
+document.getElementById("counter").innerText="0 caracteres"
 
 document.getElementById("modal").style.display="flex"
 
@@ -268,7 +314,7 @@ document.getElementById("modal").style.display="flex"
 
 async function editar(id){
 
-const {data}=await supabase
+const {data} = await supabase
 .from("prompts_mercatto")
 .select("*")
 .eq("id",id)
@@ -279,6 +325,8 @@ editId=id
 document.getElementById("nome").value=data.nome
 document.getElementById("prompt").value=data.prompt
 
+contar()
+
 document.getElementById("modal").style.display="flex"
 
 }
@@ -287,12 +335,12 @@ document.getElementById("modal").style.display="flex"
 
 async function salvar(){
 
-const nome=document.getElementById("nome").value
-const prompt=document.getElementById("prompt").value
+const nome=document.getElementById("nome").value.trim()
+const prompt=document.getElementById("prompt").value.trim()
 
 if(!nome || !prompt){
 
-alert("Preencha todos os campos")
+alert("Preencha nome e prompt")
 return
 
 }
@@ -308,17 +356,21 @@ await supabase
 
 await supabase
 .from("prompts_mercatto")
-.insert({nome,prompt,ativo:true})
+.insert({
+nome,
+prompt,
+ativo:true,
+ordem:1
+})
 
 }
 
-document.getElementById("modal").style.display="none"
-
+fechar()
 carregar()
 
 }
 
-/* ===== EXCLUIR ===== */
+/* ===== REMOVER ===== */
 
 async function remover(id){
 
@@ -345,6 +397,27 @@ await supabase
 carregar()
 
 }
+
+/* ===== FECHAR ===== */
+
+function fechar(){
+
+document.getElementById("modal").style.display="none"
+
+}
+
+/* ===== CONTADOR ===== */
+
+document.getElementById("prompt").addEventListener("input",contar)
+
+function contar(){
+
+const txt=document.getElementById("prompt").value
+document.getElementById("counter").innerText=txt.length+" caracteres"
+
+}
+
+/* ===== INIT ===== */
 
 carregar()
 
