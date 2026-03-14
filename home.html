@@ -582,21 +582,44 @@ cal.innerHTML=""
 const mes=inicio.getMonth()
 const ano=inicio.getFullYear()
 
-const dias=new Date(ano,mes+1,0).getDate()
+const diasNoMes=new Date(ano,mes+1,0).getDate()
 
-for(let i=1;i<=dias;i++){
+for(let i=1;i<=diasNoMes;i++){
 
 let count=reservas.filter(r=>{
-let d=dataReserva(r.datahora)
- return d.getDate()==i &&
-d.getMonth()==mes &&
-d.getFullYear()==ano
+
+if(!r.datahora) return false
+
+const d=new Date(r.datahora.replace(" ","T"))
+
+return (
+d.getDate()===i &&
+d.getMonth()===mes &&
+d.getFullYear()===ano
+)
+
 }).length
 
 const div=document.createElement("div")
 
 div.className="day"
-div.innerHTML=`${i}<div class="dayCount">${count}</div>`
+
+const hoje=new Date()
+
+let destaque=""
+
+if(
+i===hoje.getDate() &&
+mes===hoje.getMonth() &&
+ano===hoje.getFullYear()
+){
+destaque='style="border:2px solid #3b82f6"'
+}
+
+div.innerHTML=`
+<div ${destaque}>${i}</div>
+<div class="dayCount">${count}</div>
+`
 
 div.onclick=()=>abrirDia(i,reservas,mes,ano)
 
