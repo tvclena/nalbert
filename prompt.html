@@ -3,7 +3,7 @@
 <head>
 
 <meta charset="UTF-8">
-<title>Mercatto • Prompts IA</title>
+<title>CMS Prompts IA • Mercatto</title>
 
 <meta name="viewport"
 content="width=device-width,
@@ -12,10 +12,7 @@ maximum-scale=1,
 user-scalable=no,
 viewport-fit=cover">
 
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#020617">
-
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
@@ -26,13 +23,13 @@ viewport-fit=cover">
 --bg:#020617;
 --card:#0f172a;
 --border:#1e293b;
---text:#f8fafc;
+--text:#f1f5f9;
 --muted:#94a3b8;
 --green:#22c55e;
 --red:#ef4444;
 --blue:#3b82f6;
---yellow:#f59e0b;
---radius:14px;
+--yellow:#fde047;
+--radius:16px;
 }
 
 *{box-sizing:border-box}
@@ -58,24 +55,42 @@ align-items:center;
 margin-bottom:14px;
 }
 
-.header h1{
+.title{
 font-size:20px;
-margin:0;
+font-weight:800;
 }
 
-/* BUSCA */
+/* SEARCH */
+
+.search{
+margin-bottom:16px;
+}
 
 .search input{
 width:100%;
 padding:12px;
 border-radius:10px;
 border:1px solid var(--border);
-background:var(--card);
+background:#020617;
 color:white;
-margin-bottom:14px;
+font-size:14px;
 }
 
-/* LISTA */
+/* BUTTON */
+
+.btn{
+border:none;
+padding:10px 14px;
+border-radius:10px;
+cursor:pointer;
+font-weight:600;
+}
+
+.green{background:var(--green);color:white}
+.red{background:var(--red);color:white}
+.blue{background:var(--blue);color:white}
+
+/* LIST */
 
 .lista{
 display:flex;
@@ -92,41 +107,29 @@ cursor:grab;
 touch-action:none;
 }
 
-.card h3{
-margin:0;
-font-size:16px;
+.nome{
+font-weight:700;
+font-size:15px;
+margin-bottom:6px;
 }
 
 .preview{
-font-size:13px;
+font-size:12px;
 color:var(--muted);
-margin-top:6px;
 white-space:pre-wrap;
 max-height:120px;
 overflow:hidden;
 }
 
-.actions{
+.acoes{
 display:flex;
-flex-wrap:wrap;
-gap:6px;
-margin-top:10px;
+gap:8px;
+margin-top:12px;
 }
 
-/* BOTÕES */
-
-.btn{
-border:none;
-padding:8px 12px;
-border-radius:8px;
-cursor:pointer;
-font-weight:600;
+.acoes button{
+flex:1;
 }
-
-.green{background:var(--green);color:white}
-.red{background:var(--red);color:white}
-.blue{background:var(--blue);color:white}
-.yellow{background:var(--yellow);color:black}
 
 /* MODAL */
 
@@ -137,56 +140,67 @@ background:rgba(0,0,0,.9);
 display:none;
 align-items:center;
 justify-content:center;
+padding:16px;
 z-index:999;
 }
 
 .modal-box{
-background:var(--card);
-border-radius:var(--radius);
+background:#020617;
+border:1px solid var(--border);
+border-radius:16px;
 padding:16px;
 width:100%;
 max-width:650px;
-max-height:90vh;
-overflow:auto;
 display:flex;
 flex-direction:column;
 gap:10px;
+max-height:90vh;
+overflow:auto;
+}
+
+/* INPUT */
+
+input,textarea{
+width:100%;
+background:#020617;
+border:1px solid var(--border);
+border-radius:10px;
+padding:10px;
+color:white;
+font-family:Inter;
 }
 
 textarea{
-width:100%;
 height:260px;
-background:var(--bg);
-border:1px solid var(--border);
-border-radius:10px;
-padding:10px;
-color:white;
 resize:none;
 }
 
-input{
-width:100%;
-padding:10px;
-border-radius:10px;
-border:1px solid var(--border);
-background:var(--bg);
-color:white;
-}
+/* BUSCA POPUP */
 
 .popup-search{
 display:flex;
 gap:6px;
 }
 
+.popup-search input{
+flex:1;
+}
+
 .popup-search button{
 width:40px;
 }
 
-.info{
-font-size:12px;
-color:var(--muted);
-display:flex;
-justify-content:space-between;
+.highlight{
+background:var(--yellow);
+color:black;
+}
+
+/* EMPTY */
+
+.empty{
+text-align:center;
+margin-top:60px;
+opacity:.6;
 }
 
 </style>
@@ -195,8 +209,11 @@ justify-content:space-between;
 <body>
 
 <div class="header">
-<h1>Prompts IA</h1>
-<button class="btn green" onclick="novoPrompt()">Novo</button>
+<div class="title">Prompts IA</div>
+
+<button class="btn green" onclick="novoPrompt()">
+Novo Prompt
+</button>
 </div>
 
 <div class="search">
@@ -204,6 +221,10 @@ justify-content:space-between;
 </div>
 
 <div id="lista" class="lista"></div>
+
+<div id="empty" class="empty" style="display:none">
+Nenhum prompt encontrado
+</div>
 
 <!-- MODAL -->
 
@@ -224,21 +245,16 @@ justify-content:space-between;
 
 <textarea id="prompt"></textarea>
 
-<div class="info">
-<div id="charCount">0 caracteres</div>
-<div id="wordCount">0 palavras</div>
-</div>
-
-<div style="display:flex;gap:8px;flex-wrap:wrap">
+<div style="display:flex;gap:10px">
 
 <button class="btn green" onclick="salvar()">Salvar</button>
-<button class="btn blue" onclick="copiarPrompt()">Copiar</button>
-<button class="btn yellow" onclick="duplicarPrompt()">Duplicar</button>
-<button class="btn red" onclick="fechar()">Fechar</button>
+
+<button class="btn red" onclick="fechar()">Cancelar</button>
 
 </div>
 
 </div>
+
 </div>
 
 <script>
@@ -250,28 +266,17 @@ const db = supabase.createClient(
 "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 )
 
-let listaGlobal=[]
+/* VARS */
+
 let editId=null
+let listaGlobal=[]
 
 const lista=document.getElementById("lista")
 const modal=document.getElementById("modal")
-
-/* CONTADOR */
-
-prompt.addEventListener("input",()=>{
-
-charCount.innerText = prompt.value.length + " caracteres"
-
-let palavras = prompt.value.trim()
-
-if(!palavras) palavras=0
-else palavras=palavras.split(/\s+/).length
-
-wordCount.innerText = palavras + " palavras"
-
-})
-
-/* BUSCA INTERNA */
+const nome=document.getElementById("nome")
+const prompt=document.getElementById("prompt")
+const buscar=document.getElementById("buscar")
+const buscarPopup=document.getElementById("buscarPopup")
 
 let resultados=[]
 let indice=0
@@ -280,10 +285,16 @@ let indice=0
 
 async function carregar(){
 
-const {data}=await db
+const {data,error}=await db
 .from("prompts_mercatto")
 .select("*")
 .order("ordem",{ascending:true})
+
+if(error){
+console.error(error)
+alert("Erro ao carregar prompts")
+return
+}
 
 listaGlobal=data||[]
 render()
@@ -296,18 +307,25 @@ function render(){
 
 lista.innerHTML=""
 
-const busca=buscar.value.toLowerCase()
-
 let filtrados=listaGlobal
+
+const busca=buscar.value.toLowerCase()
 
 if(busca){
 
 filtrados=listaGlobal.filter(p=>
-p.nome.toLowerCase().includes(busca) ||
-p.prompt.toLowerCase().includes(busca)
+(p.nome||"").toLowerCase().includes(busca) ||
+(p.prompt||"").toLowerCase().includes(busca)
 )
 
 }
+
+if(filtrados.length===0){
+document.getElementById("empty").style.display="block"
+return
+}
+
+document.getElementById("empty").style.display="none"
 
 filtrados.forEach(p=>{
 
@@ -317,33 +335,26 @@ card.dataset.id=p.id
 
 card.innerHTML=`
 
-<h3>${p.nome}</h3>
+<div class="nome">${p.nome}</div>
 
-<div class="preview">
-${p.prompt.substring(0,220)}
-</div>
+<div class="preview">${(p.prompt||"").substring(0,350)}</div>
 
-<div class="actions">
+<div class="acoes">
 
-<button class="btn blue" onclick="editar('${p.id}')">Editar</button>
+<button class="btn blue" onclick="editar('${p.id}')">
+Editar
+</button>
 
 <button class="btn green" onclick="toggle('${p.id}',${p.ativo})">
 ${p.ativo?"Ativo":"Inativo"}
-</button>
-
-<button class="btn yellow" onclick="duplicar('${p.id}')">
-Duplicar
 </button>
 
 <button class="btn red" onclick="remover('${p.id}')">
 Excluir
 </button>
 
-<button class="btn blue" onclick="copiar('${p.prompt.replace(/'/g,"&#39;")}')">
-Copiar
-</button>
-
 </div>
+
 `
 
 lista.appendChild(card)
@@ -354,23 +365,23 @@ ativarDrag()
 
 }
 
-/* DRAG */
+/* DRAG MOBILE */
 
 function ativarDrag(){
 
 new Sortable(lista,{
-
 animation:150,
 delay:2000,
 delayOnTouchOnly:true,
+touchStartThreshold:4,
 forceFallback:true,
+fallbackTolerance:5,
 
 onStart:()=>{
 if(navigator.vibrate) navigator.vibrate(80)
 },
 
 onEnd:salvarOrdem
-
 })
 
 }
@@ -383,10 +394,12 @@ const cards=[...document.querySelectorAll(".card")]
 
 for(let i=0;i<cards.length;i++){
 
+const id=cards[i].dataset.id
+
 await db
 .from("prompts_mercatto")
 .update({ordem:i})
-.eq("id",cards[i].dataset.id)
+.eq("id",id)
 
 }
 
@@ -394,16 +407,23 @@ carregar()
 
 }
 
-/* CRUD */
+/* BUSCA LISTA */
+
+buscar.addEventListener("input",render)
+
+/* NOVO */
 
 function novoPrompt(){
 
 editId=null
 nome.value=""
 prompt.value=""
+
 abrirModal()
 
 }
+
+/* EDITAR */
 
 async function editar(id){
 
@@ -421,16 +441,23 @@ abrirModal()
 
 }
 
+/* SALVAR */
+
 async function salvar(){
+
+const n=nome.value.trim()
+const p=prompt.value.trim()
+
+if(!n||!p){
+alert("Preencha todos os campos")
+return
+}
 
 if(editId){
 
 await db
 .from("prompts_mercatto")
-.update({
-nome:nome.value,
-prompt:prompt.value
-})
+.update({nome:n,prompt:p})
 .eq("id",editId)
 
 }else{
@@ -438,8 +465,8 @@ prompt:prompt.value
 await db
 .from("prompts_mercatto")
 .insert({
-nome:nome.value,
-prompt:prompt.value,
+nome:n,
+prompt:p,
 ativo:true,
 ordem:listaGlobal.length
 })
@@ -451,22 +478,22 @@ carregar()
 
 }
 
-async function duplicar(id){
+/* REMOVER */
 
-const p=listaGlobal.find(x=>x.id==id)
+async function remover(id){
+
+if(!confirm("Excluir prompt?"))return
 
 await db
 .from("prompts_mercatto")
-.insert({
-nome:p.nome+" (cópia)",
-prompt:p.prompt,
-ativo:true,
-ordem:listaGlobal.length
-})
+.delete()
+.eq("id",id)
 
 carregar()
 
 }
+
+/* TOGGLE */
 
 async function toggle(id,ativo){
 
@@ -479,65 +506,29 @@ carregar()
 
 }
 
-async function remover(id){
-
-if(!confirm("Excluir prompt?")) return
-
-await db
-.from("prompts_mercatto")
-.delete()
-.eq("id",id)
-
-carregar()
-
-}
-
-/* COPIAR */
-
-function copiar(texto){
-
-navigator.clipboard.writeText(texto)
-alert("Prompt copiado")
-
-}
-
-function copiarPrompt(){
-
-navigator.clipboard.writeText(prompt.value)
-
-}
-
 /* MODAL */
 
 function abrirModal(){
-
 modal.style.display="flex"
 document.body.classList.add("modal-open")
-
 }
 
 function fechar(){
-
 modal.style.display="none"
 document.body.classList.remove("modal-open")
-
 }
 
-/* BUSCA */
+/* BUSCA DENTRO DO PROMPT */
 
-buscar.addEventListener("input",render)
+buscarPopup.addEventListener("input",buscarInterno)
 
-/* BUSCA INTERNA */
-
-buscarPopup.addEventListener("input",()=>{
+function buscarInterno(){
 
 const termo=buscarPopup.value.toLowerCase()
 const texto=prompt.value.toLowerCase()
 
 resultados=[]
 indice=0
-
-if(!termo) return
 
 let pos=texto.indexOf(termo)
 
@@ -548,11 +539,11 @@ pos=texto.indexOf(termo,pos+1)
 
 }
 
-})
+if(resultados.length) irParaResultado()
 
-function ir(){
+}
 
-if(!resultados.length) return
+function irParaResultado(){
 
 const pos=resultados[indice]
 
@@ -568,7 +559,7 @@ if(!resultados.length) return
 indice++
 if(indice>=resultados.length) indice=0
 
-ir()
+irParaResultado()
 
 }
 
@@ -579,9 +570,11 @@ if(!resultados.length) return
 indice--
 if(indice<0) indice=resultados.length-1
 
-ir()
+irParaResultado()
 
 }
+
+/* INIT */
 
 carregar()
 
