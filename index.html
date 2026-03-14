@@ -226,8 +226,9 @@ flex:1;
 position:absolute;
 top:0;
 left:0;
-right:0;
-bottom:0;
+width:100%;
+min-height:100%;
+
 pointer-events:none;
 
 white-space:pre-wrap;
@@ -238,6 +239,7 @@ line-height:1.6;
 
 color:transparent;
 z-index:1;
+overflow:hidden;
 }
 
 textarea{
@@ -381,9 +383,9 @@ atualizarHighlight()
 })
 
 prompt.addEventListener("scroll",()=>{
-linhas.scrollTop=prompt.scrollTop
+linhas.scrollTop = prompt.scrollTop
+highlightLayer.scrollTop = prompt.scrollTop
 })
-
 /* CARREGAR */
 
 async function carregar(){
@@ -618,6 +620,8 @@ const regex = new RegExp(termo,"gi")
 
 highlightLayer.innerHTML =
 textoOriginal.replace(regex,m=>`<mark>${m}</mark>`)
+
+highlightLayer.style.height = prompt.scrollHeight + "px"
 
 }
 
