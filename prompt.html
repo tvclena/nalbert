@@ -30,6 +30,7 @@ viewport-fit=cover">
 --blue:#3b82f6;
 --yellow:#fde047;
 --radius:16px;
+--shadow:0 10px 25px rgba(0,0,0,.35);
 }
 
 *{box-sizing:border-box}
@@ -39,7 +40,7 @@ margin:0;
 font-family:Inter;
 background:var(--bg);
 color:var(--text);
-padding:16px;
+padding:18px;
 }
 
 body.modal-open{
@@ -52,24 +53,24 @@ overflow:hidden;
 display:flex;
 justify-content:space-between;
 align-items:center;
-margin-bottom:14px;
+margin-bottom:16px;
 }
 
 .title{
-font-size:20px;
+font-size:22px;
 font-weight:800;
 }
 
 /* SEARCH */
 
 .search{
-margin-bottom:16px;
+margin-bottom:18px;
 }
 
 .search input{
 width:100%;
-padding:12px;
-border-radius:10px;
+padding:13px;
+border-radius:12px;
 border:1px solid var(--border);
 background:#020617;
 color:white;
@@ -84,6 +85,11 @@ padding:10px 14px;
 border-radius:10px;
 cursor:pointer;
 font-weight:600;
+transition:.15s;
+}
+
+.btn:hover{
+transform:scale(.97);
 }
 
 .green{background:var(--green);color:white}
@@ -95,16 +101,22 @@ font-weight:600;
 .lista{
 display:flex;
 flex-direction:column;
-gap:12px;
+gap:14px;
 }
 
 .card{
 background:var(--card);
 border:1px solid var(--border);
 border-radius:var(--radius);
-padding:16px;
+padding:18px;
 cursor:grab;
 touch-action:none;
+box-shadow:var(--shadow);
+transition:.2s;
+}
+
+.card:hover{
+transform:translateY(-2px);
 }
 
 .nome{
@@ -119,12 +131,14 @@ color:var(--muted);
 white-space:pre-wrap;
 max-height:120px;
 overflow:hidden;
+line-height:1.4;
 }
 
 .acoes{
 display:flex;
 gap:8px;
 margin-top:12px;
+flex-wrap:wrap;
 }
 
 .acoes button{
@@ -148,14 +162,15 @@ z-index:999;
 background:#020617;
 border:1px solid var(--border);
 border-radius:16px;
-padding:16px;
+padding:18px;
 width:100%;
 max-width:650px;
 display:flex;
 flex-direction:column;
-gap:10px;
+gap:12px;
 max-height:90vh;
 overflow:auto;
+box-shadow:var(--shadow);
 }
 
 /* INPUT */
@@ -165,7 +180,7 @@ width:100%;
 background:#020617;
 border:1px solid var(--border);
 border-radius:10px;
-padding:10px;
+padding:12px;
 color:white;
 font-family:Inter;
 }
@@ -190,9 +205,13 @@ flex:1;
 width:40px;
 }
 
-.highlight{
-background:var(--yellow);
-color:black;
+/* CONTADORES */
+
+.info{
+display:flex;
+justify-content:space-between;
+font-size:12px;
+color:var(--muted);
 }
 
 /* EMPTY */
@@ -245,9 +264,16 @@ Nenhum prompt encontrado
 
 <textarea id="prompt"></textarea>
 
-<div style="display:flex;gap:10px">
+<div class="info">
+<div id="charCount">0 caracteres</div>
+<div id="wordCount">0 palavras</div>
+</div>
+
+<div style="display:flex;gap:10px;flex-wrap:wrap">
 
 <button class="btn green" onclick="salvar()">Salvar</button>
+
+<button class="btn blue" onclick="copiarPrompt()">Copiar</button>
 
 <button class="btn red" onclick="fechar()">Cancelar</button>
 
@@ -280,6 +306,21 @@ const buscarPopup=document.getElementById("buscarPopup")
 
 let resultados=[]
 let indice=0
+
+/* CONTADORES */
+
+prompt.addEventListener("input",()=>{
+
+charCount.innerText = prompt.value.length + " caracteres"
+
+let palavras = prompt.value.trim()
+
+if(!palavras) palavras=0
+else palavras=palavras.split(/\s+/).length
+
+wordCount.innerText = palavras + " palavras"
+
+})
 
 /* CARREGAR */
 
@@ -341,12 +382,14 @@ card.innerHTML=`
 
 <div class="acoes">
 
-<button class="btn blue" onclick="editar('${p.id}')">
-Editar
-</button>
+<button class="btn blue" onclick="editar('${p.id}')">Editar</button>
 
 <button class="btn green" onclick="toggle('${p.id}',${p.ativo})">
 ${p.ativo?"Ativo":"Inativo"}
+</button>
+
+<button class="btn blue" onclick="copiar('${p.prompt.replace(/'/g,"&#39;")}')">
+Copiar
 </button>
 
 <button class="btn red" onclick="remover('${p.id}')">
@@ -354,7 +397,6 @@ Excluir
 </button>
 
 </div>
-
 `
 
 lista.appendChild(card)
@@ -504,6 +546,17 @@ await db
 
 carregar()
 
+}
+
+/* COPIAR */
+
+function copiar(texto){
+navigator.clipboard.writeText(texto)
+alert("Prompt copiado")
+}
+
+function copiarPrompt(){
+navigator.clipboard.writeText(prompt.value)
 }
 
 /* MODAL */
