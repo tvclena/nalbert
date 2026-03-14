@@ -567,7 +567,9 @@ type:"bar",
 data:{labels:Object.keys(clientes).slice(0,5),
 datasets:[{data:Object.values(clientes).slice(0,5)}]}
 })
-
+function dataReserva(data){
+return new Date(data.replace(" ","T"))
+}
 gerarCalendario(reservas,inicio)
 listarReservas(res)
 }
@@ -585,8 +587,8 @@ const dias=new Date(ano,mes+1,0).getDate()
 for(let i=1;i<=dias;i++){
 
 let count=reservas.filter(r=>{
-let d=new Date(r.datahora.replace(" ","T"))
-return d.getDate()==i &&
+let d=dataReserva(r.datahora)
+ return d.getDate()==i &&
 d.getMonth()==mes &&
 d.getFullYear()==ano
 }).length
@@ -607,7 +609,7 @@ cal.appendChild(div)
 function abrirDia(dia,reservas,mes,ano){
 
 const lista=reservas.filter(r=>{
-const d=new Date(r.datahora.replace(" ","T"))
+const d=dataReserva(r.datahora)
  return d.getDate()==dia &&
 d.getMonth()==mes &&
 d.getFullYear()==ano
