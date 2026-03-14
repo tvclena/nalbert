@@ -231,15 +231,30 @@ bottom:0;
 pointer-events:none;
 
 white-space:pre-wrap;
-
 font-family:JetBrains Mono;
 font-size:13px;
 padding:12px;
 line-height:1.6;
 
 color:transparent;
+z-index:1;
 }
 
+textarea{
+flex:1;
+background:#000;
+border:none;
+outline:none;
+color:#e2e8f0;
+font-family:JetBrains Mono;
+font-size:13px;
+padding:12px;
+resize:none;
+line-height:1.6;
+
+position:relative;
+z-index:2;
+}
 #highlight mark{
 background:#facc15;
 color:#000;
@@ -607,30 +622,7 @@ textoOriginal.replace(regex,m=>`<mark>${m}</mark>`)
 }
 
 
-function atualizarHighlight(){
 
-const termo = buscarPopup.value
-
-if(!termo){
-
-highlightLayer.innerText = prompt.value
-return
-
-}
-
-const texto = prompt.value
-
-if(texto.length > 20000){
-highlightLayer.innerText = texto
-return
-}
-
-const regex = new RegExp(termo,"gi")
-
-highlightLayer.innerHTML =
-texto.replace(regex,m=>`<mark>${m}</mark>`)
-
-}
 function next(){
 
 if(!resultados.length)return
