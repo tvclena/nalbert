@@ -227,6 +227,49 @@ background:#22c55e;
 border-radius:8px;
 padding:6px;
 }
+
+/* MENU 3 PONTOS */
+
+.menuDots{
+margin-left:auto;
+cursor:pointer;
+font-size:18px;
+opacity:.6;
+}
+
+.menuDots:hover{
+opacity:1;
+}
+
+.menu{
+position:absolute;
+background:#020617;
+border:1px solid #334155;
+border-radius:8px;
+padding:6px;
+display:none;
+flex-direction:column;
+z-index:1000;
+}
+
+.menu button{
+background:none;
+border:none;
+color:white;
+padding:8px 12px;
+text-align:left;
+cursor:pointer;
+}
+
+.menu button:hover{
+background:#1e293b;
+}
+
+/* conversa pausada */
+
+.client.pausado{
+background:#3b1212;
+}
 </style>
 </head>
 
@@ -311,6 +354,10 @@ div.className="client"
 
 const inicial = c.telefone.slice(-2)
 
+const pausado = await verificarPausa(c.telefone)
+
+div.className = pausado ? "client pausado" : "client"
+
 div.innerHTML=`
 
 <div class="avatar">${inicial}</div>
@@ -321,6 +368,12 @@ ${nomes[c.telefone] ? nomes[c.telefone] : c.telefone}
 </div>
 
 <div class="preview">${c.mensagem}</div>
+</div>
+
+<div class="menuDots" onclick="abrirMenu(event,'${c.telefone}')">⋮</div>
+
+<div class="menu" id="menu-${c.telefone}">
+<button onclick="toggleBot('${c.telefone}')">Pausar / Reativar</button>
 </div>
 
 `
@@ -350,12 +403,19 @@ document.getElementById("clienteAtual").innerHTML =
 `
 ${nomeCliente} • ${telefone}
 
+<span class="menuDots" onclick="abrirMenu(event,'${telefone}')">⋮</span>
+
+<div class="menu" id="menu-${telefone}">
+<button onclick="toggleBot('${telefone}')">Pausar / Reativar</button>
+</div>
+
 <a href="https://wa.me/${telefone}" target="_blank" class="waBtn">
 <svg viewBox="0 0 32 32" width="18">
-<path fill="#25D366" d="M16 3C9 3 3.5 8.5 3.5 15.3c0 2.4.7 4.6 2 6.6L4 29l7.3-1.9c1.9 1 4 1.5 6.2 1.5 7 0 12.5-5.5 12.5-12.3C30 8.5 23 3 16 3zm6.8 17.2c-.3.8-1.7 1.6-2.4 1.7-.6.1-1.4.2-2.2-.1-.5-.2-1.2-.4-2-1-.8-.6-2.7-2.4-3.7-4.1-1-1.7-1-3.1-.7-3.6.3-.5.7-.8 1-.9.2-.1.5-.1.7-.1.2 0 .5 0 .7.5.3.6.9 2 .9 2.1.1.1.1.3 0 .4-.1.1-.2.3-.4.4-.2.2-.3.3-.5.5-.2.2-.3.3-.1.6.2.3.8 1.3 1.8 2.1 1.2 1 2.2 1.3 2.5 1.4.3.1.5.1.7-.1.2-.2.9-1 1.1-1.3.2-.3.4-.2.7-.1.3.1 1.7.8 2 .9.3.2.5.3.5.4 0 .1 0 .8-.3 1.6z"/>
+<path fill="#25D366" d="M16 3C9 3 3.5 8.5 3.5 15.3c0 2.4.7 4.6 2 6.6L4 29l7.3-1.9c1.9 1 4 1.5 6.2 1.5 7 0 12.5-5.5 12.5-12.3C30 8.5 23 3 16 3z"/>
 </svg>
 </a>
 `
+
 const {data} = await db
 .from("conversas_whatsapp")
 .select("*")
@@ -453,6 +513,65 @@ document.getElementById("popupRepertorio").style.display="none"
 
 function abrirIframe(url){
 document.getElementById("frameRepertorio").src=url
+}
+
+
+/* MENU */
+
+function abrirMenu(e,telefone){
+
+e.stopPropagation()
+
+document.querySelectorAll(".menu").forEach(m=>{
+m.style.display="none"
+})
+
+const menu=document.getElementById("menu-"+telefone)
+
+menu.style.display="flex"
+
+menu.style.top=e.clientY+"px"
+menu.style.left=e.clientX+"px"
+
+}
+
+/* FECHAR MENU */
+
+document.addEventListener("click",()=>{
+document.querySelectorAll(".menu").forEach(m=>{
+m.style.display="none"
+})
+})
+
+/* VERIFICAR PAUSA */
+
+async function verificarPausa(telefone){
+
+const {data} = await db
+.from("controle_bot")
+.select("pausado")
+.eq("telefone",telefone)
+.maybeSingle()
+
+return data?.pausado || false
+
+}
+
+/* TOGGLE BOT */
+
+async function toggleBot(telefone){
+
+const pausado = await verificarPausa(telefone)
+
+await db
+.from("controle_bot")
+.upsert({
+telefone:telefone,
+pausado:!pausado
+})
+
+carregarClientes()
+
 }
 </script>
 <div id="popupRepertorio" style="
