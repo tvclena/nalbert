@@ -217,7 +217,34 @@ gap:10px;
 padding:12px;
 border-top:1px solid var(--border);
 }
+.editor-wrapper{
+position:relative;
+flex:1;
+}
 
+#highlight{
+position:absolute;
+top:0;
+left:0;
+right:0;
+bottom:0;
+pointer-events:none;
+
+white-space:pre-wrap;
+
+font-family:JetBrains Mono;
+font-size:13px;
+padding:12px;
+line-height:1.6;
+
+color:transparent;
+}
+
+#highlight mark{
+background:#facc15;
+color:#000;
+border-radius:3px;
+}
 </style>
 </head>
 
@@ -252,7 +279,13 @@ border-top:1px solid var(--border);
 
 <div id="linhas" class="linhas"></div>
 
+<div class="editor-wrapper">
+
+<pre id="highlight"></pre>
+
 <textarea id="prompt"></textarea>
+
+</div>
 
 </div>
 
@@ -529,8 +562,8 @@ function fechar(){modal.style.display="none"}
 let resultados=[]
 let index=0
 
-buscarPopup.addEventListener("input",()=>{
-
+buscarPopup.addEventListener("input",atualizarHighlight)
+prompt.addEventListener("input",atualizarHighlight)
 const termo=buscarPopup.value.toLowerCase()
 if(!termo)return
 
@@ -550,16 +583,23 @@ if(resultados.length)highlight()
 
 })
 
-function highlight(){
+const highlightLayer = document.getElementById("highlight")
 
-const pos=resultados[index]
+function atualizarHighlight(){
 
-prompt.focus()
+const termo = buscarPopup.value
 
-prompt.setSelectionRange(
-pos,
-pos+buscarPopup.value.length
-)
+if(!termo){
+
+highlightLayer.innerText = prompt.value
+return
+
+}
+
+const regex = new RegExp(termo,"gi")
+
+highlightLayer.innerHTML =
+prompt.value.replace(regex,m=>`<mark>${m}</mark>`)
 
 }
 
