@@ -23,6 +23,7 @@
 --green:#22c55e;
 --red:#ef4444;
 --yellow:#f59e0b;
+--blue:#2563eb;
 }
 
 *{box-sizing:border-box}
@@ -118,7 +119,9 @@ flex-direction:column;
 .chat-header{
 padding:16px;
 border-bottom:1px solid var(--border);
-font-weight:700;
+display:flex;
+justify-content:space-between;
+align-items:center;
 }
 
 .messages{
@@ -171,6 +174,7 @@ cursor:pointer;
 .pause{background:var(--yellow);color:white}
 .play{background:var(--green);color:white}
 .wa{background:#22c55e;color:white}
+.repertorio{background:var(--blue);color:white}
 
 .preview{
 font-size:12px;
@@ -210,8 +214,14 @@ Conversas
 
 <div class="chat">
 
-<div class="chat-header" id="clienteAtual">
+<div class="chat-header">
+
+<div id="clienteAtual">
 Selecione uma conversa
+</div>
+
+<button class="repertorio" onclick="abrirRepertorio()">📚 Repertórios</button>
+
 </div>
 
 <div class="messages" id="mensagens"></div>
@@ -226,6 +236,7 @@ const db = supabase.createClient(
 )
 
 let clienteSelecionado=null
+let statusBotAtual=false
 
 async function carregarClientes(){
 
@@ -335,8 +346,34 @@ const {data:cliente}=await db
 .eq("telefone",telefone)
 .single()
 
-document.getElementById("clienteAtual").innerText=
-(cliente?.nome||telefone)+" • "+telefone
+const {data:controle}=await db
+.from("controle_bot")
+.select("pausado")
+.eq("telefone",telefone)
+.maybeSingle()
+
+statusBotAtual = controle?.pausado || false
+
+document.getElementById("clienteAtual").innerHTML=
+`
+${cliente?.nome||telefone} • ${telefone}
+
+<button onclick="toggleBot()" style="
+margin-left:10px;
+background:${statusBotAtual ? '#22c55e':'#f59e0b'};
+color:white;
+padding:4px 10px;
+border-radius:6px;
+border:none;
+cursor:pointer;
+">
+
+${statusBotAtual ? '▶ Reativar agente':'⏸ Pausar agente'}
+
+</button>
+
+<button class="wa" onclick="abrirWhats('${telefone}')">WA</button>
+`
 
 const {data}=await db
 .from("conversas_whatsapp")
@@ -352,8 +389,7 @@ data?.forEach(m=>{
 const div=document.createElement("div")
 div.className="msg "+(m.role==="assistant"?"assistant":"user")
 
-const hora=new Date(m.created_at)
-.toLocaleString("pt-BR")
+const hora=new Date(m.created_at).toLocaleString("pt-BR")
 
 div.innerHTML=`
 <div>${m.mensagem}</div>
@@ -365,6 +401,27 @@ container.appendChild(div)
 })
 
 container.scrollTop=container.scrollHeight
+
+}
+
+async function toggleBot(){
+
+if(!clienteSelecionado) return
+
+const novo=!statusBotAtual
+
+await db
+.from("controle_bot")
+.upsert({
+telefone:clienteSelecionado,
+pausado:novo
+})
+
+statusBotAtual=novo
+
+abrirConversa(clienteSelecionado)
+
+carregarClientes()
 
 }
 
@@ -401,14 +458,98 @@ window.open("https://wa.me/"+telefone,"_blank")
 }
 
 document.getElementById("buscar").addEventListener("input",carregarClientes)
-
 document.getElementById("filtroStatus").addEventListener("change",carregarClientes)
 
 setInterval(carregarClientes,5000)
 
 carregarClientes()
 
+function abrirRepertorio(){
+document.getElementById("popupRepertorio").style.display="flex"
+}
+
+function fecharRepertorio(){
+document.getElementById("popupRepertorio").style.display="none"
+}
+
+function abrirIframe(url){
+document.getElementById("frameRepertorio").src=url
+}
+
 </script>
+
+
+<div id="popupRepertorio" style="
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,.7);
+display:none;
+align-items:center;
+justify-content:center;
+z-index:999;
+">
+
+<div style="
+width:90%;
+height:85%;
+background:#020617;
+border-radius:14px;
+display:flex;
+flex-direction:column;
+overflow:hidden;
+">
+
+<div style="
+padding:14px;
+border-bottom:1px solid #334155;
+display:flex;
+justify-content:space-between;
+align-items:center;
+">
+
+<b>Repertórios</b>
+
+<button onclick="fecharRepertorio()" style="
+background:#ef4444;
+color:white;
+border:none;
+border-radius:6px;
+padding:6px 12px;
+cursor:pointer;
+">Fechar</button>
+
+</div>
+
+<div style="
+display:flex;
+gap:10px;
+padding:12px;
+border-bottom:1px solid #334155;
+flex-wrap:wrap;
+">
+
+<button onclick="abrirIframe('prompt.html')">Prompt de comando</button>
+
+<button onclick="abrirIframe('conversas.html')">Conversas Pausadas</button>
+
+<button onclick="abrirIframe('reservas.html')">Reservas</button>
+
+<button onclick="abrirIframe('repertorio4.html')">Promoções</button>
+
+</div>
+
+<iframe id="frameRepertorio"
+style="
+flex:1;
+border:none;
+background:white;
+"></iframe>
+
+</div>
+</div>
 
 </body>
 </html>
