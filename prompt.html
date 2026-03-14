@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+
+<meta charset="UTF-8">
+
+<title>Gerenciar Prompts • Mercatto IA</title>
+
+<meta name="viewport"
+content="width=device-width,
+initial-scale=1,
+maximum-scale=1,
+user-scalable=no,
+viewport-fit=cover">
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+
+/* ===== BASE ===== */
+
+:root{
+--bg:#0f172a;
+--card:#1e293b;
+--border:#334155;
+--text:#ffffff;
+--muted:#94a3b8;
+--accent:#22c55e;
+--danger:#ef4444;
+--radius:16px;
+}
+
+*{
+box-sizing:border-box;
+}
+
+body{
+margin:0;
+font-family:Inter;
+background:linear-gradient(180deg,#020617,#0f172a);
+color:var(--text);
+padding:16px;
+}
+
+/* ===== HEADER ===== */
+
+.header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:16px;
+}
+
+.header h1{
+font-size:20px;
+margin:0;
+font-weight:800;
+}
+
+/* ===== BOTÃO ===== */
+
+.btn{
+border:none;
+background:var(--accent);
+color:white;
+padding:10px 14px;
+border-radius:10px;
+font-weight:600;
+cursor:pointer;
+}
+
+/* ===== CARD ===== */
+
+.card{
+background:var(--card);
+border:1px solid var(--border);
+border-radius:var(--radius);
+padding:14px;
+margin-bottom:12px;
+}
+
+.card h3{
+margin:0 0 6px 0;
+font-size:16px;
+}
+
+.card p{
+margin:0;
+font-size:13px;
+color:var(--muted);
+white-space:pre-wrap;
+}
+
+/* ===== AÇÕES ===== */
+
+.actions{
+display:flex;
+gap:8px;
+margin-top:10px;
+}
+
+.actions button{
+flex:1;
+padding:8px;
+border-radius:8px;
+border:none;
+font-weight:600;
+cursor:pointer;
+}
+
+.edit{background:#2563eb;color:white}
+.delete{background:var(--danger);color:white}
+.toggle{background:#475569;color:white}
+
+/* ===== MODAL ===== */
+
+.modal{
+position:fixed;
+inset:0;
+background:rgba(0,0,0,.7);
+display:none;
+align-items:center;
+justify-content:center;
+padding:16px;
+}
+
+.modal-content{
+background:var(--card);
+border-radius:16px;
+padding:16px;
+width:100%;
+max-width:420px;
+}
+
+.modal input,
+.modal textarea{
+width:100%;
+margin-bottom:10px;
+padding:10px;
+border-radius:10px;
+border:1px solid var(--border);
+background:#020617;
+color:white;
+font-family:Inter;
+}
+
+.modal textarea{
+height:180px;
+resize:none;
+}
+
+/* ===== EMPTY ===== */
+
+.empty{
+text-align:center;
+color:var(--muted);
+margin-top:40px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="header">
+<h1>Prompts IA</h1>
+<button class="btn" onclick="abrirNovo()">Novo</button>
+</div>
+
+<div id="lista"></div>
+
+<div id="modal" class="modal">
+
+<div class="modal-content">
+
+<h3 id="tituloModal">Novo Prompt</h3>
+
+<input id="nome" placeholder="Nome do prompt">
+
+<textarea id="prompt" placeholder="Escreva o prompt aqui..."></textarea>
+
+<button class="btn" onclick="salvar()">Salvar</button>
+
+</div>
+</div>
+
+<script>
+
+/* ===== SUPABASE ===== */
+
+const supabase = window.supabase.createClient(
+"COLE_SUA_URL_SUPABASE",
+"COLE_SUA_ANON_KEY"
+)
+
+let editId=null
+
+/* ===== CARREGAR ===== */
+
+async function carregar(){
+
+const {data,error} = await supabase
+.from("prompts_mercatto")
+.select("*")
+.order("ordem",{ascending:true})
+
+const lista=document.getElementById("lista")
+
+lista.innerHTML=""
+
+if(!data || !data.length){
+
+lista.innerHTML='<div class="empty">Nenhum prompt cadastrado</div>'
+return
+
+}
+
+data.forEach(p=>{
+
+const card=document.createElement("div")
+card.className="card"
+
+card.innerHTML=`
+
+<h3>${p.nome || "Sem nome"}</h3>
+
+<p>${(p.prompt || "").substring(0,200)}...</p>
+
+<div class="actions">
+
+<button class="edit" onclick="editar('${p.id}')">Editar</button>
+
+<button class="delete" onclick="remover('${p.id}')">Excluir</button>
+
+<button class="toggle" onclick="toggle('${p.id}',${p.ativo})">
+${p.ativo ? "Desativar":"Ativar"}
+</button>
+
+</div>
+
+`
+
+lista.appendChild(card)
+
+})
+
+}
+
+/* ===== NOVO ===== */
+
+function abrirNovo(){
+
+editId=null
+
+document.getElementById("nome").value=""
+document.getElementById("prompt").value=""
+
+document.getElementById("modal").style.display="flex"
+
+}
+
+/* ===== EDITAR ===== */
+
+async function editar(id){
+
+const {data}=await supabase
+.from("prompts_mercatto")
+.select("*")
+.eq("id",id)
+.single()
+
+editId=id
+
+document.getElementById("nome").value=data.nome
+document.getElementById("prompt").value=data.prompt
+
+document.getElementById("modal").style.display="flex"
+
+}
+
+/* ===== SALVAR ===== */
+
+async function salvar(){
+
+const nome=document.getElementById("nome").value
+const prompt=document.getElementById("prompt").value
+
+if(!nome || !prompt){
+
+alert("Preencha todos os campos")
+return
+
+}
+
+if(editId){
+
+await supabase
+.from("prompts_mercatto")
+.update({nome,prompt})
+.eq("id",editId)
+
+}else{
+
+await supabase
+.from("prompts_mercatto")
+.insert({nome,prompt,ativo:true})
+
+}
+
+document.getElementById("modal").style.display="none"
+
+carregar()
+
+}
+
+/* ===== EXCLUIR ===== */
+
+async function remover(id){
+
+if(!confirm("Excluir prompt?")) return
+
+await supabase
+.from("prompts_mercatto")
+.delete()
+.eq("id",id)
+
+carregar()
+
+}
+
+/* ===== ATIVAR ===== */
+
+async function toggle(id,ativo){
+
+await supabase
+.from("prompts_mercatto")
+.update({ativo:!ativo})
+.eq("id",id)
+
+carregar()
+
+}
+
+carregar()
+
+</script>
+
+</body>
+</html>
