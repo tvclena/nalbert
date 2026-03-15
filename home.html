@@ -365,8 +365,7 @@ Financeiro
 
 </div>
  
-<div class="kpis">
-
+<div id="kpisGeral">
 <div class="card"><h3>Conversas únicas</h3><div id="convUnicas" class="kpi">0</div></div>
 <div class="card"><h3>Total mensagens</h3><div id="mensagens" class="kpi">0</div></div>
 <div class="card"><h3>Mensagens cliente</h3><div id="msgClientes" class="kpi">0</div></div>
@@ -789,26 +788,24 @@ conteudoOriginal = document.getElementById("painelConteudo").innerHTML
 
 function abrirGeral(botao){
 
-/* ativa botão */
-
 document.querySelectorAll(".tabBtn")
 .forEach(b=>b.classList.remove("active"))
 
 botao.classList.add("active")
 
-/* destrói gráficos atuais */
+/* mostrar kpis novamente */
+
+document.getElementById("kpisGeral").style.display="block"
+
+/* destruir gráficos */
 
 Object.keys(charts).forEach(k=>{
 try{ charts[k].destroy() }catch(e){}
 })
 
-charts = {}
-
-/* restaura conteúdo original */
+charts={}
 
 document.getElementById("painelConteudo").innerHTML = conteudoOriginal
-
-/* recria gráficos */
 
 setTimeout(()=>carregar(),50)
 
@@ -822,6 +819,10 @@ document.querySelectorAll(".tabBtn")
 .forEach(b=>b.classList.remove("active"))
 
 botao.classList.add("active")
+
+/* esconder kpis */
+
+document.getElementById("kpisGeral").style.display="none"
 
 fetch(pagina)
 .then(res=>res.text())
