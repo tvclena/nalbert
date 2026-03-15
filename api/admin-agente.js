@@ -195,6 +195,7 @@ const agoraTexto = hoje.toLocaleString("pt-BR",{
 const completion = await openai.chat.completions.create({
 
 model:"gpt-4.1-mini",
+temperature:0,
 
 messages:[
 
@@ -337,7 +338,7 @@ let resposta = completion.choices[0].message.content
 
 /* ================= DETECTAR AÇÃO ================= */
 
-const match = resposta.match(/ALTERAR_REGISTRO_JSON:\s*({[\s\S]*?})/)
+const match = resposta.match(/ALTERAR_REGISTRO_JSON:\s*(\{[\s\S]*\})/)
 
 let acao = null
 
@@ -345,13 +346,20 @@ if(match){
 
 try{
 
-acao = JSON.parse(match[1])
+let jsonTexto = match[1]
+
+jsonTexto = jsonTexto
+.replace(/```json/g,"")
+.replace(/```/g,"")
+.trim()
+
+acao = JSON.parse(jsonTexto)
 
 resposta += "\n\n⚠️ Confirme para executar esta ação."
 
 }catch(e){
 
-console.log("Erro parse JSON ação")
+console.log("Erro parse JSON ação:", match[1])
 
 }
 
