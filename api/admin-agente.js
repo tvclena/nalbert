@@ -113,6 +113,10 @@ role: m.role,
 content: m.mensagem
 }))
 
+mensagens.push({
+role:"user",
+content: pergunta
+})
 /* ================= BUSCAR DADOS SISTEMA ================= */
 
 const {data:reservas} = await supabase
@@ -215,8 +219,16 @@ Regras obrigatórias:
 - "hoje" = ${hojeISO}
 - "ontem" = ${ontemISO}
 - "amanhã" = ${amanhaISO}
+`
+},
 
-Sempre usar essas datas para consultas em reservas, agenda e eventos.
+{
+role:"system",
+content:`REGRAS DO AGENTE:
+
+${promptAgente}
+
+Todas as regras acima são obrigatórias e devem ser seguidas rigorosamente.
 `
 },
 
@@ -224,6 +236,7 @@ Sempre usar essas datas para consultas em reservas, agenda e eventos.
 role:"system",
 content:`RESERVAS:\n${JSON.stringify(reservas || [])}`
 },
+
 
 {
 role:"system",
