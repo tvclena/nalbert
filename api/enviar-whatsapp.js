@@ -7,11 +7,21 @@ process.env.SUPABASE_SERVICE_ROLE
 
 module.exports = async function handler(req,res){
 
+/* CORS */
+
+res.setHeader("Access-Control-Allow-Origin","*")
+res.setHeader("Access-Control-Allow-Methods","POST")
+res.setHeader("Access-Control-Allow-Headers","Content-Type, Authorization")
+
+if(req.method === "OPTIONS"){
+return res.status(200).end()
+}
+
 if(req.method !== "POST"){
 return res.status(405).json({erro:"Método não permitido"})
 }
 
-/* ================= SEGURANÇA ================= */
+/* SEGURANÇA */
 
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN
 
@@ -21,20 +31,19 @@ return res.status(403).json({erro:"Acesso negado"})
 
 try{
 
-const telefone = req.body.telefone
-const mensagem = req.body.mensagem
+const {telefone,mensagem} = req.body
 
 if(!telefone || !mensagem){
 return res.status(400).json({erro:"telefone ou mensagem faltando"})
 }
 
-/* ================= WHATSAPP API ================= */
+/* ================= WHATSAPP ================= */
 
 const phone_number_id = process.env.WHATSAPP_PHONE_ID
 
 const url = `https://graph.facebook.com/v19.0/${phone_number_id}/messages`
 
-await fetch(url,{
+const resposta = await fetch(url,{
 
 method:"POST",
 
@@ -59,18 +68,34 @@ body:mensagem
 
 })
 
-/* ================= SALVAR NO HISTORICO ================= */
+const data = await resposta.json()
+
+/* MOSTRAR ERRO DO FACEBOOK */
+
+if(!resposta.ok){
+
+console.log("ERRO WHATSAPP:",data)
+
+return res.status(400).json({
+erro:"erro whatsapp",
+detalhe:data
+})
+
+}
+
+/* ================= SALVAR ================= */
 
 await supabase
 .from("conversas_whatsapp")
 .insert({
-telefone:telefone,
-mensagem:mensagem,
+telefone,
+mensagem,
 role:"assistant"
 })
 
 return res.json({
-ok:true
+ok:true,
+whatsapp:data
 })
 
 }catch(e){
@@ -78,7 +103,7 @@ ok:true
 console.log("ERRO ENVIO:",e)
 
 return res.status(500).json({
-erro:"erro ao enviar mensagem"
+erro:"erro interno"
 })
 
 }
