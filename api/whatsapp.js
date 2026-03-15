@@ -18,6 +18,7 @@ new Date().toLocaleString("en-US",{ timeZone:"America/Bahia" })
 
 }
 
+
 /* ================= RELATORIO AUTOMATICO ================= */
 
 async function enviarRelatorioAutomatico(){
