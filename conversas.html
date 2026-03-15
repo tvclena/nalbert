@@ -871,7 +871,7 @@ const msg = document.getElementById("msgManual").value.trim()
 
 if(!msg) return
 
-await fetch("/api/enviar-whatsapp",{
+await fetch("https://nalbert.vercel.app/api/enviar-whatsapp",{
 
 method:"POST",
 
@@ -889,12 +889,9 @@ mensagem:msg
 
 document.getElementById("msgManual").value=""
 
-/* atualiza conversa */
-
 abrirConversa(clienteSelecionado)
 
 }
-
 /* realtime mensagens */
 
 db
