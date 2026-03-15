@@ -660,16 +660,16 @@ const diasNoMes=new Date(ano,mes+1,0).getDate()
 
 for(let i=1;i<=diasNoMes;i++){
 
-let count=reservas.filter(r=>{
+let count = reservas.filter(r=>{
 
 if(!r.datahora) return false
 
-const d=new Date(r.datahora)
-return (
-d.getDate()===i &&
-d.getMonth()===mes &&
-d.getFullYear()===ano
-)
+const d = new Date(r.datahora)
+
+const diaReserva = d.toLocaleDateString("pt-BR")
+const diaCalendario = new Date(ano,mes,i).toLocaleDateString("pt-BR")
+
+return diaReserva === diaCalendario
 
 }).length
 
