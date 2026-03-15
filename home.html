@@ -470,7 +470,7 @@ let charts={}
 function normalizar(t){return (t||"").replace(/\D/g,"")}
 function dataReserva(data){
 if(!data) return null
-return new Date(data.replace(" ","T"))
+return new Date(data)
 }
 function money(v){return Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}
 
@@ -664,8 +664,7 @@ let count=reservas.filter(r=>{
 
 if(!r.datahora) return false
 
-const d=new Date(r.datahora.replace(" ","T"))
-
+const d=new Date(r.datahora)
 return (
 d.getDate()===i &&
 d.getMonth()===mes &&
@@ -746,8 +745,7 @@ function listarReservas(res){
 const lista=document.getElementById("lista")
 lista.innerHTML=""
 
-res.sort((a,b)=>new Date(a.datahora.replace(" ","T"))-new Date(b.datahora.replace(" ","T")))
- 
+res.sort((a,b)=>new Date(a.datahora)-new Date(b.datahora)) 
 res.forEach(r=>{
 
 const div=document.createElement("div")
