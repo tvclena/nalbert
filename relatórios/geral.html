@@ -10,7 +10,7 @@ initial-scale=1,
 maximum-scale=1,
 user-scalable=no">
 
-<title>Central de Relatórios</title>
+<title>Central de Relatórios • CMV</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 
@@ -19,49 +19,75 @@ user-scalable=no">
 :root{
 --primary:#14b8a6;
 --primary-dark:#0f766e;
+
 --bg:#0b1220;
 --panel:#0f172a;
+
 --text:#e5e7eb;
 --muted:#94a3b8;
+
 --border:rgba(148,163,184,.18);
 }
 
+/* BODY */
+
 body{
+
 margin:0;
+
 font-family:Inter;
+
 background:
 radial-gradient(1200px 600px at 10% -10%, rgba(20,184,166,.08), transparent 60%),
 radial-gradient(900px 500px at 110% 10%, rgba(20,184,166,.06), transparent 55%),
 var(--bg);
+
 color:var(--text);
+
 }
 
 /* HEADER */
 
 .header{
+
 max-width:1200px;
+
 margin:auto;
-padding:30px 20px 10px;
+
+padding:28px 20px 8px;
+
 }
 
 .header h1{
+
 margin:0;
-font-size:28px;
+
+font-size:26px;
+
 font-weight:900;
+
 }
 
 .header p{
+
 margin:6px 0 0;
+
 color:var(--muted);
+
 font-size:13px;
+
 }
 
 /* SEARCH */
 
 .search{
+
 max-width:1200px;
+
 margin:auto;
-padding:10px 20px;
+
+padding:12px 20px;
+
 }
 
 .search input{
@@ -87,9 +113,13 @@ text-transform:uppercase;
 /* GRID */
 
 .container{
+
 max-width:1200px;
+
 margin:auto;
+
 padding:20px;
+
 }
 
 .grid{
@@ -98,7 +128,7 @@ display:grid;
 
 grid-template-columns:repeat(4,1fr);
 
-gap:16px;
+gap:14px;
 
 }
 
@@ -129,6 +159,8 @@ border-color:rgba(20,184,166,.5);
 
 }
 
+/* ICON */
+
 .icon{
 
 width:36px;
@@ -144,24 +176,67 @@ background:linear-gradient(135deg,var(--primary),var(--primary-dark));
 
 }
 
-/* IFRAME */
+/* VIEWER */
 
 .viewer{
 
 max-width:1200px;
-margin:20px auto;
+
+margin:10px auto 40px;
+
 padding:0 20px;
 
+display:none;
+
 }
+
+.viewerHeader{
+
+display:flex;
+
+justify-content:space-between;
+
+align-items:center;
+
+margin-bottom:10px;
+
+}
+
+.viewerHeader h2{
+
+margin:0;
+
+font-size:18px;
+
+}
+
+.close{
+
+background:var(--primary);
+
+border:none;
+
+padding:8px 14px;
+
+border-radius:8px;
+
+cursor:pointer;
+
+font-weight:700;
+
+}
+
+/* IFRAME */
 
 iframe{
 
 width:100%;
-height:600px;
+
+height:650px;
 
 border:none;
 
-border-radius:14px;
+border-radius:12px;
 
 background:#020617;
 
@@ -176,7 +251,7 @@ background:#020617;
 
 <h1>📊 Central de Relatórios</h1>
 
-<p>Delivery • CMV • Vendas • Ingredientes</p>
+<p>Delivery • Vendas • Ingredientes • CMV</p>
 
 </div>
 
@@ -190,22 +265,22 @@ background:#020617;
 
 <div class="grid" id="grid">
 
-<div class="card" onclick="abrir('delivery.html')">
+<div class="card" onclick="abrir('delivery.html','Delivery')">
 <div class="icon">🚚</div>
 <h3>Delivery</h3>
 </div>
 
-<div class="card" onclick="abrir('vendas.html')">
+<div class="card" onclick="abrir('vendas.html','Vendas')">
 <div class="icon">🛒</div>
 <h3>Vendas</h3>
 </div>
 
-<div class="card" onclick="abrir('ingredientes.html')">
+<div class="card" onclick="abrir('ingredientes.html','Ingredientes')">
 <div class="icon">🧾</div>
 <h3>Ingredientes</h3>
 </div>
 
-<div class="card" onclick="abrir('cmv.html')">
+<div class="card" onclick="abrir('cmv.html','CMV')">
 <div class="icon">📊</div>
 <h3>CMV</h3>
 </div>
@@ -214,35 +289,64 @@ background:#020617;
 
 </div>
 
-<div class="viewer">
+
+<div class="viewer" id="viewer">
+
+<div class="viewerHeader">
+
+<h2 id="tituloRelatorio"></h2>
+
+<button class="close" onclick="fechar()">Fechar</button>
+
+</div>
 
 <iframe id="frame"></iframe>
 
 </div>
 
+
 <script>
 
 /* ABRIR RELATÓRIO */
 
-function abrir(pagina){
+function abrir(pagina,titulo){
 
-document.getElementById("frame").src = pagina
+document.getElementById("viewer").style.display="block"
+
+document.getElementById("frame").src=pagina
+
+document.getElementById("tituloRelatorio").innerText=titulo
+
+window.scrollTo({
+top:document.getElementById("viewer").offsetTop,
+behavior:"smooth"
+})
+
+}
+
+/* FECHAR */
+
+function fechar(){
+
+document.getElementById("viewer").style.display="none"
+
+document.getElementById("frame").src=""
 
 }
 
 /* PESQUISA */
 
-const busca = document.getElementById("busca")
+const busca=document.getElementById("busca")
 
 busca.addEventListener("input",()=>{
 
-const termo = busca.value.toLowerCase()
+const termo=busca.value.toLowerCase()
 
 document.querySelectorAll(".card").forEach(card=>{
 
-const texto = card.innerText.toLowerCase()
+const texto=card.innerText.toLowerCase()
 
-card.style.display = texto.includes(termo) ? "block" : "none"
+card.style.display=texto.includes(termo)?"block":"none"
 
 })
 
