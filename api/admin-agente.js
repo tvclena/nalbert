@@ -139,6 +139,15 @@ const {data:buffet} = await supabase
 .from("buffet")
 .select("*")
 .limit(100)
+
+/* ================= BUSCAR PROMPTS DO AGENTE ================= */
+
+const {data:promptTabela} = await supabase
+.from("prompt_agente")
+.select("*")
+.order("ordem",{ascending:true})
+
+  
 /* ================= BUSCAR PROMPT DO AGENTE ================= */
 
 const { data: prompts } = await supabase
@@ -235,7 +244,71 @@ content:`CONVERSAS:\n${JSON.stringify(conversas || [])}`
 role:"system",
 content:`CARDAPIO:\n${JSON.stringify(buffet || [])}`
 },
+{
+role:"system",
+content:`PROMPTS DO AGENTE:\n${JSON.stringify(promptTabela || [])}`
+},
 
+
+{
+role:"system",
+content:`
+
+Você pode criar, editar ou apagar prompts da tabela "prompt_agente".
+
+Estrutura da tabela:
+
+prompt_agente
+- id
+- prompt
+- ordem
+- ativo
+- created_at
+
+Se o usuário pedir para alterar ou criar prompts, gere uma ação usando:
+
+ALTERAR_REGISTRO_JSON:
+{
+"operacao":"insert | update | delete",
+"tabela":"prompt_agente",
+"dados":{...},
+"filtro":{...}
+}
+
+Exemplo criar prompt:
+
+ALTERAR_REGISTRO_JSON:
+{
+"operacao":"insert",
+"tabela":"prompt_agente",
+"dados":{
+"prompt":"Sempre enviar a foto do prato antes da descrição.",
+"ordem":10,
+"ativo":true
+}
+}
+
+Exemplo editar prompt:
+
+ALTERAR_REGISTRO_JSON:
+{
+"operacao":"update",
+"tabela":"prompt_agente",
+"dados":{
+"prompt":"texto atualizado"
+},
+"filtro":{
+"id":5
+}
+}
+
+Nunca execute nada direto.
+Sempre gere o JSON ALTERAR_REGISTRO_JSON para confirmação.
+`
+},
+
+
+  
 ...mensagens
 ]
 
