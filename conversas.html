@@ -588,6 +588,11 @@ ${nomes[c.telefone] ? nomes[c.telefone] : c.telefone}
 
 <div class="menuDots" onclick="abrirMenu(event,'${c.telefone}')">⋮</div>
 <div class="menu" id="menu-${c.telefone}">
+
+<button onclick="editarContato('${c.telefone}')">
+Editar contato
+</button>
+
 <button onclick="toggleBot('${c.telefone}')" style="
 background:${pausado?'#22c55e':'#ef4444'};
 color:white;
@@ -597,6 +602,8 @@ font-size:12px;
 ">
 ${pausado ? "ATIVAR BOT" : "DESATIVAR BOT"}
 </button>
+
+</div>
 </div>
 
 `
@@ -629,11 +636,17 @@ document.getElementById("clienteAtual").innerHTML = `
 ${nomeCliente} • ${telefone}
 
 <span class="menuDots" onclick="abrirMenu(event,'${telefone}')">⋮</span>
-
 <div class="menu" id="menu-${telefone}">
+
+<button onclick="editarContato('${telefone}')">
+Editar contato
+</button>
+
 <button onclick="toggleBot('${telefone}')">
 Pausar / Reativar
 </button>
+
+</div>
 </div>
 
 <a href="https://wa.me/${telefone}" target="_blank" class="waBtn">
@@ -932,7 +945,45 @@ document.getElementById("popupRepertorio").style.display="flex"
 
 }
 
+async function editarContato(telefone){
 
+const {data} = await db
+.from("memoria_clientes")
+.select("nome")
+.eq("telefone",telefone)
+.maybeSingle()
+
+const nomeAtual = data?.nome || ""
+
+const novoNome = prompt("Editar nome do contato:",nomeAtual)
+
+if(!novoNome) return
+
+if(data){
+
+await db
+.from("memoria_clientes")
+.update({nome:novoNome})
+.eq("telefone",telefone)
+
+}else{
+
+await db
+.from("memoria_clientes")
+.insert({
+telefone:telefone,
+nome:novoNome
+})
+
+}
+
+carregarClientes()
+
+if(clienteSelecionado === telefone){
+abrirConversa(telefone)
+}
+
+}
 
 
 
