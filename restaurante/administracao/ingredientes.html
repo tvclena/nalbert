@@ -41,6 +41,8 @@
 html,body{
   margin:0;
   height:100%;
+  width:100%;
+
   font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto;
 
   background:
@@ -53,11 +55,14 @@ html,body{
   overflow:hidden;
 }
 
-/* APP */
+/* LAYOUT PRINCIPAL */
 
 .app{
+
   display:grid;
-  grid-template-columns:260px 1fr;
+
+  grid-template-columns:240px 1fr;
+
   height:100%;
   width:100%;
 }
@@ -65,6 +70,8 @@ html,body{
 /* SIDEBAR */
 
 .sidebar{
+
+  grid-column:1;
 
   background:
   linear-gradient(180deg, rgba(15,23,42,.95), rgba(11,18,32,.96));
@@ -236,7 +243,9 @@ html,body{
 
 .main{
 
-  padding:18px;
+  grid-column:2;
+
+  padding:20px;
 
   overflow-y:auto;
 
@@ -259,9 +268,9 @@ html,body{
 
   var(--panel);
 
-  border-radius:24px;
+  border-radius:22px;
 
-  padding:26px;
+  padding:24px;
 
   border:1px solid var(--border);
 
@@ -285,9 +294,9 @@ html,body{
 
 .section{
 
-  margin-top:20px;
+  margin-top:18px;
 
-  padding-top:14px;
+  padding-top:12px;
 
   border-top:1px dashed var(--border);
 }
@@ -332,7 +341,7 @@ html,body{
   color:#cbd5e1;
 }
 
-/* INPUTS */
+/* INPUT */
 
 input,select{
 
@@ -376,7 +385,7 @@ input:focus,select:focus{
 
 button{
 
-  margin-top:20px;
+  margin-top:18px;
 
   border:none;
 
@@ -488,33 +497,6 @@ button:hover{
 .toast.show{
   opacity:1;
 }
-
-/* RESPONSIVO */
-
-@media(max-width:900px){
-
-  .app{
-    grid-template-columns:1fr;
-  }
-
-  .sidebar{
-    height:auto;
-    border-right:none;
-    border-bottom:1px solid var(--border);
-  }
-
-  .form-grid{
-    grid-template-columns:repeat(2,1fr);
-  }
-}
-
-@media(max-width:520px){
-
-  .form-grid{
-    grid-template-columns:1fr;
-  }
-}
-  
 </style>
 </head>
 
