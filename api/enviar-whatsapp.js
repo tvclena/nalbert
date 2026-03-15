@@ -71,8 +71,7 @@ Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
 
 /* LOG */
 
-console.log("WHATSAPP ENVIADO:",resposta.data)
-
+console.log("WHATSAPP RESPONSE:", JSON.stringify(resposta.data,null,2))
 /* SALVAR CONVERSA */
 
 await supabase
