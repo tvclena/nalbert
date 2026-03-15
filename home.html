@@ -780,25 +780,38 @@ location.href=pagina
 
 function abrirPainel(pagina,botao){
 
-/* ativa botão */
-
 document.querySelectorAll(".tabBtn")
 .forEach(b=>b.classList.remove("active"))
 
 botao.classList.add("active")
 
-/* carrega html dentro da área dos gráficos */
-
 fetch(pagina)
 .then(res=>res.text())
 .then(html=>{
 
-document.getElementById("painelConteudo").innerHTML = html
+const area = document.getElementById("painelConteudo")
+
+area.innerHTML = html
+
+/* executa scripts do painel carregado */
+
+area.querySelectorAll("script").forEach(oldScript => {
+
+const newScript = document.createElement("script")
+
+if(oldScript.src){
+newScript.src = oldScript.src
+}else{
+newScript.textContent = oldScript.textContent
+}
+
+document.body.appendChild(newScript)
+
+})
 
 })
 
 }
-
  
 </script>
 
