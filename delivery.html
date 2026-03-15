@@ -1,8 +1,246 @@
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div class="kpis">
+
+<div class="card">
+<h3>Total pedidos</h3>
+<div id="pedidosTotal" class="kpi">0</div>
+</div>
+
+<div class="card">
+<h3>Pedidos entregues</h3>
+<div id="pedidosEntregues" class="kpi">0</div>
+</div>
+
+<div class="card">
+<h3>Pedidos cancelados</h3>
+<div id="pedidosCancelados" class="kpi">0</div>
+</div>
+
+<div class="card">
+<h3>Ticket médio</h3>
+<div id="ticketDelivery" class="kpi">R$0</div>
+</div>
+
+<div class="card">
+<h3>Faturamento</h3>
+<div id="faturamentoDelivery" class="kpi">R$0</div>
+</div>
+
+<div class="card">
+<h3>Clientes únicos</h3>
+<div id="clientesDelivery" class="kpi">0</div>
+</div>
+
+</div>
+
+
 <div class="gridCharts">
 
 <div class="card">
-<h3>Pedidos Delivery</h3>
-<canvas id="graficoDelivery"></canvas>
+<h3>Pedidos por hora</h3>
+<canvas id="graficoHoraDelivery"></canvas>
+</div>
+
+<div class="card">
+<h3>Status pedidos</h3>
+<canvas id="graficoStatusDelivery"></canvas>
 </div>
 
 </div>
+
+
+<div class="gridCharts2">
+
+<div class="card">
+<h3>Pedidos por dia</h3>
+<canvas id="graficoDiaDelivery"></canvas>
+</div>
+
+<div class="card">
+<h3>Top produtos</h3>
+<canvas id="graficoProdutosDelivery"></canvas>
+</div>
+
+<div class="card">
+<h3>Top clientes</h3>
+<canvas id="graficoClientesDelivery"></canvas>
+</div>
+
+</div>
+
+
+<script>
+
+const db = supabase.createClient(
+"https://dxkszikemntfusfyrzos.supabase.co",
+"sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
+)
+
+let chartsDelivery = {}
+
+function money(v){
+return Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"})
+}
+
+function destroy(id){
+if(chartsDelivery[id]) chartsDelivery[id].destroy()
+}
+
+async function carregarDelivery(){
+
+const {data:pedidos} = await db
+.from("delivery_pedidos")
+.select("*")
+
+if(!pedidos) return
+
+/* KPIS */
+
+document.getElementById("pedidosTotal").innerText = pedidos.length
+
+const entregues = pedidos.filter(p=>p.status==="entregue")
+document.getElementById("pedidosEntregues").innerText = entregues.length
+
+const cancelados = pedidos.filter(p=>p.status==="cancelado")
+document.getElementById("pedidosCancelados").innerText = cancelados.length
+
+let faturamento = pedidos.reduce((a,p)=>a+Number(p.total||0),0)
+
+document.getElementById("faturamentoDelivery").innerText = money(faturamento)
+
+document.getElementById("ticketDelivery").innerText =
+money(pedidos.length ? faturamento/pedidos.length : 0)
+
+const clientes = new Set()
+pedidos.forEach(p=>clientes.add(p.cliente))
+
+document.getElementById("clientesDelivery").innerText = clientes.size
+
+
+/* PEDIDOS POR HORA */
+
+let horas = Array(24).fill(0)
+
+pedidos.forEach(p=>{
+let h = new Date(p.created_at).getHours()
+horas[h]++
+})
+
+destroy("hora")
+
+chartsDelivery["hora"] = new Chart(
+document.getElementById("graficoHoraDelivery"),
+{
+type:"bar",
+data:{
+labels:[...Array(24).keys()].map(h=>h+"h"),
+datasets:[{
+data:horas,
+backgroundColor:"#3b82f6"
+}]
+},
+options:{plugins:{legend:{display:false}}}
+})
+
+
+/* STATUS */
+
+let status = {}
+
+pedidos.forEach(p=>{
+status[p.status] = (status[p.status] || 0) + 1
+})
+
+destroy("status")
+
+chartsDelivery["status"] = new Chart(
+document.getElementById("graficoStatusDelivery"),
+{
+type:"doughnut",
+data:{
+labels:Object.keys(status),
+datasets:[{data:Object.values(status)}]
+}
+})
+
+
+/* PEDIDOS POR DIA */
+
+let dias = {}
+
+pedidos.forEach(p=>{
+let d = new Date(p.created_at).toLocaleDateString("pt-BR")
+dias[d] = (dias[d]||0)+1
+})
+
+destroy("dias")
+
+chartsDelivery["dias"] = new Chart(
+document.getElementById("graficoDiaDelivery"),
+{
+type:"line",
+data:{
+labels:Object.keys(dias),
+datasets:[{
+data:Object.values(dias),
+borderColor:"#3b82f6"
+}]
+}
+})
+
+
+/* PRODUTOS */
+
+let produtos = {}
+
+pedidos.forEach(p=>{
+if(!p.itens) return
+p.itens.forEach(i=>{
+produtos[i.nome]=(produtos[i.nome]||0)+i.qtd
+})
+})
+
+destroy("produtos")
+
+chartsDelivery["produtos"] = new Chart(
+document.getElementById("graficoProdutosDelivery"),
+{
+type:"bar",
+data:{
+labels:Object.keys(produtos).slice(0,5),
+datasets:[{
+data:Object.values(produtos).slice(0,5)
+}]
+}
+})
+
+
+/* CLIENTES */
+
+let clientesTop = {}
+
+pedidos.forEach(p=>{
+clientesTop[p.cliente]=(clientesTop[p.cliente]||0)+1
+})
+
+destroy("clientes")
+
+chartsDelivery["clientes"] = new Chart(
+document.getElementById("graficoClientesDelivery"),
+{
+type:"bar",
+data:{
+labels:Object.keys(clientesTop).slice(0,5),
+datasets:[{
+data:Object.values(clientesTop).slice(0,5)
+}]
+}
+})
+
+}
+
+carregarDelivery()
+
+</script>
