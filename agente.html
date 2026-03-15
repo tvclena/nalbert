@@ -4,137 +4,95 @@
 <head>
 
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 
-<title>Mercatto • Agente Administrador</title>
+<title>Agente Administrador</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 
-/* ================= BASE ================= */
+/* BASE */
 
 body{
 margin:0;
 font-family:Inter;
-background:#020617;
-color:#e2e8f0;
+background:#0b141a;
 display:flex;
+flex-direction:column;
 height:100vh;
-overflow:hidden;
-}
-
-/* ================= SIDEBAR ================= */
-
-.sidebar{
-width:260px;
-background:#020617;
-border-right:1px solid #1e293b;
-display:flex;
-flex-direction:column;
-}
-
-.sidebar-header{
-padding:16px;
-font-weight:600;
-border-bottom:1px solid #1e293b;
-}
-
-.new-chat{
-margin:12px;
-padding:10px;
-background:#2563eb;
-border:none;
 color:white;
-border-radius:8px;
-cursor:pointer;
-}
-
-.conversations{
-flex:1;
-overflow:auto;
-}
-
-.conv{
-padding:12px 16px;
-border-bottom:1px solid #1e293b;
-cursor:pointer;
-font-size:13px;
-}
-
-/* ================= MAIN ================= */
-
-.main{
-flex:1;
-display:flex;
-flex-direction:column;
 }
 
 /* HEADER */
 
 .header{
-padding:14px 18px;
-border-bottom:1px solid #1e293b;
+background:#202c33;
+padding:12px 16px;
 display:flex;
-justify-content:space-between;
 align-items:center;
+gap:10px;
 }
 
-/* CHAT */
+.header-title{
+font-weight:600;
+}
 
-.messages{
+/* CHAT AREA */
+
+.chat{
 flex:1;
 overflow:auto;
 padding:20px;
 display:flex;
 flex-direction:column;
-gap:16px;
+gap:10px;
+background:#111b21;
 }
 
 /* BOLHAS */
 
 .msg{
-max-width:720px;
-padding:14px;
-border-radius:12px;
-line-height:1.5;
+max-width:65%;
+padding:10px 12px;
+border-radius:8px;
 font-size:14px;
+line-height:1.5;
+word-wrap:break-word;
 }
 
 .user{
-background:#1e293b;
-align-self:flex-start;
+align-self:flex-end;
+background:#005c4b;
 }
 
 .assistant{
-background:#16a34a;
-color:white;
-align-self:flex-end;
+align-self:flex-start;
+background:#202c33;
 }
 
-/* MEDIA */
+/* MIDIA */
 
 .media img{
-width:100%;
-border-radius:10px;
-margin-top:10px;
+max-width:260px;
+border-radius:8px;
+margin-top:8px;
 }
 
 .media video{
-width:100%;
-border-radius:10px;
-margin-top:10px;
+max-width:260px;
+border-radius:8px;
+margin-top:8px;
 }
 
 .download{
 display:inline-block;
 margin-top:6px;
-background:#0ea5e9;
-padding:6px 10px;
-border-radius:6px;
+background:#2563eb;
+padding:4px 8px;
+border-radius:4px;
 font-size:12px;
 color:white;
 text-decoration:none;
@@ -142,43 +100,39 @@ text-decoration:none;
 
 /* INPUT */
 
-.send{
+.input-area{
 display:flex;
-padding:14px;
 gap:10px;
-border-top:1px solid #1e293b;
+padding:12px;
+background:#202c33;
 }
 
 textarea{
 flex:1;
-height:50px;
-background:#020617;
-border:1px solid #334155;
-color:white;
-border-radius:8px;
-padding:10px;
+height:40px;
+border-radius:6px;
+border:none;
+padding:8px;
+font-family:Inter;
 resize:none;
+background:#2a3942;
+color:white;
 }
 
 button{
-background:#2563eb;
+background:#00a884;
 border:none;
+padding:8px 14px;
+border-radius:6px;
 color:white;
-padding:10px 16px;
-border-radius:8px;
 cursor:pointer;
 }
 
-/* DASHBOARD */
+/* PENSANDO */
 
-.dashboard{
-padding:20px;
-border-top:1px solid #1e293b;
-background:#020617;
-}
-
-.chart{
-max-width:400px;
+.thinking{
+opacity:0.6;
+font-size:13px;
 }
 
 </style>
@@ -187,135 +141,47 @@ max-width:400px;
 
 <body>
 
-<!-- SIDEBAR -->
-
-<div class="sidebar">
-
-<div class="sidebar-header">
-Mercatto AI
-</div>
-
-<button class="new-chat" onclick="novoChat()">+ Nova conversa</button>
-
-<div class="conversations" id="conversations"></div>
-
-</div>
-
-<!-- MAIN -->
-
-<div class="main">
-
 <div class="header">
-
-<div>
-🤖 Agente Administrador
+<div class="header-title">Agente Administrador</div>
 </div>
 
-<div>
-Dashboard
-</div>
+<div id="chat" class="chat"></div>
 
-</div>
+<div class="input-area">
 
-<div class="messages" id="chat"></div>
-
-<div class="send">
-
-<textarea id="msg" placeholder="Digite sua pergunta..."></textarea>
-
-<input type="file" id="upload" hidden>
-
-<button onclick="document.getElementById('upload').click()">📎</button>
+<textarea id="msg" placeholder="Digite sua mensagem..."></textarea>
 
 <button onclick="enviar()">Enviar</button>
 
 </div>
 
-<div class="dashboard">
-
-<canvas id="chartReservas" class="chart"></canvas>
-
-</div>
-
-</div>
-
 <script>
 
-/* ================= HISTÓRICO ================= */
+/* ================= PROMPT DO SISTEMA ================= */
 
-let historico = JSON.parse(localStorage.getItem("chatHistorico") || "[]")
+const SYSTEM_PROMPT = `
 
-let conversaAtual = []
+COLE AQUI SEU PROMPT DO AGENTE
+
+`
+
+/* ================= HISTORICO ================= */
+
+let historico = JSON.parse(localStorage.getItem("mercatto_admin_chat") || "[]")
 
 function salvarHistorico(){
 
-localStorage.setItem("chatHistorico",JSON.stringify(historico))
-
-renderConversas()
+localStorage.setItem("mercatto_admin_chat",JSON.stringify(historico))
 
 }
 
-function renderConversas(){
+/* ================= DETECTAR MIDIA ================= */
 
-const el = document.getElementById("conversations")
-
-el.innerHTML=""
-
-historico.forEach((c,i)=>{
-
-const div = document.createElement("div")
-
-div.className="conv"
-
-div.innerText=c.titulo || "Conversa"
-
-div.onclick=()=>abrirConversa(i)
-
-el.appendChild(div)
-
-})
-
-}
-
-function abrirConversa(i){
-
-conversaAtual = historico[i].msgs
-
-renderChat()
-
-}
-
-function novoChat(){
-
-conversaAtual=[]
-
-renderChat()
-
-}
-
-/* ================= RENDER CHAT ================= */
-
-function renderChat(){
-
-const chat = document.getElementById("chat")
-
-chat.innerHTML=""
-
-conversaAtual.forEach(m=>{
-
-addMsg(m.role,m.content)
-
-})
-
-}
-
-/* ================= MIDIA ================= */
-
-function detectarMidia(texto){
-
-const urls = texto.match(/https?:\/\/[^\s]+/g)
+function renderMidia(texto){
 
 let html = marked.parse(texto)
+
+const urls = texto.match(/https?:\/\/[^\s]+/g)
 
 if(urls){
 
@@ -323,19 +189,25 @@ urls.forEach(url=>{
 
 if(url.match(/\.(jpg|jpeg|png|webp|gif)/i)){
 
-html += `<div class="media">
+html += `
+<div class="media">
 <img src="${url}">
+<br>
 <a class="download" href="${url}" download>Baixar</a>
-</div>`
+</div>
+`
 
 }
 
-else if(url.match(/\.(mp4|webm|mov)/i)){
+if(url.match(/\.(mp4|webm|mov)/i)){
 
-html += `<div class="media">
+html += `
+<div class="media">
 <video controls src="${url}"></video>
+<br>
 <a class="download" href="${url}" download>Baixar</a>
-</div>`
+</div>
+`
 
 }
 
@@ -347,7 +219,7 @@ return html
 
 }
 
-/* ================= ADD MSG ================= */
+/* ================= ADICIONAR MSG ================= */
 
 function addMsg(role,text){
 
@@ -357,13 +229,21 @@ const div = document.createElement("div")
 
 div.className="msg "+role
 
-div.innerHTML = detectarMidia(text)
+div.innerHTML = renderMidia(text)
 
 chat.appendChild(div)
 
 chat.scrollTop = chat.scrollHeight
 
 }
+
+/* ================= CARREGAR HISTORICO ================= */
+
+historico.forEach(m=>{
+
+addMsg(m.role,m.content)
+
+})
 
 /* ================= ENVIAR ================= */
 
@@ -377,9 +257,27 @@ if(!texto) return
 
 addMsg("user",texto)
 
-conversaAtual.push({role:"user",content:texto})
+historico.push({role:"user",content:texto})
+
+salvarHistorico()
 
 textarea.value=""
+
+/* pensando */
+
+const chat = document.getElementById("chat")
+
+const thinking = document.createElement("div")
+
+thinking.className="msg assistant thinking"
+
+thinking.innerText="Agente está pensando..."
+
+chat.appendChild(thinking)
+
+chat.scrollTop = chat.scrollHeight
+
+/* requisição */
 
 const res = await fetch("/api/admin-agente",{
 
@@ -391,7 +289,8 @@ headers:{
 },
 
 body:JSON.stringify({
-pergunta:texto
+pergunta:texto,
+system_prompt:SYSTEM_PROMPT
 })
 
 })
@@ -401,17 +300,24 @@ const text = await res.text()
 let data
 
 try{
+
 data = JSON.parse(text)
+
 }catch(e){
+
+thinking.remove()
 
 addMsg("assistant","Erro no servidor")
 
 return
+
 }
+
+thinking.remove()
 
 addMsg("assistant",data.resposta)
 
-conversaAtual.push({role:"assistant",content:data.resposta})
+historico.push({role:"assistant",content:data.resposta})
 
 salvarHistorico()
 
@@ -419,7 +325,7 @@ salvarHistorico()
 
 /* ENTER ENVIA */
 
-document.getElementById("msg").addEventListener("keydown",e=>{
+document.getElementById("msg").addEventListener("keydown",function(e){
 
 if(e.key==="Enter" && !e.shiftKey){
 
@@ -430,46 +336,6 @@ enviar()
 }
 
 })
-
-/* ================= UPLOAD ================= */
-
-document.getElementById("upload").addEventListener("change",async e=>{
-
-const file = e.target.files[0]
-
-const reader = new FileReader()
-
-reader.onload = function(){
-
-addMsg("user",`Imagem enviada`)
-
-const img = `<img src="${reader.result}">`
-
-document.getElementById("chat").innerHTML += img
-
-}
-
-reader.readAsDataURL(file)
-
-})
-
-/* ================= DASHBOARD ================= */
-
-const ctx = document.getElementById("chartReservas")
-
-new Chart(ctx,{
-type:"bar",
-data:{
-labels:["Seg","Ter","Qua","Qui","Sex","Sab","Dom"],
-datasets:[{
-label:"Reservas",
-data:[12,19,8,15,25,30,18],
-backgroundColor:"#16a34a"
-}]
-}
-})
-
-renderConversas()
 
 </script>
 
