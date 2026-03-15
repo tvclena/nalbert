@@ -271,8 +271,21 @@ Todas as regras acima são obrigatórias e devem ser seguidas rigorosamente.
 
 {
 role:"system",
-content:`RESERVAS:\n${JSON.stringify(reservas || [])}`
-},
+content:`
+TABELA: reservas_mercatto
+
+Os dados abaixo são TODOS os registros retornados da tabela reservas_mercatto.
+
+Se uma reserva não aparecer nessa lista, significa que ela NÃO EXISTE no sistema.
+
+Nunca invente reservas.
+Nunca deduza reservas.
+Use apenas os registros abaixo.
+
+Dados:
+
+${JSON.stringify(reservas || [])}
+`},
 
 
 {
