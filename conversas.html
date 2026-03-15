@@ -869,7 +869,10 @@ return
 
 const msg = document.getElementById("msgManual").value.trim()
 
-if(!msg) return
+if(!msg){
+alert("Digite uma mensagem")
+return
+}
 
 await fetch("https://nalbert.vercel.app/api/enviar-whatsapp",{
 
@@ -889,55 +892,7 @@ mensagem:msg
 
 document.getElementById("msgManual").value=""
 
-abrirConversa(clienteSelecionado)
-
 }
-/* realtime mensagens */
-
-db
-.channel("mensagens_whatsapp")
-.on(
-"postgres_changes",
-{
-event:"INSERT",
-schema:"public",
-table:"conversas_whatsapp"
-},
-payload=>{
-
-const msg = payload.new
-
-/* se a conversa aberta for desse cliente */
-if(msg.telefone === clienteSelecionado){
-
-const container = document.getElementById("mensagens")
-
-const div = document.createElement("div")
-
-div.className = "msg " + (msg.role === "assistant" ? "assistant" : "user")
-
-const date = new Date(msg.created_at)
-.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})
-
-div.innerHTML = `
-<div>${msg.mensagem}</div>
-<div class="time">${date}</div>
-`
-
-container.appendChild(div)
-
-container.scrollTop = container.scrollHeight
-
-}
-
-/* atualiza lista lateral */
-
-carregarClientes()
-
-}
-)
-.subscribe()
-
 
 function falarComAgente(){
 
