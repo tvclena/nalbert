@@ -388,6 +388,7 @@ Financeiro
 
 </div>
 
+<div id="painelConteudo">
 
 <div class="gridCharts">
 
@@ -427,23 +428,18 @@ Financeiro
 <div class="gridCharts">
 
 <div class="card">
-
 <h3>Calendário reservas</h3>
-
 <div id="calendar" class="calendar"></div>
-
 </div>
 
 <div class="card">
-
 <h3>Reservas no período</h3>
-
 <div id="lista" class="reservas"></div>
-
 </div>
 
 </div>
 
+</div>
 
 </div>
 </div>
@@ -784,21 +780,24 @@ location.href=pagina
 
 function abrirPainel(pagina,botao){
 
-/* REMOVE BOTAO ATIVO */
+/* ativa botão */
 
 document.querySelectorAll(".tabBtn")
 .forEach(b=>b.classList.remove("active"))
 
-/* ATIVA BOTAO */
-
 botao.classList.add("active")
 
-/* ABRE PAINEL */
+/* carrega html dentro da área dos gráficos */
 
-window.location.href = pagina
+fetch(pagina)
+.then(res=>res.text())
+.then(html=>{
+
+document.getElementById("painelConteudo").innerHTML = html
+
+})
 
 }
-
 
  
 </script>
