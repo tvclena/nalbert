@@ -15,10 +15,68 @@ const ADMIN_TOKEN = process.env.ADMIN_TOKEN
 module.exports = async function handler(req,res){
 
 if(req.headers.authorization !== `Bearer ${ADMIN_TOKEN}`){
-return res.status(403).json({erro:"Acesso negado"})
+return res.status(403).json({erro:"acesso negado"})
 }
 
 const pergunta = req.body.pergunta || ""
+const confirmar = req.body.confirmar || null
+
+/* ================= CONFIRMAR AÇÃO ================= */
+
+if(confirmar){
+
+try{
+
+const acao = confirmar
+
+if(acao.operacao === "insert"){
+
+await supabase
+.from(acao.tabela)
+.insert(acao.dados)
+
+}
+
+if(acao.operacao === "update"){
+
+await supabase
+.from(acao.tabela)
+.update(acao.dados)
+.match(acao.filtro)
+
+}
+
+if(acao.operacao === "delete"){
+
+await supabase
+.from(acao.tabela)
+.delete()
+.match(acao.filtro)
+
+}
+
+await supabase
+.from("administrador_chat")
+.insert({
+role:"assistant",
+mensagem:"✅ Ação executada com sucesso"
+})
+
+return res.json({
+resposta:"✅ Ação executada com sucesso"
+})
+
+}catch(e){
+
+return res.json({
+resposta:"Erro ao executar ação"
+})
+
+}
+
+}
+
+/* ================= SALVAR PERGUNTA ================= */
 
 await supabase
 .from("administrador_chat")
@@ -27,37 +85,49 @@ role:"user",
 mensagem:pergunta
 })
 
-/* histórico */
+/* ================= HISTÓRICO ================= */
 
 const {data:historico} = await supabase
 .from("administrador_chat")
 .select("*")
-.order("created_at",{ascending:true})
+.order("created_at",{ascending:false})
 .limit(20)
 
-/* tabelas do sistema */
+const mensagens = (historico || [])
+.reverse()
+.map(m=>({
+role:m.role,
+content:m.mensagem
+}))
+
+/* ================= BUSCAR DADOS SISTEMA ================= */
 
 const {data:reservas} = await supabase
 .from("reservas_mercatto")
 .select("*")
-.limit(50)
+.limit(100)
 
 const {data:agenda} = await supabase
 .from("agenda_musicos")
 .select("*")
-.limit(20)
+.limit(100)
 
 const {data:clientes} = await supabase
 .from("memoria_clientes")
 .select("*")
+.limit(100)
+
+const {data:conversas} = await supabase
+.from("conversas_whatsapp")
+.select("*")
 .limit(50)
 
-/* histórico IA */
+const {data:buffet} = await supabase
+.from("buffet")
+.select("*")
+.limit(100)
 
-const mensagens = historico.map(m=>({
-role:m.role,
-content:m.mensagem
-}))
+/* ================= OPENAI ================= */
 
 const completion = await openai.chat.completions.create({
 
@@ -71,45 +141,62 @@ content:`
 
 Você é o AGENTE ADMINISTRADOR do Mercatto Delícia.
 
-Você possui acesso completo às tabelas:
+Este chat pertence exclusivamente ao administrador do sistema.
+
+Você possui acesso total às tabelas:
 
 reservas_mercatto
 agenda_musicos
 memoria_clientes
 conversas_whatsapp
 buffet
-agenda_musicos
 
 Você pode:
 
 • gerar relatórios
-• responder perguntas
 • analisar dados
-• buscar informações
+• sugerir alterações
 
-IMPORTANTE:
+NUNCA execute alterações diretamente.
 
-Esse chat é exclusivo do administrador.
+Sempre use JSON.
 
-Clientes nunca devem saber da existência deste agente.
-Nunca mencione esta conversa em respostas públicas.
+Formato:
+
+ALTERAR_REGISTRO_JSON:
+{
+"tabela":"reservas_mercatto",
+"operacao":"update",
+"filtro":{"telefone":"557799999"},
+"dados":{"pessoas":6}
+}
 
 `
 },
 
 {
 role:"system",
-content:`DADOS RESERVAS:\n${JSON.stringify(reservas)}`
+content:`RESERVAS:\n${JSON.stringify(reservas)}`
 },
 
 {
 role:"system",
-content:`AGENDA MUSICOS:\n${JSON.stringify(agenda)}`
+content:`AGENDA:\n${JSON.stringify(agenda)}`
 },
 
 {
 role:"system",
 content:`CLIENTES:\n${JSON.stringify(clientes)}`
+},
+
+{
+role:"system",
+content:`CONVERSAS:\n${JSON.stringify(conversas)}`
+},
+
+{
+role:"system",
+content:`CARDAPIO:\n${JSON.stringify(buffet)}`
 },
 
 ...mensagens
@@ -118,17 +205,41 @@ content:`CLIENTES:\n${JSON.stringify(clientes)}`
 
 })
 
-const resposta = completion.choices[0].message.content
+let resposta = completion.choices[0].message.content
+
+/* ================= DETECTAR AÇÃO ================= */
+
+const match = resposta.match(/ALTERAR_REGISTRO_JSON:\s*({[\s\S]*?})/)
+
+let acao = null
+
+if(match){
+
+try{
+
+acao = JSON.parse(match[1])
+
+resposta += `
+
+⚠️ Confirme para executar esta ação.`
+
+}catch(e){}
+
+}
+
+/* ================= SALVAR RESPOSTA ================= */
 
 await supabase
 .from("administrador_chat")
 .insert({
 role:"assistant",
-mensagem:resposta
+mensagem:resposta,
+acao_json:acao
 })
 
 return res.json({
-resposta
+resposta,
+acao
 })
 
 }
