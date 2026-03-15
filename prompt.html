@@ -752,8 +752,6 @@ card.innerHTML=`
 ${p.ativo?"Ativo":"Inativo"}
 </button>
 
-<button class="btn blue" onclick="copiar(\`${p.prompt}\`)">Copiar</button>
-
 <button class="btn red" onclick="remover('${p.id}')">Excluir</button>
 
 </div>
@@ -887,9 +885,7 @@ carregar()
 
 }
 
-function copiar(t){
-navigator.clipboard.writeText(t)
-}
+
 
 /* MODAL */
 
