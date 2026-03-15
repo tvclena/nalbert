@@ -153,14 +153,29 @@ const promptAgente = (prompts || [])
 
 
 
-/* ================= DATA LOCAL ================= */
+/* ================= DATAS SISTEMA ================= */
 
-const agoraBahia = new Date().toLocaleString("pt-BR", {
-  timeZone: "America/Bahia",
-  dateStyle: "full",
-  timeStyle: "long"
+const agora = new Date()
+
+const hoje = new Date(
+  agora.toLocaleString("en-US",{timeZone:"America/Bahia"})
+)
+
+const ontem = new Date(hoje)
+ontem.setDate(hoje.getDate() - 1)
+
+const amanha = new Date(hoje)
+amanha.setDate(hoje.getDate() + 1)
+
+const hojeISO = hoje.toISOString().split("T")[0]
+const ontemISO = ontem.toISOString().split("T")[0]
+const amanhaISO = amanha.toISOString().split("T")[0]
+
+const agoraTexto = hoje.toLocaleString("pt-BR",{
+  timeZone:"America/Bahia",
+  dateStyle:"full",
+  timeStyle:"long"
 })
-
   
 /* ================= OPENAI ================= */
 
@@ -171,21 +186,29 @@ model:"gpt-4.1-mini",
 messages:[
 
 {
-role:"system",
-content: promptAgente
-},
-
 {
 role:"system",
-content:`DATA E LOCALIZAÇÃO DO SISTEMA:
+content:`DATA DO SISTEMA
 
-Usuário está em Barreiras - Bahia - Brasil
+Local: Barreiras - Bahia - Brasil
 Timezone: America/Bahia (UTC-3)
 
-Data e hora atual local:
-${agoraBahia}
+Agora:
+${agoraTexto}
 
-Sempre usar essa data como referência temporal.
+Datas calculadas:
+
+HOJE = ${hojeISO}
+ONTEM = ${ontemISO}
+AMANHÃ = ${amanhaISO}
+
+Regras obrigatórias:
+
+- "hoje" = ${hojeISO}
+- "ontem" = ${ontemISO}
+- "amanhã" = ${amanhaISO}
+
+Sempre usar essas datas para consultas em reservas, agenda e eventos.
 `
 },
 
