@@ -656,11 +656,12 @@ container.innerHTML = ""
 
 if(!data || data.length === 0){
 
-container.innerHTML = `
-<div class="empty">
-Nenhuma mensagem ainda
-</div>
-`
+const empty = document.createElement("div")
+
+empty.className="empty"
+empty.innerText="Nenhuma mensagem ainda"
+
+container.appendChild(empty)
 
 }
 
