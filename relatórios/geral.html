@@ -14,61 +14,104 @@
 
 <style>
 
+/* BASE */
+
 body{
 margin:0;
 font-family:Inter;
-background:linear-gradient(90deg,#031024,#02142c);
-color:white;
+background:linear-gradient(90deg,#021024,#01142b);
+color:#e2e8f0;
 }
 
+/* CONTAINER CENTRAL */
+
 .wrapper{
-max-width:1200px;
+max-width:1150px;
 margin:auto;
-padding:40px 20px;
+padding:50px 20px;
 }
+
+/* TITULO */
 
 h1{
 text-align:center;
+font-weight:800;
 margin-bottom:30px;
 }
 
-.menu{
-display:flex;
-gap:12px;
-justify-content:center;
+/* BARRA DE PESQUISA */
+
+.search{
+margin-bottom:30px;
+}
+
+.search input{
+width:100%;
+padding:12px 18px;
+background:#020b1a;
+border:1px solid #1f3b63;
+border-radius:30px;
+color:white;
+}
+
+/* CARDS RELATORIOS */
+
+.relatorios{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:14px;
 margin-bottom:40px;
 }
 
-.menu button{
-background:#0c1f38;
-border:1px solid #1b3556;
-color:white;
-padding:10px 18px;
-border-radius:20px;
+.relatorioCard{
+
+background:linear-gradient(180deg,#0c1e38,#08172c);
+border:1px solid #1f3b63;
+border-radius:14px;
+padding:14px;
 cursor:pointer;
+transition:.2s;
+
+display:flex;
+align-items:center;
+gap:10px;
 }
 
-.menu button.active{
-background:#3b82f6;
+.relatorioCard:hover{
+transform:translateY(-3px);
+border-color:#3b82f6;
 }
+
+.icon{
+width:32px;
+height:32px;
+background:#22c55e;
+border-radius:8px;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:16px;
+}
+
+/* KPIs */
 
 .kpis{
 display:grid;
 grid-template-columns:repeat(6,1fr);
-gap:16px;
-margin-bottom:30px;
+gap:14px;
+margin-bottom:24px;
 }
 
 .card{
-background:linear-gradient(180deg,#0c1f38,#08172c);
-padding:18px;
+background:linear-gradient(180deg,#0c1e38,#08172c);
+border:1px solid #1f3b63;
 border-radius:14px;
-border:1px solid #1b3556;
+padding:16px;
 }
 
 .card h3{
 margin:0;
-font-size:13px;
+font-size:12px;
 color:#9db7d9;
 }
 
@@ -77,6 +120,8 @@ font-size:24px;
 font-weight:800;
 margin-top:6px;
 }
+
+/* GRÁFICOS */
 
 .gridCharts{
 display:grid;
@@ -96,7 +141,13 @@ width:100%!important;
 height:260px!important;
 }
 
+/* RESPONSIVO */
+
 @media(max-width:900px){
+
+.relatorios{
+grid-template-columns:repeat(2,1fr);
+}
 
 .kpis{
 grid-template-columns:repeat(2,1fr);
@@ -119,14 +170,36 @@ grid-template-columns:1fr;
 
 <div class="wrapper">
 
-<h1>Central de Relatórios</h1>
+<h1>📊 Central de Relatórios</h1>
 
-<div class="menu">
+<div class="search">
+<input id="busca" placeholder="Pesquisar relatório...">
+</div>
 
-<button onclick="carregarDelivery()" class="active">Delivery</button>
-<button onclick="carregarVendas()">Vendas</button>
-<button onclick="carregarIngredientes()">Ingredientes</button>
-<button onclick="carregarCMV()">CMV</button>
+
+<!-- CARDS RELATÓRIOS -->
+
+<div class="relatorios">
+
+<div class="relatorioCard" onclick="carregarDelivery()">
+<div class="icon">🚚</div>
+Delivery
+</div>
+
+<div class="relatorioCard" onclick="carregarVendas()">
+<div class="icon">🛒</div>
+Vendas
+</div>
+
+<div class="relatorioCard" onclick="carregarIngredientes()">
+<div class="icon">📄</div>
+Ingredientes
+</div>
+
+<div class="relatorioCard" onclick="carregarCMV()">
+<div class="icon">📊</div>
+CMV
+</div>
 
 </div>
 
@@ -143,7 +216,7 @@ const db = supabase.createClient(
 "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 )
 
-let charts = {}
+let charts={}
 
 function money(v){
 return Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"})
@@ -231,9 +304,6 @@ return `
 
 }
 
-
-/* DELIVERY */
-
 async function carregarDelivery(){
 
 destroyCharts()
@@ -244,8 +314,6 @@ const {data:pedidos} = await db
 .from("delivery_pedidos")
 .select("*")
 
-if(!pedidos) return
-
 document.getElementById("pedidosTotal").innerText = pedidos.length
 
 let faturamento = pedidos.reduce((a,p)=>a+Number(p.total||0),0)
@@ -255,7 +323,6 @@ document.getElementById("faturamentoDelivery").innerText = money(faturamento)
 document.getElementById("ticketDelivery").innerText =
 money(pedidos.length ? faturamento/pedidos.length : 0)
 
-
 let horas = Array(24).fill(0)
 
 pedidos.forEach(p=>{
@@ -263,7 +330,7 @@ let h=new Date(p.created_at).getHours()
 horas[h]++
 })
 
-charts.hora = new Chart(
+charts.hora=new Chart(
 document.getElementById("graficoHoraDelivery"),
 {
 type:"bar",
@@ -274,31 +341,6 @@ datasets:[{data:horas,backgroundColor:"#3b82f6"}]
 })
 
 }
-
-
-/* OUTROS RELATÓRIOS */
-
-function carregarVendas(){
-
-document.getElementById("conteudoRelatorio").innerHTML =
-"<h2 style='text-align:center'>Relatório de Vendas em desenvolvimento</h2>"
-
-}
-
-function carregarIngredientes(){
-
-document.getElementById("conteudoRelatorio").innerHTML =
-"<h2 style='text-align:center'>Relatório de Ingredientes</h2>"
-
-}
-
-function carregarCMV(){
-
-document.getElementById("conteudoRelatorio").innerHTML =
-"<h2 style='text-align:center'>Relatório CMV</h2>"
-
-}
-
 
 carregarDelivery()
 
