@@ -232,15 +232,18 @@ background:#020617;
 
 
 .frameArea{
-width:100%;
+flex:1;
+height:100%;
+display:flex;
+flex-direction:column;
 }
 
 .frameArea iframe{
 width:100%;
 height:100%;
 border:none;
+background:#020617;
 }
-
 
 .sidebar{
 position:fixed;
@@ -291,10 +294,26 @@ Fichas Técnicas
 
 </div>
 
-
 <div class="main">
 
 <div class="header">
+
+<h2 id="tituloPagina">Analytics Operacional</h2>
+
+<div class="filters">
+<input type="date" id="inicio">
+<input type="date" id="fim">
+<button onclick="carregar()">Atualizar</button>
+</div>
+
+</div>
+
+<div class="frameArea">
+<iframe id="framePagina"></iframe>
+</div>
+
+
+ 
 
 <h2 id="tituloPagina">Analytics Operacional</h2>
 
@@ -714,12 +733,9 @@ defaultDates()
 window.addEventListener("DOMContentLoaded",carregar)
 function abrirPagina(pagina,titulo){
 
-if(pagina==="dashboard.html"){
-location.href="home.html"
-return
-}
+document.getElementById("tituloPagina").innerText = titulo
 
-location.href=pagina
+document.getElementById("framePagina").src = pagina
 
 }
 </script>
