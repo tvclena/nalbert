@@ -232,18 +232,15 @@ background:#020617;
 
 
 .frameArea{
-flex:1;
-height:100%;
-display:flex;
-flex-direction:column;
+width:100%;
 }
 
 .frameArea iframe{
 width:100%;
 height:100%;
 border:none;
-background:#020617;
 }
+
 
 .sidebar{
 position:fixed;
@@ -293,6 +290,8 @@ Fichas Técnicas
 </div>
 
 </div>
+
+
 <div class="main">
 
 <div class="header">
@@ -303,12 +302,6 @@ Fichas Técnicas
 <input type="date" id="inicio">
 <input type="date" id="fim">
 <button onclick="carregar()">Atualizar</button>
-</div>
-
-</div>
-
-<div class="frameArea">
-<iframe id="framePagina"></iframe>
 </div>
 
 </div>
@@ -719,15 +712,14 @@ lista.appendChild(div)
 
 defaultDates()
 window.addEventListener("DOMContentLoaded",carregar)
-document.addEventListener("DOMContentLoaded",()=>{
-document.getElementById("framePagina").src="dashboard.html"
-})
- 
 function abrirPagina(pagina,titulo){
 
-document.getElementById("tituloPagina").innerText = titulo
+if(pagina==="dashboard.html"){
+location.href="home.html"
+return
+}
 
-document.getElementById("framePagina").src = pagina
+location.href=pagina
 
 }
 </script>
