@@ -3,16 +3,17 @@
 <head>
 
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>Central de Relatórios</title>
+<title>Analytics Operacional - Delivery</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
+
 /* BASE */
 
 body{
@@ -20,6 +21,22 @@ margin:0;
 font-family:Inter,system-ui;
 background:linear-gradient(90deg,#031024,#02142c);
 color:#e2e8f0;
+}
+
+/* CONTAINER */
+
+.wrapper{
+max-width:1200px;
+margin:auto;
+padding:40px 20px;
+}
+
+/* TITULO */
+
+h1{
+text-align:center;
+font-weight:800;
+margin-bottom:30px;
 }
 
 /* KPIs */
@@ -143,6 +160,7 @@ grid-template-columns:1fr;
 }
 
 }
+
 </style>
 </head>
 
@@ -150,68 +168,9 @@ grid-template-columns:1fr;
 
 <div class="wrapper">
 
-<h1>📊 Central de Relatórios</h1>
+<h1>Analytics Operacional - Delivery</h1>
 
-<div class="search">
-<input id="busca" placeholder="Pesquisar relatório...">
-</div>
-
-
-<!-- CARDS RELATÓRIOS -->
-
-<div class="relatorios">
-
-<div class="relatorioCard" onclick="carregarDelivery()">
-<div class="icon">🚚</div>
-Delivery
-</div>
-
-<div class="relatorioCard" onclick="carregarVendas()">
-<div class="icon">🛒</div>
-Vendas
-</div>
-
-<div class="relatorioCard" onclick="carregarIngredientes()">
-<div class="icon">📄</div>
-Ingredientes
-</div>
-
-<div class="relatorioCard" onclick="carregarCMV()">
-<div class="icon">📊</div>
-CMV
-</div>
-
-</div>
-
-
-<div id="conteudoRelatorio"></div>
-
-</div>
-
-
-<script>
-
-const db = supabase.createClient(
-"https://dxkszikemntfusfyrzos.supabase.co",
-"sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
-)
-
-let charts={}
-
-function money(v){
-return Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"})
-}
-
-function destroyCharts(){
-Object.values(charts).forEach(c=>c.destroy())
-charts={}
-}
-
-/* TEMPLATE DELIVERY */
-
-function templateDelivery(){
-
-return `
+<!-- KPIs -->
 
 <div class="kpis">
 
@@ -247,6 +206,8 @@ return `
 
 </div>
 
+<!-- GRÁFICOS -->
+
 <div class="gridCharts">
 
 <div class="card">
@@ -280,21 +241,42 @@ return `
 
 </div>
 
-`
+</div>
 
+<script>
+
+const db = supabase.createClient(
+"https://dxkszikemntfusfyrzos.supabase.co",
+"sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
+)
+
+let chartsDelivery = {}
+
+function money(v){
+return Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"})
+}
+
+function destroy(id){
+if(chartsDelivery[id]) chartsDelivery[id].destroy()
 }
 
 async function carregarDelivery(){
-
-destroyCharts()
-
-document.getElementById("conteudoRelatorio").innerHTML = templateDelivery()
 
 const {data:pedidos} = await db
 .from("delivery_pedidos")
 .select("*")
 
+if(!pedidos) return
+
+/* KPIS */
+
 document.getElementById("pedidosTotal").innerText = pedidos.length
+
+const entregues = pedidos.filter(p=>p.status==="entregue")
+document.getElementById("pedidosEntregues").innerText = entregues.length
+
+const cancelados = pedidos.filter(p=>p.status==="cancelado")
+document.getElementById("pedidosCancelados").innerText = cancelados.length
 
 let faturamento = pedidos.reduce((a,p)=>a+Number(p.total||0),0)
 
@@ -303,20 +285,124 @@ document.getElementById("faturamentoDelivery").innerText = money(faturamento)
 document.getElementById("ticketDelivery").innerText =
 money(pedidos.length ? faturamento/pedidos.length : 0)
 
+const clientes = new Set()
+pedidos.forEach(p=>clientes.add(p.cliente))
+
+document.getElementById("clientesDelivery").innerText = clientes.size
+
+/* PEDIDOS POR HORA */
+
 let horas = Array(24).fill(0)
 
 pedidos.forEach(p=>{
-let h=new Date(p.created_at).getHours()
+let h = new Date(p.created_at).getHours()
 horas[h]++
 })
 
-charts.hora=new Chart(
+destroy("hora")
+
+chartsDelivery["hora"] = new Chart(
 document.getElementById("graficoHoraDelivery"),
 {
 type:"bar",
 data:{
 labels:[...Array(24).keys()].map(h=>h+"h"),
-datasets:[{data:horas,backgroundColor:"#3b82f6"}]
+datasets:[{
+data:horas,
+backgroundColor:"#3b82f6"
+}]
+},
+options:{plugins:{legend:{display:false}}}
+})
+
+/* STATUS */
+
+let status = {}
+
+pedidos.forEach(p=>{
+status[p.status] = (status[p.status] || 0) + 1
+})
+
+destroy("status")
+
+chartsDelivery["status"] = new Chart(
+document.getElementById("graficoStatusDelivery"),
+{
+type:"doughnut",
+data:{
+labels:Object.keys(status),
+datasets:[{data:Object.values(status)}]
+}
+})
+
+/* PEDIDOS POR DIA */
+
+let dias = {}
+
+pedidos.forEach(p=>{
+let d = new Date(p.created_at).toLocaleDateString("pt-BR")
+dias[d] = (dias[d]||0)+1
+})
+
+destroy("dias")
+
+chartsDelivery["dias"] = new Chart(
+document.getElementById("graficoDiaDelivery"),
+{
+type:"line",
+data:{
+labels:Object.keys(dias),
+datasets:[{
+data:Object.values(dias),
+borderColor:"#3b82f6"
+}]
+}
+})
+
+/* PRODUTOS */
+
+let produtos = {}
+
+pedidos.forEach(p=>{
+if(!p.itens) return
+p.itens.forEach(i=>{
+produtos[i.nome]=(produtos[i.nome]||0)+i.qtd
+})
+})
+
+destroy("produtos")
+
+chartsDelivery["produtos"] = new Chart(
+document.getElementById("graficoProdutosDelivery"),
+{
+type:"bar",
+data:{
+labels:Object.keys(produtos).slice(0,5),
+datasets:[{
+data:Object.values(produtos).slice(0,5)
+}]
+}
+})
+
+/* CLIENTES */
+
+let clientesTop = {}
+
+pedidos.forEach(p=>{
+clientesTop[p.cliente]=(clientesTop[p.cliente]||0)+1
+})
+
+destroy("clientes")
+
+chartsDelivery["clientes"] = new Chart(
+document.getElementById("graficoClientesDelivery"),
+{
+type:"bar",
+data:{
+labels:Object.keys(clientesTop).slice(0,5),
+datasets:[{
+data:Object.values(clientesTop).slice(0,5)
+}]
 }
 })
 
