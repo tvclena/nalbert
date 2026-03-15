@@ -294,7 +294,7 @@ button:disabled{opacity:.6;cursor:not-allowed}
 <div class="container">
 
 <!-- AUTH -->
-<div id="authBox" class="card">
+<div id="authBox" class="card hidden">
   <h1>ENTRAR</h1>
   <label>EMAIL</label>
   <input id="authEmail" type="email">
@@ -304,7 +304,7 @@ button:disabled{opacity:.6;cursor:not-allowed}
 </div>
 
 <!-- APP -->
-<div id="app" class="card hidden">
+<div id="app" class="card">
   <div id="overlay" class="overlay"><div class="spinner"></div></div>
 
   <h1>FICHA TÉCNICA</h1>
@@ -432,6 +432,7 @@ const hide = () => overlay && (overlay.style.display = "none");
 
 
 /* ================= AUTH ================= */
+/*
 async function restore(){
   const {data}=await sb.auth.getSession();
   if(data?.session){
@@ -440,6 +441,7 @@ async function restore(){
   }
 }
 restore();
+*/
 
 async function login(){
   show();
