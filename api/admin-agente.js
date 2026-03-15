@@ -394,7 +394,8 @@ acao = JSON.parse(jsonTexto)
 if(!resposta.includes("Confirme")){
 resposta += "\n\n⚠️ Confirme para executar esta ação."
 }
-catch(e){
+
+}catch(e){
 
 console.log("Erro parse JSON ação:", match[1])
 
