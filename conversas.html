@@ -200,8 +200,9 @@ font-size:11px;
 margin-top:6px;
 opacity:.6;
 text-align:right;
+letter-spacing:.3px;
 }
-
+  
 .checkbox{
 position:absolute;
 top:-10px;
@@ -675,18 +676,20 @@ div.className = "msg " + (m.role === "assistant" ? "assistant" : "user")
 
 const date = new Date(m.created_at)
 
-const hora = date.toLocaleTimeString(
-"pt-BR",
-{
+const dataFormatada = date.toLocaleDateString("pt-BR",{
+timeZone:"America/Bahia"
+})
+
+const horaFormatada = date.toLocaleTimeString("pt-BR",{
 hour:"2-digit",
 minute:"2-digit",
+second:"2-digit",
 timeZone:"America/Bahia"
-}
-)
+})
 
 div.innerHTML = `
 <div>${m.mensagem}</div>
-<div class="time">${date}</div>
+<div class="time">${dataFormatada} • ${horaFormatada}</div>
 `
 
 container.appendChild(div)
