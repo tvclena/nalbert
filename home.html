@@ -644,21 +644,22 @@ type:"bar",
 data:{labels:Object.keys(clientes).slice(0,5),
 datasets:[{data:Object.values(clientes).slice(0,5)}]}
 })
-gerarCalendario(res,inicio)
-listarReservas(res)
+gerarCalendario(res,inicio,fim)
+ listarReservas(res)
 }
 
-function gerarCalendario(reservas,inicio){
+function gerarCalendario(reservas,inicio,fim){
 
 const cal=document.getElementById("calendar")
 cal.innerHTML=""
 
-const mes=inicio.getMonth()
-const ano=inicio.getFullYear()
+let dataAtual = new Date(inicio)
 
-const diasNoMes=new Date(ano,mes+1,0).getDate()
+while(dataAtual <= fim){
 
-for(let i=1;i<=diasNoMes;i++){
+const i = dataAtual.getDate()
+const mes = dataAtual.getMonth()
+const ano = dataAtual.getFullYear()
 
 let count = reservas.filter(r=>{
 
@@ -666,15 +667,15 @@ if(!r.datahora) return false
 
 const d = new Date(r.datahora)
 
-const diaReserva = d.toLocaleDateString("pt-BR")
-const diaCalendario = new Date(ano,mes,i).toLocaleDateString("pt-BR")
-
-return diaReserva === diaCalendario
+return (
+d.getDate() === i &&
+d.getMonth() === mes &&
+d.getFullYear() === ano
+)
 
 }).length
 
 const div=document.createElement("div")
-
 div.className="day"
 
 const hoje=new Date()
@@ -698,10 +699,13 @@ div.onclick=()=>abrirDia(i,reservas,mes,ano)
 
 cal.appendChild(div)
 
-}
+/* 👇 AQUI fica o avanço do dia */
+
+dataAtual.setDate(dataAtual.getDate()+1)
 
 }
 
+}
 function abrirDia(dia,reservas,mes,ano){
 
 const lista=reservas.filter(r=>{
