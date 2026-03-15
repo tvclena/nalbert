@@ -395,6 +395,31 @@ color:white;
 
 
 
+  .tabBtn{
+background:#020617;
+border:1px solid #1e293b;
+color:#e2e8f0;
+padding:10px 18px;
+border-radius:30px;
+font-weight:600;
+cursor:pointer;
+transition:0.2s;
+}
+
+.tabBtn:hover{
+background:#1e293b;
+}
+
+.tabBtn.active{
+background:#3b82f6;
+border-color:#3b82f6;
+color:white;
+box-shadow:0 0 10px rgba(59,130,246,0.4);
+}
+
+
+
+  
 
   
 </style>
@@ -771,12 +796,12 @@ Controle
 
 <div class="popupActions">
 
-<button class="btn blue"
+<button class="tabBtn active"
 onclick="abrirIframe('prompt.html')">
 Prompt de comando
 </button>
 
-<button class="btn red"
+<button class="tabBtn"
 onclick="fecharRepertorio()">
 Fechar
 </button>
