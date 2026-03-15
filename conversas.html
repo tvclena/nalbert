@@ -284,6 +284,119 @@ color:#22c55e;
 .status.off{
 color:#ef4444;
 }
+
+
+/* POPUP */
+
+.popupOverlay{
+
+position:fixed;
+inset:0;
+
+background:rgba(0,0,0,.75);
+backdrop-filter:blur(6px);
+
+display:none;
+align-items:center;
+justify-content:center;
+
+z-index:9999;
+
+}
+
+.popupBox{
+
+width:92%;
+height:88%;
+max-width:1200px;
+
+background:#020617;
+
+border-radius:16px;
+
+border:1px solid #334155;
+
+display:flex;
+flex-direction:column;
+
+overflow:hidden;
+
+box-shadow:0 40px 100px rgba(0,0,0,.8);
+
+}
+
+.popupHeader{
+
+display:flex;
+justify-content:space-between;
+align-items:center;
+
+padding:16px 20px;
+
+border-bottom:1px solid #334155;
+
+}
+
+.popupTitle{
+
+font-weight:700;
+font-size:16px;
+
+}
+
+.popupActions{
+
+display:flex;
+gap:10px;
+
+}
+
+.popupContent{
+
+flex:1;
+display:flex;
+
+}
+
+.popupContent iframe{
+
+width:100%;
+height:100%;
+
+border:none;
+
+background:#020617;
+
+}
+
+.btn{
+
+border:none;
+padding:9px 14px;
+border-radius:8px;
+
+cursor:pointer;
+
+font-weight:600;
+font-size:13px;
+
+}
+
+.blue{
+background:#2563eb;
+color:white;
+}
+
+.red{
+background:#ef4444;
+color:white;
+}
+
+
+
+
+
+  
 </style>
 </head>
 
@@ -639,72 +752,40 @@ carregarClientes()
 
 }
 </script>
-<div id="popupRepertorio" style="
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:rgba(0,0,0,.7);
-display:none;
-align-items:center;
-justify-content:center;
-z-index:999;
-">
+<div id="popupRepertorio" class="popupOverlay">
 
-<div style="
-width:90%;
-height:85%;
-background:#020617;
-border-radius:14px;
-display:flex;
-flex-direction:column;
-overflow:hidden;
-">
+<div class="popupBox">
 
-<div style="
-padding:14px;
-border-bottom:1px solid #334155;
-display:flex;
-justify-content:space-between;
-align-items:center;
-">
+<div class="popupHeader">
 
-<b>Repertórios</b>
+<div class="popupTitle">
+Controle
+</div>
 
-<button onclick="fecharRepertorio()" style="
-background:#ef4444;
-color:white;
-border:none;
-border-radius:6px;
-padding:6px 12px;
-cursor:pointer;
-">Fechar</button>
+<div class="popupActions">
+
+<button class="btn blue"
+onclick="abrirIframe('prompt.html')">
+Prompt de comando
+</button>
+
+<button class="btn red"
+onclick="fecharRepertorio()">
+Fechar
+</button>
 
 </div>
 
-<div style="
-display:flex;
-gap:10px;
-padding:12px;
-border-bottom:1px solid #334155;
-flex-wrap:wrap;
-">
+</div>
 
-<button onclick="abrirIframe('prompt.html')">Prompt de comando</button>
+<div class="popupContent">
 
-
+<iframe id="frameRepertorio"></iframe>
 
 </div>
 
-<iframe id="frameRepertorio"
-style="
-flex:1;
-border:none;
-background:white;
-"></iframe>
-
 </div>
+
 </div>
 </body>
 </html>
