@@ -674,7 +674,15 @@ const div = document.createElement("div")
 div.className = "msg " + (m.role === "assistant" ? "assistant" : "user")
 
 const date = new Date(m.created_at)
-.toLocaleString("pt-BR",{hour:"2-digit",minute:"2-digit"})
+
+const hora = date.toLocaleTimeString(
+"pt-BR",
+{
+hour:"2-digit",
+minute:"2-digit",
+timeZone:"America/Bahia"
+}
+)
 
 div.innerHTML = `
 <div>${m.mensagem}</div>
@@ -875,15 +883,18 @@ const textarea = document.getElementById("msgManual")
 const msg = textarea.value.trim()
 
 if(!msg){
-
 alert("Digite uma mensagem")
-
 return
 }
 
-/* DEBUG */
+/* limpar telefone */
 
-console.log("MENSAGEM ENVIADA:",msg)
+const telefone = clienteSelecionado
+.replace(/\D/g,"")
+.trim()
+
+console.log("TELEFONE:",telefone)
+console.log("MENSAGEM:",msg)
 
 await fetch("https://nalbert.vercel.app/api/enviar-whatsapp",{
 
@@ -895,7 +906,7 @@ headers:{
 },
 
 body:JSON.stringify({
-telefone:clienteSelecionado,
+telefone:telefone,
 mensagem:msg
 })
 
@@ -904,6 +915,11 @@ mensagem:msg
 textarea.value=""
 
 }
+
+
+
+
+  
 
 function falarComAgente(){
 
