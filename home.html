@@ -731,6 +731,10 @@ lista.appendChild(div)
 
 defaultDates()
 window.addEventListener("DOMContentLoaded",carregar)
+document.addEventListener("DOMContentLoaded",()=>{
+document.getElementById("framePagina").src="dashboard.html"
+})
+ 
 function abrirPagina(pagina,titulo){
 
 document.getElementById("tituloPagina").innerText = titulo
