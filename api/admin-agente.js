@@ -150,6 +150,18 @@ const { data: prompts } = await supabase
 const promptAgente = (prompts || [])
 .map(p => p.prompt)
 .join("\n\n")
+
+
+
+/* ================= DATA LOCAL ================= */
+
+const agoraBahia = new Date().toLocaleString("pt-BR", {
+  timeZone: "America/Bahia",
+  dateStyle: "full",
+  timeStyle: "long"
+})
+
+  
 /* ================= OPENAI ================= */
 
 const completion = await openai.chat.completions.create({
@@ -161,6 +173,20 @@ messages:[
 {
 role:"system",
 content: promptAgente
+},
+
+{
+role:"system",
+content:`DATA E LOCALIZAÇÃO DO SISTEMA:
+
+Usuário está em Barreiras - Bahia - Brasil
+Timezone: America/Bahia (UTC-3)
+
+Data e hora atual local:
+${agoraBahia}
+
+Sempre usar essa data como referência temporal.
+`
 },
 
 {
@@ -189,7 +215,6 @@ content:`CARDAPIO:\n${JSON.stringify(buffet || [])}`
 },
 
 ...mensagens
-
 ]
 
 })
