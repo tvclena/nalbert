@@ -296,22 +296,39 @@ let impostosMap = {};
 
 async function carregarDados(){
 
-  const { data: buffet } = await sb.from("buffet").select("*");
-  const { data: itens } = await sb.from("buffet_itens").select("*");
-  const { data: impostos } = await sb.from("impostos").select("*");
+  const { data: buffet } = await sb
+    .from("buffet")
+    .select("*")
+    .range(0,10000);
+
+  const { data: itens } = await sb
+    .from("buffet_itens")
+    .select("*")
+    .range(0,10000);
+
+  const { data: impostos } = await sb
+    .from("impostos")
+    .select("*")
+    .range(0,10000);
 
   pratos = buffet || [];
 
   itensMap = {};
   (itens||[]).forEach(i=>{
-    if(!itensMap[i.buffet_id]) itensMap[i.buffet_id]=[];
-    itensMap[i.buffet_id].push(i);
+    const id = String(i.buffet_id).trim();
+
+    if(!itensMap[id]) itensMap[id]=[];
+
+    itensMap[id].push(i);
   });
 
   impostosMap = {};
   (impostos||[]).forEach(i=>{
-    if(!impostosMap[i.buffet_id]) impostosMap[i.buffet_id]=[];
-    impostosMap[i.buffet_id].push(i);
+    const id = String(i.buffet_id).trim();
+
+    if(!impostosMap[id]) impostosMap[id]=[];
+
+    impostosMap[id].push(i);
   });
 
   popularTipos();
