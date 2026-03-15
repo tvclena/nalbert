@@ -685,8 +685,10 @@ container.appendChild(div)
 
 })
 
-container.scrollTop = container.scrollHeight
-
+container.scrollTo({
+top:container.scrollHeight,
+behavior:"smooth"
+})
 /* verificar se bot está pausado */
 
 const pausado = await verificarPausa(telefone)
