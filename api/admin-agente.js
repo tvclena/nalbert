@@ -30,12 +30,10 @@ typeof req.body === "string"
 : req.body
 
 const pergunta = body?.pergunta || ""
-const pergunta = body?.pergunta || ""
 let confirmar = body?.confirmar || null
-
 /* ================= CONFIRMAR COM "SIM" ================= */
 
-if(pergunta.toLowerCase() === "sim"){
+if(pergunta && pergunta.toLowerCase() === "sim"){
 
 const { data:last } = await supabase
 .from("administrador_chat")
