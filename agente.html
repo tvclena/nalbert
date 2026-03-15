@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+
+<meta charset="UTF-8">
+<title>Agente Administrador</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+
+<style>
+
+body{
+margin:0;
+background:#020617;
+color:white;
+font-family:Inter;
+display:flex;
+flex-direction:column;
+height:100vh;
+}
+
+.messages{
+flex:1;
+overflow:auto;
+padding:20px;
+display:flex;
+flex-direction:column;
+gap:14px;
+}
+
+.msg{
+max-width:70%;
+padding:12px 14px;
+border-radius:10px;
+}
+
+.user{
+background:#1e293b;
+align-self:flex-start;
+}
+
+.assistant{
+background:#16a34a;
+align-self:flex-end;
+}
+
+.send{
+display:flex;
+padding:14px;
+border-top:1px solid #334155;
+gap:10px;
+}
+
+textarea{
+flex:1;
+height:60px;
+background:#020617;
+border:1px solid #334155;
+color:white;
+border-radius:8px;
+padding:10px;
+}
+
+button{
+background:#3b82f6;
+border:none;
+color:white;
+padding:10px 18px;
+border-radius:8px;
+cursor:pointer;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="messages" id="chat"></div>
+
+<div class="send">
+
+<textarea id="msg"></textarea>
+
+<button onclick="enviar()">Enviar</button>
+
+</div>
+
+<script>
+
+async function enviar(){
+
+const texto = document.getElementById("msg").value
+
+const chat = document.getElementById("chat")
+
+chat.innerHTML += `
+<div class="msg user">${texto}</div>
+`
+
+document.getElementById("msg").value=""
+
+const res = await fetch("/api/admin-agente",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json",
+"Authorization":"Bearer mercatto_admin_2026"
+},
+
+body:JSON.stringify({
+pergunta:texto
+})
+
+})
+
+const data = await res.json()
+
+chat.innerHTML += `
+<div class="msg assistant">${data.resposta}</div>
+`
+
+chat.scrollTop = chat.scrollHeight
+
+}
+
+</script>
+
+</body>
+</html>
