@@ -870,12 +870,20 @@ alert("Selecione um cliente")
 return
 }
 
-const msg = document.getElementById("msgManual").value.trim()
+const textarea = document.getElementById("msgManual")
+
+const msg = textarea.value.trim()
 
 if(!msg){
+
 alert("Digite uma mensagem")
+
 return
 }
+
+/* DEBUG */
+
+console.log("MENSAGEM ENVIADA:",msg)
 
 await fetch("https://nalbert.vercel.app/api/enviar-whatsapp",{
 
@@ -893,7 +901,7 @@ mensagem:msg
 
 })
 
-document.getElementById("msgManual").value=""
+textarea.value=""
 
 }
 
