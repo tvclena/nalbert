@@ -2,24 +2,35 @@ const OpenAI = require("openai")
 const { createClient } = require("@supabase/supabase-js")
 
 const openai = new OpenAI({
-apiKey: process.env.OPENAI_API_KEY
+  apiKey: process.env.OPENAI_API_KEY
 })
 
 const supabase = createClient(
-process.env.SUPABASE_URL,
-process.env.SUPABASE_SERVICE_ROLE
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE
 )
 
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN
 
-module.exports = async function handler(req,res){
+module.exports = async function handler(req, res){
+
+try{
+
+/* ================= AUTORIZAÇÃO ================= */
 
 if(req.headers.authorization !== `Bearer ${ADMIN_TOKEN}`){
 return res.status(403).json({erro:"acesso negado"})
 }
 
-const pergunta = req.body.pergunta || ""
-const confirmar = req.body.confirmar || null
+/* ================= BODY ================= */
+
+const body =
+typeof req.body === "string"
+? JSON.parse(req.body)
+: req.body
+
+const pergunta = body?.pergunta || ""
+const confirmar = body?.confirmar || null
 
 /* ================= CONFIRMAR AÇÃO ================= */
 
@@ -68,6 +79,8 @@ resposta:"✅ Ação executada com sucesso"
 
 }catch(e){
 
+console.error("Erro executar ação:",e)
+
 return res.json({
 resposta:"Erro ao executar ação"
 })
@@ -95,9 +108,9 @@ const {data:historico} = await supabase
 
 const mensagens = (historico || [])
 .reverse()
-.map(m=>({
-role:m.role,
-content:m.mensagem
+.map(m => ({
+role: m.role,
+content: m.mensagem
 }))
 
 /* ================= BUSCAR DADOS SISTEMA ================= */
@@ -138,7 +151,6 @@ messages:[
 {
 role:"system",
 content:`
-
 Você é o AGENTE ADMINISTRADOR do Mercatto Delícia.
 
 Este chat pertence exclusivamente ao administrador do sistema.
@@ -170,33 +182,32 @@ ALTERAR_REGISTRO_JSON:
 "filtro":{"telefone":"557799999"},
 "dados":{"pessoas":6}
 }
-
 `
 },
 
 {
 role:"system",
-content:`RESERVAS:\n${JSON.stringify(reservas)}`
+content:`RESERVAS:\n${JSON.stringify(reservas || [])}`
 },
 
 {
 role:"system",
-content:`AGENDA:\n${JSON.stringify(agenda)}`
+content:`AGENDA:\n${JSON.stringify(agenda || [])}`
 },
 
 {
 role:"system",
-content:`CLIENTES:\n${JSON.stringify(clientes)}`
+content:`CLIENTES:\n${JSON.stringify(clientes || [])}`
 },
 
 {
 role:"system",
-content:`CONVERSAS:\n${JSON.stringify(conversas)}`
+content:`CONVERSAS:\n${JSON.stringify(conversas || [])}`
 },
 
 {
 role:"system",
-content:`CARDAPIO:\n${JSON.stringify(buffet)}`
+content:`CARDAPIO:\n${JSON.stringify(buffet || [])}`
 },
 
 ...mensagens
@@ -219,11 +230,13 @@ try{
 
 acao = JSON.parse(match[1])
 
-resposta += `
+resposta += "\n\n⚠️ Confirme para executar esta ação."
 
-⚠️ Confirme para executar esta ação.`
+}catch(e){
 
-}catch(e){}
+console.log("Erro parse JSON ação")
+
+}
 
 }
 
@@ -241,5 +254,15 @@ return res.json({
 resposta,
 acao
 })
+
+}catch(e){
+
+console.error("ERRO GERAL:",e)
+
+return res.status(500).json({
+erro:"erro interno"
+})
+
+}
 
 }
