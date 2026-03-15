@@ -487,8 +487,10 @@ Controle
 </div>
 
 <div class="messages" id="mensagens">
+<div class="empty">Nenhuma conversa selecionada</div>
+</div>
 
-<div class="sendBox">
+<div class="sendBox" id="sendBox" style="display:none">
 
 <textarea id="msgManual" placeholder="Digite a mensagem"></textarea>
 
@@ -496,9 +498,10 @@ Controle
 Enviar
 </button>
 
-</div>
-  
-<div class="empty">Nenhuma conversa selecionada</div>
+<button onclick="falarComAgente()" style="background:#2563eb">
+Agente
+</button>
+
 </div>
 
 </div>
@@ -606,8 +609,10 @@ container.appendChild(div)
 }
 async function abrirConversa(telefone){
 
-clienteSelecionado=telefone
-selecionadas=[]
+clienteSelecionado = telefone
+selecionadas = []
+
+/* buscar nome do cliente */
 
 const {data:cliente} = await db
 .from("memoria_clientes")
@@ -617,14 +622,17 @@ const {data:cliente} = await db
 
 const nomeCliente = cliente?.nome || telefone
 
-document.getElementById("clienteAtual").innerHTML =
-`
+/* atualizar header */
+
+document.getElementById("clienteAtual").innerHTML = `
 ${nomeCliente} • ${telefone}
 
 <span class="menuDots" onclick="abrirMenu(event,'${telefone}')">⋮</span>
 
 <div class="menu" id="menu-${telefone}">
-<button onclick="toggleBot('${telefone}')">Pausar / Reativar</button>
+<button onclick="toggleBot('${telefone}')">
+Pausar / Reativar
+</button>
 </div>
 
 <a href="https://wa.me/${telefone}" target="_blank" class="waBtn">
@@ -634,38 +642,65 @@ ${nomeCliente} • ${telefone}
 </a>
 `
 
+/* carregar mensagens */
+
 const {data} = await db
 .from("conversas_whatsapp")
 .select("*")
 .eq("telefone",telefone)
 .order("created_at",{ascending:true})
 
-const container=document.getElementById("mensagens")
-container.innerHTML=""
+const container = document.getElementById("mensagens")
+
+container.innerHTML = ""
+
+if(!data || data.length === 0){
+
+container.innerHTML = `
+<div class="empty">
+Nenhuma mensagem ainda
+</div>
+`
+
+}
+
+/* renderizar mensagens */
 
 data.forEach(m=>{
 
-const div=document.createElement("div")
-div.className="msg "+(m.role==="assistant"?"assistant":"user")
+const div = document.createElement("div")
+
+div.className = "msg " + (m.role === "assistant" ? "assistant" : "user")
 
 const date = new Date(m.created_at)
 .toLocaleString("pt-BR",{hour:"2-digit",minute:"2-digit"})
 
-div.innerHTML=`
-
+div.innerHTML = `
 <div>${m.mensagem}</div>
-
 <div class="time">${date}</div>
-
-
 `
-
 
 container.appendChild(div)
 
 })
 
-container.scrollTop=container.scrollHeight
+container.scrollTop = container.scrollHeight
+
+/* verificar se bot está pausado */
+
+const pausado = await verificarPausa(telefone)
+
+const sendBox = document.getElementById("sendBox")
+
+if(pausado){
+
+sendBox.style.display = "flex"
+
+}else{
+
+sendBox.style.display = "none"
+
+}
 
 }
 
@@ -907,7 +942,24 @@ carregarClientes()
 .subscribe()
 
 
+function falarComAgente(){
 
+abrirIframe("agente.html")
+
+document.getElementById("popupRepertorio").style.display="flex"
+
+}
+
+
+
+
+
+
+
+
+
+
+  
 
 
 
