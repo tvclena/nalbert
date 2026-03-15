@@ -6,13 +6,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Agente Administrador</title>
+<title>Mercatto • Agente Administrador</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
 
-/* BASE */
+/* ================= BASE ================= */
 
 body{
 margin:0;
@@ -20,8 +23,54 @@ font-family:Inter;
 background:#020617;
 color:#e2e8f0;
 display:flex;
-flex-direction:column;
 height:100vh;
+overflow:hidden;
+}
+
+/* ================= SIDEBAR ================= */
+
+.sidebar{
+width:260px;
+background:#020617;
+border-right:1px solid #1e293b;
+display:flex;
+flex-direction:column;
+}
+
+.sidebar-header{
+padding:16px;
+font-weight:600;
+border-bottom:1px solid #1e293b;
+}
+
+.new-chat{
+margin:12px;
+padding:10px;
+background:#2563eb;
+border:none;
+color:white;
+border-radius:8px;
+cursor:pointer;
+}
+
+.conversations{
+flex:1;
+overflow:auto;
+}
+
+.conv{
+padding:12px 16px;
+border-bottom:1px solid #1e293b;
+cursor:pointer;
+font-size:13px;
+}
+
+/* ================= MAIN ================= */
+
+.main{
+flex:1;
+display:flex;
+flex-direction:column;
 }
 
 /* HEADER */
@@ -29,8 +78,9 @@ height:100vh;
 .header{
 padding:14px 18px;
 border-bottom:1px solid #1e293b;
-background:#020617;
-font-weight:600;
+display:flex;
+justify-content:space-between;
+align-items:center;
 }
 
 /* CHAT */
@@ -41,18 +91,17 @@ overflow:auto;
 padding:20px;
 display:flex;
 flex-direction:column;
-gap:14px;
+gap:16px;
 }
 
 /* BOLHAS */
 
 .msg{
-max-width:70%;
+max-width:720px;
 padding:14px;
 border-radius:12px;
-line-height:1.4;
+line-height:1.5;
 font-size:14px;
-white-space:pre-wrap;
 }
 
 .user{
@@ -62,40 +111,33 @@ align-self:flex-start;
 
 .assistant{
 background:#16a34a;
-align-self:flex-end;
 color:white;
+align-self:flex-end;
 }
 
-/* MIDIA */
-
-.media{
-margin-top:10px;
-border-radius:10px;
-overflow:hidden;
-max-width:320px;
-}
+/* MEDIA */
 
 .media img{
 width:100%;
-display:block;
+border-radius:10px;
+margin-top:10px;
 }
 
 .media video{
 width:100%;
-display:block;
+border-radius:10px;
+margin-top:10px;
 }
 
-/* BOTAO DOWNLOAD */
-
 .download{
-margin-top:6px;
 display:inline-block;
+margin-top:6px;
 background:#0ea5e9;
 padding:6px 10px;
-font-size:12px;
 border-radius:6px;
-text-decoration:none;
+font-size:12px;
 color:white;
+text-decoration:none;
 }
 
 /* INPUT */
@@ -105,7 +147,6 @@ display:flex;
 padding:14px;
 gap:10px;
 border-top:1px solid #1e293b;
-background:#020617;
 }
 
 textarea{
@@ -126,17 +167,18 @@ color:white;
 padding:10px 16px;
 border-radius:8px;
 cursor:pointer;
-font-weight:500;
 }
 
-.confirm{
-background:#f59e0b;
-margin-top:8px;
+/* DASHBOARD */
+
+.dashboard{
+padding:20px;
+border-top:1px solid #1e293b;
+background:#020617;
 }
 
-.loading{
-opacity:.6;
-font-size:13px;
+.chart{
+max-width:400px;
 }
 
 </style>
@@ -145,8 +187,34 @@ font-size:13px;
 
 <body>
 
+<!-- SIDEBAR -->
+
+<div class="sidebar">
+
+<div class="sidebar-header">
+Mercatto AI
+</div>
+
+<button class="new-chat" onclick="novoChat()">+ Nova conversa</button>
+
+<div class="conversations" id="conversations"></div>
+
+</div>
+
+<!-- MAIN -->
+
+<div class="main">
+
 <div class="header">
+
+<div>
 🤖 Agente Administrador
+</div>
+
+<div>
+Dashboard
+</div>
+
 </div>
 
 <div class="messages" id="chat"></div>
@@ -155,23 +223,99 @@ font-size:13px;
 
 <textarea id="msg" placeholder="Digite sua pergunta..."></textarea>
 
+<input type="file" id="upload" hidden>
+
+<button onclick="document.getElementById('upload').click()">📎</button>
+
 <button onclick="enviar()">Enviar</button>
+
+</div>
+
+<div class="dashboard">
+
+<canvas id="chartReservas" class="chart"></canvas>
+
+</div>
 
 </div>
 
 <script>
 
-let ultimaAcao=null
+/* ================= HISTÓRICO ================= */
 
-/* ================= DETECTAR MIDIA ================= */
+let historico = JSON.parse(localStorage.getItem("chatHistorico") || "[]")
 
-function renderResposta(texto){
+let conversaAtual = []
 
-const urlRegex = /(https?:\/\/[^\s]+)/g
+function salvarHistorico(){
 
-const urls = texto.match(urlRegex)
+localStorage.setItem("chatHistorico",JSON.stringify(historico))
 
-let html = texto
+renderConversas()
+
+}
+
+function renderConversas(){
+
+const el = document.getElementById("conversations")
+
+el.innerHTML=""
+
+historico.forEach((c,i)=>{
+
+const div = document.createElement("div")
+
+div.className="conv"
+
+div.innerText=c.titulo || "Conversa"
+
+div.onclick=()=>abrirConversa(i)
+
+el.appendChild(div)
+
+})
+
+}
+
+function abrirConversa(i){
+
+conversaAtual = historico[i].msgs
+
+renderChat()
+
+}
+
+function novoChat(){
+
+conversaAtual=[]
+
+renderChat()
+
+}
+
+/* ================= RENDER CHAT ================= */
+
+function renderChat(){
+
+const chat = document.getElementById("chat")
+
+chat.innerHTML=""
+
+conversaAtual.forEach(m=>{
+
+addMsg(m.role,m.content)
+
+})
+
+}
+
+/* ================= MIDIA ================= */
+
+function detectarMidia(texto){
+
+const urls = texto.match(/https?:\/\/[^\s]+/g)
+
+let html = marked.parse(texto)
 
 if(urls){
 
@@ -179,25 +323,19 @@ urls.forEach(url=>{
 
 if(url.match(/\.(jpg|jpeg|png|webp|gif)/i)){
 
-html += `
-<div class="media">
+html += `<div class="media">
 <img src="${url}">
 <a class="download" href="${url}" download>Baixar</a>
-</div>
-`
+</div>`
 
 }
 
 else if(url.match(/\.(mp4|webm|mov)/i)){
 
-html += `
-<div class="media">
-<video controls>
-<source src="${url}">
-</video>
+html += `<div class="media">
+<video controls src="${url}"></video>
 <a class="download" href="${url}" download>Baixar</a>
-</div>
-`
+</div>`
 
 }
 
@@ -209,24 +347,39 @@ return html
 
 }
 
+/* ================= ADD MSG ================= */
+
+function addMsg(role,text){
+
+const chat = document.getElementById("chat")
+
+const div = document.createElement("div")
+
+div.className="msg "+role
+
+div.innerHTML = detectarMidia(text)
+
+chat.appendChild(div)
+
+chat.scrollTop = chat.scrollHeight
+
+}
+
 /* ================= ENVIAR ================= */
 
 async function enviar(){
 
 const textarea = document.getElementById("msg")
+
 const texto = textarea.value.trim()
 
 if(!texto) return
 
-const chat = document.getElementById("chat")
+addMsg("user",texto)
 
-chat.innerHTML += `<div class="msg user">${texto}</div>`
+conversaAtual.push({role:"user",content:texto})
 
 textarea.value=""
-
-chat.innerHTML += `<div class="msg assistant loading" id="loading">Pensando...</div>`
-
-chat.scrollTop = chat.scrollHeight
 
 const res = await fetch("/api/admin-agente",{
 
@@ -251,63 +404,16 @@ try{
 data = JSON.parse(text)
 }catch(e){
 
-document.getElementById("loading").remove()
-
-chat.innerHTML += `<div class="msg assistant">Erro no servidor</div>`
+addMsg("assistant","Erro no servidor")
 
 return
 }
 
-document.getElementById("loading").remove()
+addMsg("assistant",data.resposta)
 
-const respostaRender = renderResposta(data.resposta)
+conversaAtual.push({role:"assistant",content:data.resposta})
 
-chat.innerHTML += `<div class="msg assistant">${respostaRender}</div>`
-
-if(data.acao){
-
-ultimaAcao = data.acao
-
-chat.innerHTML += `
-<button class="confirm" onclick="confirmar()">CONFIRMAR AÇÃO</button>
-`
-
-}
-
-chat.scrollTop = chat.scrollHeight
-
-}
-
-/* ================= CONFIRMAR ================= */
-
-async function confirmar(){
-
-if(!ultimaAcao) return
-
-const res = await fetch("/api/admin-agente",{
-
-method:"POST",
-
-headers:{
-"Content-Type":"application/json",
-"Authorization":"Bearer mercatto_admin_2026"
-},
-
-body:JSON.stringify({
-confirmar:ultimaAcao
-})
-
-})
-
-const data = await res.json()
-
-const chat = document.getElementById("chat")
-
-chat.innerHTML += `<div class="msg assistant">${data.resposta}</div>`
-
-ultimaAcao=null
-
-chat.scrollTop = chat.scrollHeight
+salvarHistorico()
 
 }
 
@@ -324,6 +430,46 @@ enviar()
 }
 
 })
+
+/* ================= UPLOAD ================= */
+
+document.getElementById("upload").addEventListener("change",async e=>{
+
+const file = e.target.files[0]
+
+const reader = new FileReader()
+
+reader.onload = function(){
+
+addMsg("user",`Imagem enviada`)
+
+const img = `<img src="${reader.result}">`
+
+document.getElementById("chat").innerHTML += img
+
+}
+
+reader.readAsDataURL(file)
+
+})
+
+/* ================= DASHBOARD ================= */
+
+const ctx = document.getElementById("chartReservas")
+
+new Chart(ctx,{
+type:"bar",
+data:{
+labels:["Seg","Ter","Qua","Qui","Sex","Sab","Dom"],
+datasets:[{
+label:"Reservas",
+data:[12,19,8,15,25,30,18],
+backgroundColor:"#16a34a"
+}]
+}
+})
+
+renderConversas()
 
 </script>
 
