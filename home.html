@@ -787,26 +787,36 @@ conteudoOriginal = document.getElementById("painelConteudo").innerHTML
 })
 
 
- function abrirGeral(botao){
+function abrirGeral(botao){
+
+/* ativa botão */
 
 document.querySelectorAll(".tabBtn")
 .forEach(b=>b.classList.remove("active"))
 
 botao.classList.add("active")
 
-/* remove qualquer iframe ou painel carregado */
+/* destrói gráficos atuais */
+
+Object.keys(charts).forEach(k=>{
+try{ charts[k].destroy() }catch(e){}
+})
+
+charts = {}
+
+/* restaura conteúdo original */
 
 document.getElementById("painelConteudo").innerHTML = conteudoOriginal
 
 /* recria gráficos */
 
-carregar()
+setTimeout(()=>carregar(),50)
 
 }
 
 function abrirPainel(pagina,botao){
 
-if(pagina === "home.html") return
+if(botao.classList.contains("active")) return
 
 document.querySelectorAll(".tabBtn")
 .forEach(b=>b.classList.remove("active"))
