@@ -618,7 +618,7 @@ const {data:cliente} = await db
 .from("memoria_clientes")
 .select("nome")
 .eq("telefone",telefone)
-.single()
+.maybeSingle()
 
 const nomeCliente = cliente?.nome || telefone
 
