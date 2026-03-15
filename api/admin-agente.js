@@ -30,7 +30,25 @@ typeof req.body === "string"
 : req.body
 
 const pergunta = body?.pergunta || ""
-const confirmar = body?.confirmar || null
+const pergunta = body?.pergunta || ""
+let confirmar = body?.confirmar || null
+
+/* ================= CONFIRMAR COM "SIM" ================= */
+
+if(pergunta.toLowerCase() === "sim"){
+
+const { data:last } = await supabase
+.from("administrador_chat")
+.select("acao_json")
+.not("acao_json","is",null)
+.order("created_at",{ascending:false})
+.limit(1)
+
+if(last && last[0]){
+confirmar = last[0].acao_json
+}
+
+}
 
 /* ================= CONFIRMAR AÇÃO ================= */
 
