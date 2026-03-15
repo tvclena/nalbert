@@ -13,84 +13,13 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-
 /* BASE */
 
 body{
 margin:0;
-font-family:Inter;
-background:linear-gradient(90deg,#021024,#01142b);
+font-family:Inter,system-ui;
+background:linear-gradient(90deg,#031024,#02142c);
 color:#e2e8f0;
-}
-
-/* CONTAINER CENTRAL */
-
-.wrapper{
-max-width:1150px;
-margin:auto;
-padding:50px 20px;
-}
-
-/* TITULO */
-
-h1{
-text-align:center;
-font-weight:800;
-margin-bottom:30px;
-}
-
-/* BARRA DE PESQUISA */
-
-.search{
-margin-bottom:30px;
-}
-
-.search input{
-width:100%;
-padding:12px 18px;
-background:#020b1a;
-border:1px solid #1f3b63;
-border-radius:30px;
-color:white;
-}
-
-/* CARDS RELATORIOS */
-
-.relatorios{
-display:grid;
-grid-template-columns:repeat(4,1fr);
-gap:14px;
-margin-bottom:40px;
-}
-
-.relatorioCard{
-
-background:linear-gradient(180deg,#0c1e38,#08172c);
-border:1px solid #1f3b63;
-border-radius:14px;
-padding:14px;
-cursor:pointer;
-transition:.2s;
-
-display:flex;
-align-items:center;
-gap:10px;
-}
-
-.relatorioCard:hover{
-transform:translateY(-3px);
-border-color:#3b82f6;
-}
-
-.icon{
-width:32px;
-height:32px;
-background:#22c55e;
-border-radius:8px;
-display:flex;
-align-items:center;
-justify-content:center;
-font-size:16px;
 }
 
 /* KPIs */
@@ -98,56 +27,108 @@ font-size:16px;
 .kpis{
 display:grid;
 grid-template-columns:repeat(6,1fr);
-gap:14px;
-margin-bottom:24px;
+gap:16px;
+margin-bottom:28px;
 }
+
+/* CARDS */
 
 .card{
-background:linear-gradient(180deg,#0c1e38,#08172c);
-border:1px solid #1f3b63;
+
+background:linear-gradient(180deg,#0c1f38,#08172c);
+
+border:1px solid #1b3556;
+
 border-radius:14px;
-padding:16px;
+
+padding:18px;
+
+box-shadow:0 4px 20px rgba(0,0,0,.35);
+
+transition:.2s;
+
 }
+
+.card:hover{
+transform:translateY(-2px);
+border-color:#2563eb;
+}
+
+/* TITULO DOS CARDS */
 
 .card h3{
+
 margin:0;
-font-size:12px;
+
+font-size:13px;
+
+font-weight:600;
+
 color:#9db7d9;
+
+letter-spacing:.3px;
+
 }
+
+/* NUMERO KPI */
 
 .kpi{
-font-size:24px;
+
+font-size:26px;
+
 font-weight:800;
+
 margin-top:6px;
+
+color:white;
+
 }
 
-/* GRÁFICOS */
+/* GRID GRÁFICOS */
 
 .gridCharts{
+
 display:grid;
+
 grid-template-columns:1fr 1fr;
+
 gap:20px;
+
 margin-bottom:20px;
+
 }
 
 .gridCharts2{
+
 display:grid;
+
 grid-template-columns:1fr 1fr 1fr;
+
 gap:20px;
+
 }
 
+/* CANVAS */
+
 canvas{
+
 width:100%!important;
+
 height:260px!important;
+
 }
 
 /* RESPONSIVO */
 
-@media(max-width:900px){
+@media(max-width:1100px){
 
-.relatorios{
-grid-template-columns:repeat(2,1fr);
+.kpis{
+grid-template-columns:repeat(3,1fr);
 }
+
+}
+
+@media(max-width:700px){
 
 .kpis{
 grid-template-columns:repeat(2,1fr);
@@ -162,7 +143,6 @@ grid-template-columns:1fr;
 }
 
 }
-
 </style>
 </head>
 
