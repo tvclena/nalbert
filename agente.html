@@ -4,22 +4,36 @@
 <head>
 
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>Agente Administrador</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
 <style>
+
+/* BASE */
 
 body{
 margin:0;
 font-family:Inter;
 background:#020617;
-color:white;
+color:#e2e8f0;
 display:flex;
 flex-direction:column;
 height:100vh;
 }
+
+/* HEADER */
+
+.header{
+padding:14px 18px;
+border-bottom:1px solid #1e293b;
+background:#020617;
+font-weight:600;
+}
+
+/* CHAT */
 
 .messages{
 flex:1;
@@ -30,10 +44,15 @@ flex-direction:column;
 gap:14px;
 }
 
+/* BOLHAS */
+
 .msg{
 max-width:70%;
-padding:12px;
-border-radius:10px;
+padding:14px;
+border-radius:12px;
+line-height:1.4;
+font-size:14px;
+white-space:pre-wrap;
 }
 
 .user{
@@ -44,23 +63,60 @@ align-self:flex-start;
 .assistant{
 background:#16a34a;
 align-self:flex-end;
+color:white;
 }
+
+/* MIDIA */
+
+.media{
+margin-top:10px;
+border-radius:10px;
+overflow:hidden;
+max-width:320px;
+}
+
+.media img{
+width:100%;
+display:block;
+}
+
+.media video{
+width:100%;
+display:block;
+}
+
+/* BOTAO DOWNLOAD */
+
+.download{
+margin-top:6px;
+display:inline-block;
+background:#0ea5e9;
+padding:6px 10px;
+font-size:12px;
+border-radius:6px;
+text-decoration:none;
+color:white;
+}
+
+/* INPUT */
 
 .send{
 display:flex;
-padding:16px;
+padding:14px;
 gap:10px;
-border-top:1px solid #334155;
+border-top:1px solid #1e293b;
+background:#020617;
 }
 
 textarea{
 flex:1;
-height:60px;
+height:50px;
 background:#020617;
 border:1px solid #334155;
 color:white;
 border-radius:8px;
 padding:10px;
+resize:none;
 }
 
 button{
@@ -70,10 +126,17 @@ color:white;
 padding:10px 16px;
 border-radius:8px;
 cursor:pointer;
+font-weight:500;
 }
 
 .confirm{
 background:#f59e0b;
+margin-top:8px;
+}
+
+.loading{
+opacity:.6;
+font-size:13px;
 }
 
 </style>
@@ -82,11 +145,15 @@ background:#f59e0b;
 
 <body>
 
+<div class="header">
+🤖 Agente Administrador
+</div>
+
 <div class="messages" id="chat"></div>
 
 <div class="send">
 
-<textarea id="msg"></textarea>
+<textarea id="msg" placeholder="Digite sua pergunta..."></textarea>
 
 <button onclick="enviar()">Enviar</button>
 
@@ -94,17 +161,72 @@ background:#f59e0b;
 
 <script>
 
-let ultimaAcao = null
+let ultimaAcao=null
+
+/* ================= DETECTAR MIDIA ================= */
+
+function renderResposta(texto){
+
+const urlRegex = /(https?:\/\/[^\s]+)/g
+
+const urls = texto.match(urlRegex)
+
+let html = texto
+
+if(urls){
+
+urls.forEach(url=>{
+
+if(url.match(/\.(jpg|jpeg|png|webp|gif)/i)){
+
+html += `
+<div class="media">
+<img src="${url}">
+<a class="download" href="${url}" download>Baixar</a>
+</div>
+`
+
+}
+
+else if(url.match(/\.(mp4|webm|mov)/i)){
+
+html += `
+<div class="media">
+<video controls>
+<source src="${url}">
+</video>
+<a class="download" href="${url}" download>Baixar</a>
+</div>
+`
+
+}
+
+})
+
+}
+
+return html
+
+}
+
+/* ================= ENVIAR ================= */
 
 async function enviar(){
 
-const texto = document.getElementById("msg").value
+const textarea = document.getElementById("msg")
+const texto = textarea.value.trim()
+
+if(!texto) return
 
 const chat = document.getElementById("chat")
 
 chat.innerHTML += `<div class="msg user">${texto}</div>`
 
-document.getElementById("msg").value=""
+textarea.value=""
+
+chat.innerHTML += `<div class="msg assistant loading" id="loading">Pensando...</div>`
+
+chat.scrollTop = chat.scrollHeight
 
 const res = await fetch("/api/admin-agente",{
 
@@ -121,9 +243,26 @@ pergunta:texto
 
 })
 
-const data = await res.json()
+const text = await res.text()
 
-chat.innerHTML += `<div class="msg assistant">${data.resposta}</div>`
+let data
+
+try{
+data = JSON.parse(text)
+}catch(e){
+
+document.getElementById("loading").remove()
+
+chat.innerHTML += `<div class="msg assistant">Erro no servidor</div>`
+
+return
+}
+
+document.getElementById("loading").remove()
+
+const respostaRender = renderResposta(data.resposta)
+
+chat.innerHTML += `<div class="msg assistant">${respostaRender}</div>`
 
 if(data.acao){
 
@@ -138,6 +277,8 @@ chat.innerHTML += `
 chat.scrollTop = chat.scrollHeight
 
 }
+
+/* ================= CONFIRMAR ================= */
 
 async function confirmar(){
 
@@ -166,7 +307,23 @@ chat.innerHTML += `<div class="msg assistant">${data.resposta}</div>`
 
 ultimaAcao=null
 
+chat.scrollTop = chat.scrollHeight
+
 }
+
+/* ENTER ENVIA */
+
+document.getElementById("msg").addEventListener("keydown",e=>{
+
+if(e.key==="Enter" && !e.shiftKey){
+
+e.preventDefault()
+
+enviar()
+
+}
+
+})
 
 </script>
 
