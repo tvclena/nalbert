@@ -656,9 +656,16 @@ c.style.display=texto.includes(filtro)?"flex":"none"
 
 carregarClientes()
 function abrirRepertorio(){
-document.getElementById("popupRepertorio").style.display="flex"
+
+const frame = document.getElementById("frameRepertorio")
+
+if(!frame.src){
+frame.src="prompt.html"
 }
 
+document.getElementById("popupRepertorio").style.display="flex"
+
+}
 function fecharRepertorio(){
 document.getElementById("popupRepertorio").style.display="none"
 }
