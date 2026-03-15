@@ -4,6 +4,7 @@
 <head>
 
 <meta charset="UTF-8">
+
 <title>Agente Administrador</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
@@ -12,9 +13,9 @@
 
 body{
 margin:0;
+font-family:Inter;
 background:#020617;
 color:white;
-font-family:Inter;
 display:flex;
 flex-direction:column;
 height:100vh;
@@ -31,7 +32,7 @@ gap:14px;
 
 .msg{
 max-width:70%;
-padding:12px 14px;
+padding:12px;
 border-radius:10px;
 }
 
@@ -47,9 +48,9 @@ align-self:flex-end;
 
 .send{
 display:flex;
-padding:14px;
-border-top:1px solid #334155;
+padding:16px;
 gap:10px;
+border-top:1px solid #334155;
 }
 
 textarea{
@@ -63,15 +64,20 @@ padding:10px;
 }
 
 button{
-background:#3b82f6;
+background:#2563eb;
 border:none;
 color:white;
-padding:10px 18px;
+padding:10px 16px;
 border-radius:8px;
 cursor:pointer;
 }
 
+.confirm{
+background:#f59e0b;
+}
+
 </style>
+
 </head>
 
 <body>
@@ -88,15 +94,15 @@ cursor:pointer;
 
 <script>
 
+let ultimaAcao = null
+
 async function enviar(){
 
 const texto = document.getElementById("msg").value
 
 const chat = document.getElementById("chat")
 
-chat.innerHTML += `
-<div class="msg user">${texto}</div>
-`
+chat.innerHTML += `<div class="msg user">${texto}</div>`
 
 document.getElementById("msg").value=""
 
@@ -117,15 +123,53 @@ pergunta:texto
 
 const data = await res.json()
 
+chat.innerHTML += `<div class="msg assistant">${data.resposta}</div>`
+
+if(data.acao){
+
+ultimaAcao = data.acao
+
 chat.innerHTML += `
-<div class="msg assistant">${data.resposta}</div>
+<button class="confirm" onclick="confirmar()">CONFIRMAR AÇÃO</button>
 `
 
+}
+
 chat.scrollTop = chat.scrollHeight
+
+}
+
+async function confirmar(){
+
+if(!ultimaAcao) return
+
+const res = await fetch("/api/admin-agente",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json",
+"Authorization":"Bearer mercatto_admin_2026"
+},
+
+body:JSON.stringify({
+confirmar:ultimaAcao
+})
+
+})
+
+const data = await res.json()
+
+const chat = document.getElementById("chat")
+
+chat.innerHTML += `<div class="msg assistant">${data.resposta}</div>`
+
+ultimaAcao=null
 
 }
 
 </script>
 
 </body>
+
 </html>
