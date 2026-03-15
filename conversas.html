@@ -417,7 +417,36 @@ color:white;
 box-shadow:0 0 10px rgba(59,130,246,0.4);
 }
 
+.sendBox{
+padding:16px;
+border-top:1px solid #334155;
+background:#020617;
+display:flex;
+gap:10px;
+}
 
+.sendBox textarea{
+flex:1;
+resize:none;
+border-radius:10px;
+border:1px solid #334155;
+background:#020617;
+color:white;
+padding:10px;
+font-family:Inter;
+height:60px;
+}
+
+.sendBox button{
+background:#22c55e;
+color:white;
+border:none;
+border-radius:8px;
+padding:10px 16px;
+cursor:pointer;
+}
+
+  
 
   
 
@@ -458,6 +487,17 @@ Controle
 </div>
 
 <div class="messages" id="mensagens">
+
+<div class="sendBox">
+
+<textarea id="msgManual" placeholder="Digite a mensagem"></textarea>
+
+<button onclick="enviarManual()">
+Enviar
+</button>
+
+</div>
+  
 <div class="empty">Nenhuma conversa selecionada</div>
 </div>
 
@@ -783,6 +823,46 @@ pausado:true
 carregarClientes()
 
 }
+
+
+async function enviarManual(){
+
+if(!clienteSelecionado){
+alert("Selecione um cliente")
+return
+}
+
+const msg = document.getElementById("msgManual").value.trim()
+
+if(!msg) return
+
+await fetch("/api/enviar-whatsapp",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json",
+"Authorization":"Bearer mercatto_admin_2026"
+},
+
+body:JSON.stringify({
+telefone:clienteSelecionado,
+mensagem:msg
+})
+
+})
+
+document.getElementById("msgManual").value=""
+
+/* atualiza conversa */
+
+abrirConversa(clienteSelecionado)
+
+}
+
+
+
+  
 </script>
 <div id="popupRepertorio" class="popupOverlay">
 
