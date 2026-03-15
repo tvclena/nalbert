@@ -1164,7 +1164,6 @@ border:none;
 </button>
 
 </div>
-</div>
 
 <div id="cards" class="grid"></div>
 
@@ -2639,14 +2638,17 @@ function abrirCadastro(){
 
 document.getElementById("popupCadastro").style.display="flex"
 
+document.body.classList.add("modal-open")
+
 }
 
 function fecharCadastro(){
 
 document.getElementById("popupCadastro").style.display="none"
 
-}
+document.body.classList.remove("modal-open")
 
+}
 
 
 
