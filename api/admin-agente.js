@@ -55,7 +55,10 @@ if(confirmar){
 try{
 
 const acao = confirmar
-
+// remove campos proibidos
+if(acao.dados && acao.dados.created_at){
+delete acao.dados.created_at
+}
 if(acao.operacao === "insert"){
 
 const { data, error } = await supabase
