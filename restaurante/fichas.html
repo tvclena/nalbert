@@ -975,7 +975,122 @@ background:#0f172a;
 
 }
 
+.btn-cadastrar{
 
+height:34px;
+padding:0 16px;
+
+border-radius:8px;
+
+background:#16a34a;
+color:white;
+
+font-size:12px;
+font-weight:800;
+letter-spacing:.04em;
+
+border:none;
+
+cursor:pointer;
+
+box-shadow:0 8px 18px rgba(22,163,74,.35);
+
+transition:.15s ease;
+
+}
+
+.btn-cadastrar:hover{
+
+transform:translateY(-1px);
+
+box-shadow:0 12px 26px rgba(22,163,74,.45);
+
+}.popupCadastro{
+
+position:fixed;
+inset:0;
+
+background:rgba(15,23,42,.75);
+backdrop-filter:blur(6px);
+
+display:none;
+align-items:center;
+justify-content:center;
+
+z-index:200;
+
+}
+
+.popupCadastroBox{
+
+width:95vw;
+max-width:1400px;
+height:92vh;
+
+background:#fff;
+
+border-radius:24px;
+
+box-shadow:0 40px 100px rgba(0,0,0,.45);
+
+overflow:hidden;
+
+display:flex;
+flex-direction:column;
+
+animation:popupIn .18s ease;
+
+}
+
+@keyframes popupIn{
+from{transform:scale(.96);opacity:0}
+to{transform:scale(1);opacity:1}
+}
+
+.popupCadastroHeader{
+
+height:60px;
+
+display:flex;
+align-items:center;
+justify-content:space-between;
+
+padding:0 20px;
+
+font-weight:800;
+font-size:14px;
+
+border-bottom:1px solid #e5e7eb;
+
+background:#f8fafc;
+
+}
+
+.popupCadastroHeader button{
+
+border:none;
+background:#ef4444;
+
+color:white;
+
+width:34px;
+height:34px;
+
+border-radius:8px;
+
+font-size:16px;
+font-weight:900;
+
+cursor:pointer;
+
+}
+
+.popupCadastro iframe{
+
+flex:1;
+border:none;
+
+}
   
 </style>
 </head>
@@ -1006,42 +1121,49 @@ background:#0f172a;
 
    
 <div class="filters">
-  <input id="filtroNome" type="text" placeholder="Buscar por nome do prato">
 
-  <select id="filtroTipo">
-    <option value="">Todos os tipos</option>
-  </select>
+<input id="filtroNome" type="text" placeholder="Buscar por nome do prato">
 
-  <select id="filtroStatus">
-    <option value="">Todos (Ativo + Desativado)</option>
-    <option value="ativo">Somente ATIVOS</option>
-    <option value="inativo">Somente DESATIVADOS</option>
-  </select>
+<select id="filtroTipo">
+<option value="">Todos os tipos</option>
+</select>
 
-  <select id="filtroCMV">
-    <option value="">CMV (todas as faixas)</option>
-    <option value="lt30">CMV < 30%</option>
-    <option value="30_35">CMV 30–35%</option>
-    <option value="35_40">CMV 35–40%</option>
-    <option value="gt40">CMV > 40%</option>
-  </select>
+<select id="filtroStatus">
+<option value="">Todos (Ativo + Desativado)</option>
+<option value="ativo">Somente ATIVOS</option>
+<option value="inativo">Somente DESATIVADOS</option>
+</select>
 
-  <select id="filtroMargem">
-    <option value="">Margem (todas as faixas)</option>
-    <option value="lt25">Margem < 25%</option>
-    <option value="25_30">Margem 25–30%</option>
-    <option value="30_40">Margem 30–40%</option>
-    <option value="gt40">Margem > 40%</option>
-  </select>
+<select id="filtroCMV">
+<option value="">CMV (todas as faixas)</option>
+<option value="lt30">CMV < 30%</option>
+<option value="30_35">CMV 30–35%</option>
+<option value="35_40">CMV 35–40%</option>
+<option value="gt40">CMV > 40%</option>
+</select>
 
-  <select id="filtroSort">
-    <option value="recent">Ordenar: Mais recente</option>
-    <option value="cmv_desc">Maior CMV</option>
-    <option value="margem_asc">Menor margem</option>
-    <option value="lucro_desc">Maior lucro</option>
-    <option value="custo_desc">Maior custo</option>
-    <option value="az">A–Z</option>
-  </select>
+<select id="filtroMargem">
+<option value="">Margem (todas as faixas)</option>
+<option value="lt25">Margem < 25%</option>
+<option value="25_30">Margem 25–30%</option>
+<option value="30_40">Margem 30–40%</option>
+<option value="gt40">Margem > 40%</option>
+</select>
+
+<select id="filtroSort">
+<option value="recent">Ordenar: Mais recente</option>
+<option value="cmv_desc">Maior CMV</option>
+<option value="margem_asc">Menor margem</option>
+<option value="lucro_desc">Maior lucro</option>
+<option value="custo_desc">Maior custo</option>
+<option value="az">A–Z</option>
+</select>
+
+<button class="btn-cadastrar" onclick="abrirCadastro()">
++ CADASTRAR
+</button>
+
+</div>
 </div>
 
 <div id="cards" class="grid"></div>
@@ -2510,9 +2632,49 @@ function scrollToTop(){
     behavior:"smooth"
   });
 }
+
+
+
+function abrirCadastro(){
+
+document.getElementById("popupCadastro").style.display="flex"
+
+}
+
+function fecharCadastro(){
+
+document.getElementById("popupCadastro").style.display="none"
+
+}
+
+
+
+
+
+
+  
 </script>
 
 <button id="btnTop" onclick="scrollToTop()">↑</button>
 
+
+
+<div id="popupCadastro" class="popupCadastro">
+
+<div class="popupCadastroBox">
+
+<div class="popupCadastroHeader">
+
+<span>Cadastrar nova ficha técnica</span>
+
+<button onclick="fecharCadastro()">✕</button>
+
+</div>
+
+<iframe src="cadastro.html"></iframe>
+
+</div>
+
+</div>
 </body>
 </html>
