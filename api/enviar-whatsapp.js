@@ -1,7 +1,4 @@
-const axios = require("axios")
 const { createClient } = require("@supabase/supabase-js")
-
-/* SUPABASE */
 
 const supabase = createClient(
 process.env.SUPABASE_URL,
@@ -24,55 +21,58 @@ if(req.method !== "POST"){
 return res.status(405).json({erro:"Método não permitido"})
 }
 
-/* TOKEN ADMIN */
+/* TOKEN */
 
-const ADMIN_TOKEN = process.env.ADMIN_TOKEN
-
-if(req.headers.authorization !== `Bearer ${ADMIN_TOKEN}`){
+if(req.headers.authorization !== `Bearer ${process.env.ADMIN_TOKEN}`){
 return res.status(403).json({erro:"Acesso negado"})
 }
 
 try{
 
-const {telefone,mensagem} = req.body
+const body =
+typeof req.body === "string"
+? JSON.parse(req.body)
+: req.body
+
+const telefone = body.telefone
+const mensagem = body.mensagem
 
 if(!telefone || !mensagem){
-
-return res.status(400).json({
-erro:"telefone ou mensagem faltando"
-})
-
+return res.status(400).json({erro:"telefone ou mensagem faltando"})
 }
 
 /* WHATSAPP */
 
-const phone_number_id = process.env.WHATSAPP_PHONE_ID
-
 const url =
-`https://graph.facebook.com/v19.0/${phone_number_id}/messages`
+`https://graph.facebook.com/v19.0/${process.env.WHATSAPP_PHONE_ID}/messages`
 
-const resposta = await axios.post(
-url,
-{
+const resposta = await fetch(url,{
+
+method:"POST",
+
+headers:{
+Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+
 messaging_product:"whatsapp",
 to:telefone,
 type:"text",
 text:{
 body:mensagem
 }
-},
-{
-headers:{
-Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
-"Content-Type":"application/json"
-}
-}
-)
 
-/* LOG */
+})
 
-console.log("WHATSAPP RESPONSE:", JSON.stringify(resposta.data,null,2))
-/* SALVAR CONVERSA */
+})
+
+const json = await resposta.json()
+
+console.log("WHATSAPP RESPONSE:",json)
+
+/* SALVAR HISTORICO */
 
 await supabase
 .from("conversas_whatsapp")
@@ -84,16 +84,15 @@ role:"assistant"
 
 return res.json({
 ok:true,
-whatsapp:resposta.data
+whatsapp:json
 })
 
 }catch(e){
 
-console.log("ERRO WHATSAPP:",e.response?.data || e)
+console.log("ERRO ENVIO:",e)
 
 return res.status(500).json({
-erro:"erro envio whatsapp",
-detalhe:e.response?.data || e
+erro:"erro envio whatsapp"
 })
 
 }
