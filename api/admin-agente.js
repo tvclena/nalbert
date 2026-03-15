@@ -315,8 +315,14 @@ ALTERAR_REGISTRO_JSON:
 }
 }
 
-Nunca execute nada direto.
-Sempre gere o JSON ALTERAR_REGISTRO_JSON para confirmação.
+Se o usuário pedir para criar, editar ou apagar um prompt:
+
+1. Gere obrigatoriamente a ação ALTERAR_REGISTRO_JSON.
+2. Não explique nada antes.
+3. Não escreva texto adicional.
+4. Apenas retorne o JSON da ação.
+
+Se não gerar o JSON a ação será ignorada.
 `
 },
 
