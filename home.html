@@ -339,7 +339,7 @@ Fichas Técnicas
 <div class="painelTabs">
 
 <button class="tabBtn active"
-onclick="abrirPainel('home.html',this)">
+onclick="abrirGeral(this)">
 Geral
 </button>
 
@@ -778,7 +778,35 @@ location.href=pagina
 }
 
 
+ let conteudoOriginal = ""
+
+window.addEventListener("DOMContentLoaded",()=>{
+
+conteudoOriginal = document.getElementById("painelConteudo").innerHTML
+
+})
+
+
+ function abrirGeral(botao){
+
+document.querySelectorAll(".tabBtn")
+.forEach(b=>b.classList.remove("active"))
+
+botao.classList.add("active")
+
+/* remove qualquer iframe ou painel carregado */
+
+document.getElementById("painelConteudo").innerHTML = conteudoOriginal
+
+/* recria gráficos */
+
+carregar()
+
+}
+
 function abrirPainel(pagina,botao){
+
+if(pagina === "home.html") return
 
 document.querySelectorAll(".tabBtn")
 .forEach(b=>b.classList.remove("active"))
@@ -792,8 +820,6 @@ fetch(pagina)
 const area = document.getElementById("painelConteudo")
 
 area.innerHTML = html
-
-/* executa scripts do painel carregado */
 
 area.querySelectorAll("script").forEach(oldScript => {
 
