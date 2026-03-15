@@ -1,0 +1,11 @@
+{
+  "name": "mercatto-whatsapp-bot",
+  "version": "1.0.0",
+  "description": "Bot WhatsApp Mercatto Delícia com OpenAI e Supabase",
+  "main": "index.js",
+  "type": "commonjs",
+  "dependencies": {
+    "openai": "^4.52.0",
+    "@supabase/supabase-js": "^2.43.4"
+  }
+}
