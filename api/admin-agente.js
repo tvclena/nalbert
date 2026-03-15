@@ -58,27 +58,44 @@ const acao = confirmar
 
 if(acao.operacao === "insert"){
 
-await supabase
+const { data, error } = await supabase
 .from(acao.tabela)
 .insert(acao.dados)
+.select()
+
+if(error){
+console.error("Erro insert:", error)
+throw error
+}
 
 }
 
 if(acao.operacao === "update"){
 
-await supabase
+const { data, error } = await supabase
 .from(acao.tabela)
 .update(acao.dados)
 .match(acao.filtro)
+.select()
+
+if(error){
+console.error("Erro update:", error)
+throw error
+}
 
 }
 
 if(acao.operacao === "delete"){
 
-await supabase
+const { error } = await supabase
 .from(acao.tabela)
 .delete()
 .match(acao.filtro)
+
+if(error){
+console.error("Erro delete:", error)
+throw error
+}
 
 }
 
