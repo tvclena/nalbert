@@ -366,8 +366,8 @@ function render(lista){
 
   lista.forEach(p=>{
 
-    const itens=itensMap[p.id]||[];
-    const impostos=impostosMap[p.id]||[];
+const itens = itensMap[String(p.id).trim()] || [];
+const impostos = impostosMap[String(p.id).trim()] || [];
 
     const cmvBase=itens.reduce((s,i)=>s+Number(i.custo_calculado||0),0);
 
