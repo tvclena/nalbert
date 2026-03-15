@@ -694,8 +694,27 @@ grid-template-columns:1fr;
 
   <h3>INGREDIENTES</h3>
 
-  <label>BUSCAR INGREDIENTE</label>
-  <input id="buscaIngrediente">
+<label>BUSCAR INGREDIENTE</label>
+
+<div style="display:flex;gap:8px;align-items:center">
+
+<input id="buscaIngrediente" style="flex:1">
+
+<button 
+type="button"
+onclick="abrirCadastroIngrediente()"
+style="
+margin-top:6px;
+padding:10px 16px;
+border-radius:12px;
+font-size:18px;
+font-weight:900;
+"
+>
++
+</button>
+
+</div>
   <div id="listaIngrediente" class="lista"></div>
 
 <div class="grid">
@@ -1236,7 +1255,23 @@ function removerIngrediente(index, btn){
   }, 350);
 }
 
+/* ================= POPUP INGREDIENTE ================= */
 
+function abrirCadastroIngrediente(){
+
+document.getElementById("popupIngrediente").style.display="flex"
+
+document.body.classList.add("modal-open")
+
+}
+
+function fecharCadastroIngrediente(){
+
+document.getElementById("popupIngrediente").style.display="none"
+
+document.body.classList.remove("modal-open")
+
+}
 
 
 
@@ -1262,5 +1297,28 @@ function removerIngrediente(index, btn){
   </div>
 </div>
 
+
+
+<!-- POPUP CADASTRO INGREDIENTE -->
+
+<div id="popupIngrediente" class="modal">
+
+<div class="modal-box" style="max-width:900px;height:85vh;padding:0">
+
+<span class="close" onclick="fecharCadastroIngrediente()">✕</span>
+
+<iframe
+src="cadastroingredientes.html"
+style="
+width:100%;
+height:100%;
+border:none;
+border-radius:18px;
+"
+></iframe>
+
+</div>
+
+</div>
 </body>
 </html>
