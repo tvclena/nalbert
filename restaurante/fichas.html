@@ -2975,8 +2975,7 @@ document.addEventListener("click", e => {
 
   const id = e.target.dataset.id;
 
-  const prod = ingredientesBase.find(p => p.id === id);
-
+const prod = ingredientesBase.find(p => String(p.id) === id);
   ingredienteSelecionado = prod;
 
   ingBusca.value = prod.nome;
