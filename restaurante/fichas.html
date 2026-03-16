@@ -2499,39 +2499,73 @@ async function salvarPrecoVenda(cmvFinal){
 
 async function salvarIngrediente(){
 
-const prod = ingredienteSelecionado;
-if(!prod) return alert("Selecione um ingrediente");
+  const prod = ingredienteSelecionado;
+  if(!prod){
+    alert("Selecione um ingrediente na lista.");
+    return;
+  }
 
-const qtd = Number(ingQtd.value || 0);
-if(qtd <= 0) return alert("Quantidade inválida");
+  const qtdInput = document.getElementById("ingQtd");
+  const qtd = Number(qtdInput.value || 0);
 
-const custoUnit = Number(prod.valor || 0);
+  if(qtd <= 0){
+    alert("Quantidade inválida.");
+    qtdInput.focus();
+    return;
+  }
 
-await sb.from("buffet_itens").insert({
-  buffet_id: pratoAtual.id,
-  produto_id: prod.id,
-  nome: prod.nome,
-  quantidade: qtd,
-  unidade_uso: prod.unidade_medida,
-  custo_unitario: custoUnit,
-  custo_calculado: custoUnit * qtd
-});
+  const custoUnit = Number(prod.valor || 0);
 
-await carregarCMVCache();
-await carregarPratos();
-aplicarFiltros();
+  try{
 
-salvarDraftPreco();
+    await sb
+      .from("buffet_itens")
+      .insert({
+        buffet_id: pratoAtual.id,
+        produto_id: prod.id,
+        nome: prod.nome,
+        quantidade: qtd,
+        unidade_uso: prod.unidade_medida,
+        custo_unitario: custoUnit,
+        custo_calculado: custoUnit * qtd
+      });
 
-const { data: pratoNovo } = await sb
-  .from("buffet")
-  .select("*")
-  .eq("id", pratoAtual.id)
-  .single();
+    // 🔄 atualiza caches
+    await carregarCMVCache();
+    await carregarPratos();
+    aplicarFiltros();
 
-abrirModal(pratoNovo);
+    salvarDraftPreco();
+
+    // 🔄 recarrega prato atualizado
+    const { data: pratoNovo } = await sb
+      .from("buffet")
+      .select("*")
+      .eq("id", pratoAtual.id)
+      .single();
+
+    // 🔄 limpa campos
+    ingredienteSelecionado = null;
+
+    const busca = document.getElementById("ingBusca");
+    const qtdField = document.getElementById("ingQtd");
+    const unidade = document.getElementById("ingUnidade");
+    const lista = document.getElementById("resultadoIngredientes");
+
+    if(busca) busca.value = "";
+    if(qtdField) qtdField.value = "";
+    if(unidade) unidade.value = "";
+    if(lista) lista.style.display = "none";
+
+    // 🔄 reabre modal atualizado
+    abrirModal(pratoNovo);
+
+  }catch(err){
+    console.error(err);
+    alert("Erro ao salvar ingrediente.");
+  }
+
 }
-
 async function excluirIngrediente(itemId){
   if(!confirm("Excluir este ingrediente?")) return;
 
