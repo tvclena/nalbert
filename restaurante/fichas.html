@@ -2,7 +2,11 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>CMV • Fichas Técnicas</title>
+<head>
+<meta charset="UTF-8">
+<title>Fichas Técnicas</title>
+
+<link rel="icon" href="logo.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -1331,7 +1335,13 @@ cursor:pointer;
   }
 }
 
+.grid-3{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:12px;
+}
 
+  
 
 
   
@@ -2016,7 +2026,14 @@ mBody.innerHTML = `
   "
 >${p.descricao || ""}</textarea>
 
-<div class="grid-2" style="margin:14px 0">
+
+
+
+
+
+
+
+<div class="grid-3" style="margin:14px 0">
 
   <div>
     <label style="font-weight:800;font-size:13px">
@@ -2036,6 +2053,17 @@ mBody.innerHTML = `
 
     <select id="tipoPrato" style="margin-top:6px">
       <option value="">SELECIONE</option>
+    </select>
+  </div>
+
+  <div>
+    <label style="font-weight:800;font-size:13px">
+      NO CARDÁPIO
+    </label>
+
+    <select id="cardapioPrato" style="margin-top:6px">
+      <option value="true">SIM</option>
+      <option value="false">NÃO</option>
     </select>
   </div>
 
@@ -2388,6 +2416,7 @@ aplicarFiltros();
   }, 0);
 setTimeout(() => {
   const statusSelect = document.getElementById("statusPrato");
+  
   if (!statusSelect) return;
 
   statusSelect.value = p.ativo === false ? "false" : "true";
@@ -2404,6 +2433,29 @@ setTimeout(() => {
 aplicarFiltros();
   };
 }, 0);
+
+
+  setTimeout(() => {
+  const cardapioSelect = document.getElementById("cardapioPrato");
+  if (!cardapioSelect) return;
+
+  // define valor atual
+  cardapioSelect.value = p.cardapio === false ? "false" : "true";
+
+  cardapioSelect.onchange = async () => {
+
+    const cardapio = cardapioSelect.value === "true";
+
+    await sb
+      .from("buffet")
+      .update({ cardapio })
+      .eq("id", pratoAtual.id);
+
+    await carregarPratos();
+    aplicarFiltros();
+  };
+
+},0);
 setTimeout(() => {
   const mp = document.getElementById("modoPreparo");
   if (!mp) return;
@@ -3214,7 +3266,7 @@ document.addEventListener("click", e => {
 
 </div>
 
-<iframe src="/restaurante/administracao/cadastrodeficha.html"></iframe>
+<iframe src="administracao/cadastrodeficha.html"></iframe>
 </div>
 
 </div>
