@@ -2792,13 +2792,12 @@ async function editarIngrediente(itemId){
   btn.classList.remove("btn-add");
   btn.classList.add("btn-edit");
 
-  btn.onclick = async () => {
+btn.onclick = async () => {
 
-    const quantidade = Number(qtd.value || 0);
-    if(quantidade <= 0) return alert("Quantidade inválida");
+  const quantidade = Number(qtd.value || 0);
+  if(quantidade <= 0) return alert("Quantidade inválida");
 
-    const custoUnit = Number(prod.valor || 0);
-
+  const custoUnit = Number(prod.custo_unitario || prod.valor || 0);
     await sb
       .from("buffet_itens")
       .update({
