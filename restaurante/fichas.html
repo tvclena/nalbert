@@ -1852,15 +1852,6 @@ mBody.innerHTML = `
     <option value="false">DESATIVADO</option>
   </select>
 </div>
-
-
-<div class="resumo">
-  <div class="box">Custo base<b>${moeda(cmvBase)}</b></div>
-  <div class="box">Operacional<b>${moeda(totalImpostos)}</b></div>
-  <div class="box">Custo final<b>${moeda(cmvFinal)}</b></div>
-  <div class="box">Margem<b>${margem.toFixed(1)}%</b></div>
-</div>
-
   <hr>
   <h3>Tipo do prato</h3>
 
@@ -1869,6 +1860,15 @@ mBody.innerHTML = `
 </select>
 
 <hr>
+
+<div class="resumo">
+  <div class="box">Custo base<b>${moeda(cmvBase)}</b></div>
+  <div class="box">Operacional<b>${moeda(totalImpostos)}</b></div>
+  <div class="box">Custo final<b>${moeda(cmvFinal)}</b></div>
+  <div class="box">Margem<b>${margem.toFixed(1)}%</b></div>
+</div>
+
+
 
 
 <h3>Precificação</h3>
