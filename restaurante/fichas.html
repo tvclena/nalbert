@@ -2971,19 +2971,20 @@ document.addEventListener("input", e => {
 
 document.addEventListener("click", e => {
 
-const item = e.target.closest(".itemIngrediente");
-if(!item) return;
+  const item = e.target.closest(".itemIngrediente");
+  if(!item) return;
 
-const id = item.dataset.id;
-  const id = e.target.dataset.id;
+  const id = item.dataset.id;
 
-const prod = ingredientesBase.find(p => String(p.id) === id);
+  const prod = ingredientesBase.find(p => String(p.id) === id);
+  if(!prod) return;
+
   ingredienteSelecionado = prod;
 
-  ingBusca.value = prod.nome;
-  ingUnidade.value = prod.unidade_medida;
+  document.getElementById("ingBusca").value = prod.nome;
+  document.getElementById("ingUnidade").value = prod.unidade_medida;
 
-  resultadoIngredientes.style.display = "none";
+  document.getElementById("resultadoIngredientes").style.display = "none";
 
 });
 
