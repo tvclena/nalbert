@@ -462,7 +462,10 @@ function renderProximaPagina(){
           <th>Custo Total</th>
         </tr>
 
-        ${itens.map(i=>{
+${itens
+.sort((a,b)=>b.custo_calculado - a.custo_calculado)
+.map(i=>{
+  
           const qtd=Number(i.quantidade||0);
           const custoUnit=Number(i.custo_unitario||0);
           const total=qtd*custoUnit;
