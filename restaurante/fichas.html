@@ -2974,17 +2974,44 @@ document.addEventListener("click", e => {
   const item = e.target.closest(".itemIngrediente");
   if(!item) return;
 
-  const id = item.dataset.id;
+  const id = item.dataset.id.trim();
 
-  const prod = ingredientesBase.find(p => String(p.id) === id);
-  if(!prod) return;
+  const prod = ingredientesBase.find(p => 
+    String(p.id).trim() === id
+  );
 
+  if(!prod){
+    console.warn("Ingrediente não encontrado:", id);
+    return;
+  }
+
+  // salva ingrediente selecionado
   ingredienteSelecionado = prod;
 
-  document.getElementById("ingBusca").value = prod.nome;
-  document.getElementById("ingUnidade").value = prod.unidade_medida;
+  // preenche campos
+  const busca = document.getElementById("ingBusca");
+  const unidade = document.getElementById("ingUnidade");
 
-  document.getElementById("resultadoIngredientes").style.display = "none";
+  if(busca) busca.value = prod.nome;
+  if(unidade) unidade.value = prod.unidade_medida || "";
+
+  // esconde lista
+  const box = document.getElementById("resultadoIngredientes");
+  if(box) box.style.display = "none";
+
+  console.log("Ingrediente selecionado:", prod);
+
+});
+document.addEventListener("click", e => {
+
+  const busca = document.getElementById("ingBusca");
+  const box = document.getElementById("resultadoIngredientes");
+
+  if(!busca || !box) return;
+
+  if(!busca.contains(e.target) && !box.contains(e.target)){
+    box.style.display = "none";
+  }
 
 });
 
