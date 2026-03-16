@@ -2626,6 +2626,7 @@ function salvarDraftPreco() {
   draftPreco.preco  = pv ? pv.value : null;
 }
 async function editarIngrediente(itemId){
+
   const { data, error } = await sb
     .from("buffet_itens")
     .select("*")
@@ -2637,74 +2638,79 @@ async function editarIngrediente(itemId){
     return;
   }
 
-ingProduto.value = data.produto_id;
-ingQtd.value = data.quantidade;
-ingUnidade.value = data.unidade_uso;
+  // encontra produto na base
+  const prod = ingredientesBase.find(p => p.id === data.produto_id);
 
-document.querySelector(".line-add").scrollIntoView({
-  behavior: "smooth",
-  block: "center"
-});
+  if(!prod){
+    alert("Produto não encontrado");
+    return;
+  }
 
-ingQtd.focus();
-ingQtd.select();
+  ingredienteSelecionado = prod;
+
+  // preenche busca
+  const busca = document.getElementById("ingBusca");
+  const qtd = document.getElementById("ingQtd");
+  const unidade = document.getElementById("ingUnidade");
+
+  busca.value = prod.nome;
+  qtd.value = data.quantidade;
+  unidade.value = data.unidade_uso;
+
+  document.querySelector(".line-add").scrollIntoView({
+    behavior: "smooth",
+    block: "center"
+  });
+
+  qtd.focus();
+  qtd.select();
 
   const btn = document.getElementById("btnSalvarIngrediente");
 
-  // 🔥 melhora visual do botão
-btn.innerText = "✔";
+  btn.innerText = "✔";
   btn.classList.remove("btn-add");
   btn.classList.add("btn-edit");
 
   btn.onclick = async () => {
-    const qtd = Number(ingQtd.value || 0);
-    if(qtd <= 0) return alert("Quantidade inválida");
 
-    const prod = ingredientesBase.find(p => p.id === ingProduto.value);
-    const custoUnit = Number(prod.valor);
+    const quantidade = Number(qtd.value || 0);
+    if(quantidade <= 0) return alert("Quantidade inválida");
 
-    const { error: errUpdate } = await sb
+    const custoUnit = Number(prod.valor || 0);
+
+    await sb
       .from("buffet_itens")
       .update({
-        quantidade: qtd,
+        quantidade: quantidade,
         custo_unitario: custoUnit,
-        custo_calculado: custoUnit * qtd
+        custo_calculado: custoUnit * quantidade
       })
       .eq("id", itemId);
 
-    if(errUpdate){
-      alert("Erro ao atualizar ingrediente");
-      return;
-    }
+    await carregarCMVCache();
+    await carregarPratos();
+    aplicarFiltros();
 
-// 🔁 atualiza cache + lista
-await carregarCMVCache();
-await carregarPratos();
-aplicarFiltros();   // ✅
-
-    // 🔄 recarrega prato atualizado
     const { data: pratoNovo } = await sb
       .from("buffet")
       .select("*")
       .eq("id", pratoAtual.id)
       .single();
 
-    // 🔥 reseta botão pro estado normal
-    btn.innerText = "ADICIONAR INGREDIENTE";
+    btn.innerText = "＋";
     btn.classList.remove("btn-edit");
     btn.classList.add("btn-add");
     btn.onclick = salvarIngrediente;
 
-    ingProduto.value = "";
-    ingQtd.value = "";
-    ingUnidade.value = "";
+    busca.value = "";
+    qtd.value = "";
+    unidade.value = "";
 
-    // 🔁 força re-render do modal
     fechar();
     setTimeout(() => abrirModal(pratoNovo), 50);
 
-    alert("✅ Ingrediente atualizado com sucesso");
   };
+
 }
 async function carregarTipos(){
   const { data, error } = await sb
