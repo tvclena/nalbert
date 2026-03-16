@@ -2513,9 +2513,14 @@ async function editarIngrediente(itemId){
     return;
   }
 
-  ingProduto.value = data.produto_id;
-  ingQtd.value = data.quantidade;
-  ingUnidade.value = data.unidade_uso;
+ingProduto.value = data.produto_id;
+ingQtd.value = data.quantidade;
+ingUnidade.value = data.unidade_uso;
+
+document.querySelector(".line-add").scrollIntoView({
+  behavior: "smooth",
+  block: "center"
+});
 
   const btn = document.getElementById("btnSalvarIngrediente");
 
