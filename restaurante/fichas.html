@@ -2971,8 +2971,10 @@ document.addEventListener("input", e => {
 
 document.addEventListener("click", e => {
 
-  if(!e.target.classList.contains("itemIngrediente")) return;
+const item = e.target.closest(".itemIngrediente");
+if(!item) return;
 
+const id = item.dataset.id;
   const id = e.target.dataset.id;
 
 const prod = ingredientesBase.find(p => String(p.id) === id);
