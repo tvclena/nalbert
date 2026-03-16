@@ -1300,7 +1300,36 @@ cursor:pointer;
 
 
 
+.empresa-header{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-weight:900;
+  font-size:14px;
+  color:#fff;
+  margin-right:6px;
+}
 
+.empresa-header .verificado{
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  background:#2563eb;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:11px;
+  font-weight:900;
+  color:#fff;
+  box-shadow:0 0 0 2px rgba(37,99,235,.25);
+}
+
+@media(max-width:600px){
+  .empresa-header{
+    width:100%;
+    margin-bottom:4px;
+  }
+}
 
 
 
@@ -1337,8 +1366,12 @@ cursor:pointer;
    
 <div class="filters">
 
-<input id="filtroNome" type="text" placeholder="Buscar por nome do prato">
+<div class="empresa-header">
+  DELÍCIA GOURMET
+  <span class="verificado">✔</span>
+</div>
 
+<input id="filtroNome" type="text" placeholder="Buscar por nome do prato">
 <select id="filtroTipo">
 <option value="">Todos os tipos</option>
 </select>
