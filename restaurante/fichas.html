@@ -1842,22 +1842,32 @@ mBody.innerHTML = `
   "
 >${p.descricao || ""}</textarea>
 
-<div style="margin:14px 0">
-  <label style="font-weight:800;font-size:13px">
-    STATUS DO PRATO
-  </label>
+<div class="grid-2" style="margin:14px 0">
 
-  <select id="statusPrato" style="margin-top:6px">
-    <option value="true">ATIVO</option>
-    <option value="false">DESATIVADO</option>
-  </select>
+  <div>
+    <label style="font-weight:800;font-size:13px">
+      STATUS DO PRATO
+    </label>
+
+    <select id="statusPrato" style="margin-top:6px">
+      <option value="true">ATIVO</option>
+      <option value="false">DESATIVADO</option>
+    </select>
+  </div>
+
+  <div>
+    <label style="font-weight:800;font-size:13px">
+      TIPO DO PRATO
+    </label>
+
+    <select id="tipoPrato" style="margin-top:6px">
+      <option value="">SELECIONE</option>
+    </select>
+  </div>
+
 </div>
-  <hr>
-  <h3>Tipo do prato</h3>
 
-<select id="tipoPrato">
-  <option value="">SELECIONE</option>
-</select>
+<hr>
 
 <hr>
 
