@@ -1165,6 +1165,67 @@ padding:5px 8px;
 border-radius:6px;
 cursor:pointer;
 }
+
+/* =========================
+   RESUMO FINANCEIRO BONITO
+========================= */
+
+.financeiro-box{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+  margin-top:12px;
+}
+
+.financeiro-item{
+  background:#f8fafc;
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:10px 12px;
+  font-size:12px;
+  box-shadow:var(--shadow-xs);
+}
+
+.financeiro-item span{
+  display:block;
+  font-size:11px;
+  color:var(--muted);
+}
+
+.financeiro-item b{
+  display:block;
+  margin-top:4px;
+  font-size:16px;
+  font-weight:900;
+}
+
+/* cores */
+
+.financeiro-item.venda{
+  background:#eef2ff;
+  border-color:#c7d2fe;
+  color:#3730a3;
+}
+
+.financeiro-item.lucro{
+  background:#ecfdf5;
+  border-color:#a7f3d0;
+  color:#065f46;
+}
+
+.financeiro-item.margem{
+  background:#fff7ed;
+  border-color:#fed7aa;
+  color:#9a3412;
+}
+
+/* mobile */
+
+@media(max-width:720px){
+  .financeiro-box{
+    grid-template-columns:1fr;
+  }
+}
 </style>
 </head>
 
@@ -1934,11 +1995,25 @@ color:#166534
 "></p>
 
 ${precoVenda ? `
-  <p><b>Preço atual:</b> ${moeda(precoVenda)}</p>
-  <p><b>Lucro:</b> ${moeda(lucro)}</p>
-  <p><b>Margem:</b> ${margem.toFixed(2)}%</p>
-` : ``}
+<div class="financeiro-box">
 
+  <div class="financeiro-item venda">
+    <span>Preço de venda</span>
+    <b>${moeda(precoVenda)}</b>
+  </div>
+
+  <div class="financeiro-item lucro">
+    <span>Lucro estimado</span>
+    <b>${moeda(lucro)}</b>
+  </div>
+
+  <div class="financeiro-item margem">
+    <span>Margem de lucro</span>
+    <b>${margem.toFixed(2)}%</b>
+  </div>
+
+</div>
+` : ``}
 
   <hr>
 <h3>Ingredientes (planilha)</h3>
