@@ -346,43 +346,60 @@ function aplicarFiltros(){
   const nome = search.value.toUpperCase();
   const tipo = tipoFilter.value;
 
-  const filtrados = pratos.filter(p=>{
+  listaFiltrada = pratos.filter(p=>{
     const nomeOk = !nome || p.nome.toUpperCase().includes(nome);
     const tipoOk = !tipo || p.tipo === tipo;
     return nomeOk && tipoOk;
   });
 
-  render(filtrados);
+  pageIndex = 0;
+  conteudo.innerHTML="";
 
-  /* 🔥 VOLTAR PARA O TOPO */
+  renderProximaPagina();
+
   window.scrollTo({
     top: 0,
-    behavior: "smooth" 
+    behavior: "smooth"
   });
 }
 
-function render(lista){
-  conteudo.innerHTML="";
 
-  lista.forEach(p=>{
 
-const itens = itensMap[String(p.id).trim()] || [];
-const impostos = impostosMap[String(p.id).trim()] || [];
+function renderProximaPagina(){
 
-    const cmvBase=itens.reduce((s,i)=>s+Number(i.custo_calculado||0),0);
+  if(carregando) return;
 
-    let totalImp=0;
+  const inicio = pageIndex * pageSize;
+
+  if(inicio >= listaFiltrada.length) return;
+
+  carregando = true;
+
+  const fim = inicio + pageSize;
+
+  const pagina = listaFiltrada.slice(inicio,fim);
+
+  pagina.forEach(p=>{
+
+    const itens = itensMap[String(p.id).trim()] || [];
+    const impostos = impostosMap[String(p.id).trim()] || [];
+
+    const cmvBase = itens.reduce((s,i)=>s+Number(i.custo_calculado||0),0);
+
+    let totalImp = 0;
+
     impostos.forEach(i=>{
       if(i.modalidade==="FIXO") totalImp+=Number(i.valor);
+
       if(i.modalidade==="PERCENTUAL")
         totalImp+=(cmvBase*Number(i.valor))/100;
     });
 
-    const custoFinal=cmvBase+totalImp;
-    const preco=Number(p.preco_venda||0);
-    const lucro=preco-custoFinal;
-    const margem=preco?(lucro/preco)*100:0;
-    const cmvPerc=preco?(cmvBase/preco)*100:0;
+    const custoFinal = cmvBase + totalImp;
+    const preco = Number(p.preco_venda||0);
+    const lucro = preco - custoFinal;
+    const margem = preco ? (lucro/preco)*100 : 0;
+    const cmvPerc = preco ? (cmvBase/preco)*100 : 0;
 
     const div=document.createElement("div");
     div.className="card";
@@ -421,20 +438,23 @@ const impostos = impostosMap[String(p.id).trim()] || [];
           <th>Custo Unit.</th>
           <th>Custo Total</th>
         </tr>
+
         ${itens.map(i=>{
           const qtd=Number(i.quantidade||0);
           const custoUnit=Number(i.custo_unitario||0);
           const total=qtd*custoUnit;
+
           return `
             <tr>
               <td>${i.nome}</td>
-<td>${qtd.toFixed(4)}</td>
-<td>${i.unidade_uso}</td>
+              <td>${qtd.toFixed(4)}</td>
+              <td>${i.unidade_uso}</td>
               <td>R$ ${custoUnit.toFixed(2)}</td>
               <td><b>R$ ${total.toFixed(2)}</b></td>
             </tr>
           `;
         }).join("")}
+
         <tr class="total-row">
           <td colspan="4">Total Ingredientes</td>
           <td>R$ ${cmvBase.toFixed(2)}</td>
@@ -442,8 +462,15 @@ const impostos = impostosMap[String(p.id).trim()] || [];
       </table>
 
       <div class="section-title">Impostos / Custos</div>
+
       <table>
-        <tr><th>Descrição</th><th>Tipo</th><th>Modalidade</th><th>Valor</th></tr>
+        <tr>
+          <th>Descrição</th>
+          <th>Tipo</th>
+          <th>Modalidade</th>
+          <th>Valor</th>
+        </tr>
+
         ${impostos.map(i=>`
           <tr>
             <td>${i.descricao}</td>
@@ -452,6 +479,7 @@ const impostos = impostosMap[String(p.id).trim()] || [];
             <td>${i.modalidade==="PERCENTUAL"?i.valor+"%":"R$ "+Number(i.valor).toFixed(2)}</td>
           </tr>
         `).join("")}
+
       </table>
 
       <div class="section-title">Modo de Preparo</div>
@@ -459,9 +487,14 @@ const impostos = impostosMap[String(p.id).trim()] || [];
     `;
 
     conteudo.appendChild(div);
-  });
-}
 
+  });
+
+  pageIndex++;
+
+  carregando=false;
+
+}
 search.oninput=aplicarFiltros;
 tipoFilter.onchange=aplicarFiltros;
 
