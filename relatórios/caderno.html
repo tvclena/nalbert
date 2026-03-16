@@ -293,7 +293,12 @@ const sb = supabase.createClient(
 let pratos = [];
 let itensMap = {};
 let impostosMap = {};
+let pageSize = 10;
+let pageIndex = 0;
+let listaFiltrada = [];
+let carregando = false;
 
+  
 async function carregarDados(){
 
   const { data: buffet } = await sb
