@@ -2998,8 +2998,19 @@ document.addEventListener("click", e => {
 
   document.getElementById("resultadoIngredientes").style.display = "none";
 
+
+
+
+  const busca = document.getElementById("ingBusca");
+  const box = document.getElementById("resultadoIngredientes");
+
+  if(!busca || !box) return;
+
+  if(!busca.contains(e.target) && !box.contains(e.target)){
+    box.style.display = "none";
+  }
+
 });
-  
 </script>
 
 <button id="btnTop" onclick="scrollToTop()">↑</button>
