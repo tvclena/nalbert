@@ -2837,13 +2837,14 @@ btn.onclick = async () => {
 
     console.error(err);
     alert("Erro ao atualizar ingrediente");
-
   }finally{
 
-    btn.classList.remove("btn-loading");  // 🔥 remove overlay
+    btn.classList.remove("btn-loading");
 
   }
 
+};   // fecha btn.onclick
+}    // fecha editarIngrediente
 
 async function carregarTipos(){
   const { data, error } = await sb
