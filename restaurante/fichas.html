@@ -2980,7 +2980,7 @@ document.addEventListener("click", e => {
   const item = e.target.closest(".itemIngrediente");
   if(!item) return;
 
-  e.stopPropagation(); // 🔥 impede o modal de capturar o clique
+  e.stopPropagation();
 
   const id = item.dataset.id;
 
@@ -2997,18 +2997,6 @@ document.addEventListener("click", e => {
   document.getElementById("ingUnidade").value = prod.unidade_medida || "";
 
   document.getElementById("resultadoIngredientes").style.display = "none";
-
-
-
-
-  const busca = document.getElementById("ingBusca");
-  const box = document.getElementById("resultadoIngredientes");
-
-  if(!busca || !box) return;
-
-  if(!busca.contains(e.target) && !box.contains(e.target)){
-    box.style.display = "none";
-  }
 
 });
 </script>
