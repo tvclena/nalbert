@@ -53,10 +53,13 @@ margin:8px 0 12px 0;
 flex-wrap:wrap;
 
 position:sticky;
-top:40px;
+top:38px;
+
 background:var(--bg);
-z-index:900;
-padding-bottom:6px;
+
+z-index:1999;
+
+padding-bottom:8px;
 }
 
 .tabBtn{
@@ -125,8 +128,10 @@ border-bottom:1px solid var(--line);
 
 position:sticky;
 top:0;
+
 background:var(--bg);
-z-index:900;
+
+z-index:2000;
 }
 
 .filters{
@@ -300,7 +305,16 @@ margin:0;
 font-size:18px;
 font-weight:700;
 }
+.card{
+background:var(--panel);
+border:1px solid var(--line);
+border-radius:12px;
+padding:22px;
+box-shadow:0 4px 14px rgba(0,0,0,0.25);
 
+position:relative;
+z-index:1;
+}
 
 </style>
 </head>
