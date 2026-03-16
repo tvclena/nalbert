@@ -1123,6 +1123,41 @@ border:none;
   width:100%;
   font-size:12px;
 }
+
+
+
+#historicoBox{
+background:#000;
+color:#fff;
+padding:12px;
+overflow-y:auto;
+height:100%;
+font-size:12px;
+}
+
+.h-item{
+display:flex;
+justify-content:space-between;
+gap:10px;
+padding:10px 0;
+border-bottom:1px solid rgba(255,255,255,.1);
+}
+
+.h-field{
+opacity:.85;
+font-size:11px;
+margin-top:2px;
+}
+
+.h-restore{
+background:#16a34a;
+border:none;
+color:#fff;
+font-size:10px;
+padding:5px 8px;
+border-radius:6px;
+cursor:pointer;
+}
 </style>
 </head>
 
@@ -1206,22 +1241,19 @@ border:none;
 <div class="modal-header">
 
   <!-- COLUNA ESQUERDA -->
-  <div class="modal-left">
+<div class="modal-left">
 
-    <img id="mFoto" class="modal-img">
+<img id="mFoto" class="modal-img">
 
-    <!-- CAMPO FOTO -->
-    <div class="foto-upload">
-      <label>FOTO DO PRATO</label>
+<div class="foto-upload">
+<label>FOTO DO PRATO</label>
+<input type="file" id="fotoPrato" accept="image/*">
+</div>
 
-      <input
-        type="file"
-        id="fotoPrato"
-        accept="image/*"
-      >
-    </div>
+<!-- HISTÓRICO -->
+<div id="historicoBox"></div>
 
-  </div>
+</div>
 
   <!-- COLUNA DIREITA -->
   <div class="modal-main">
@@ -1673,6 +1705,7 @@ filtroSort.addEventListener("change", aplicarFiltros);
 ===================================================== */
 async function abrirModal(p){
   pratoAtual = p;
+  carregarHistoricoPrato(p.id);
   modal.style.display = "flex";
 document.body.classList.add("modal-open");
    mFoto.src = p.foto_url || "https://placehold.co/600x400?text=Sem+Foto";  
@@ -2629,7 +2662,89 @@ document.body.classList.remove("modal-open")
 
 }
 
+async function carregarHistoricoPrato(buffetId){
 
+const { data, error } = await sb
+.from("historico_alteracao_fichas")
+.select("*")
+.eq("tabela","buffet")
+.eq("registro_id",buffetId)
+.order("alterado_em",{ascending:false})
+.limit(50)
+
+if(error){
+console.error(error)
+return
+}
+
+renderHistorico(data)
+
+}function renderHistorico(lista){
+
+const box = document.getElementById("historicoBox")
+
+if(!lista || lista.length===0){
+box.innerHTML="<p style='opacity:.5'>Sem histórico</p>"
+return
+}
+
+box.innerHTML = lista.map(r=>{
+
+const data = new Date(r.alterado_em).toLocaleString()
+
+return `
+<div class="h-item">
+
+<div>
+
+<strong>${data}</strong><br>
+
+${Object.keys(r.dados_depois||{})
+.map(k=>{
+
+const antes = r.dados_antes?.[k]
+const depois = r.dados_depois?.[k]
+
+if(antes===depois) return ""
+
+return `
+<div class="h-field">
+${k}: ${antes} → ${depois}
+</div>
+`
+
+}).join("")}
+
+</div>
+
+<div>
+
+<button class="h-restore"
+onclick="restaurar('${r.id}')">
+Restaurar
+</button>
+
+</div>
+
+</div>
+`
+
+}).join("")
+
+}async function restaurar(id){
+
+const senha = prompt("Senha:")
+
+if(senha!=="8486"){
+toast("Senha incorreta")
+return
+}
+
+await sb.rpc("restaurar_historico",{p_id:id})
+
+toast("Registro restaurado")
+
+}
 
 
 
