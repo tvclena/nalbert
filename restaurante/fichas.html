@@ -1799,46 +1799,7 @@ mBody.innerHTML = `
 </select>
 
 <hr>
-<h3>Integração & Preço ideal</h3>
 
-<div class="grid-2">
-  <!-- Código Varejo -->
-  <div class="precificacao compact">
-    <label>
-      🏷️ Código Varejo
-    </label>
-
-    <input
-      id="codigoVarejoInput"
-      type="text"
-      placeholder="Ex: 123456"
-      value="${p.codigo_varejo || ""}"
-    >
-
-    <small>
-      Integração com o Varejo Fácil.
-    </small>
-  </div>
-
-  <!-- Preço ideal -->
-  <div class="precificacao compact">
-    <label>
-      💡 Preço ideal (R$)
-    </label>
-
-    <input
-      id="precoIdealInput"
-      type="number"
-      step="0.01"
-      placeholder="Ex: 29.90"
-      value="${p.preco_ideal || ""}"
-    >
-
-    <small>
-      Valor de referência (salva automático).
-    </small>
-  </div>
-</div>
 
 <h3>Precificação</h3>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
@@ -1859,25 +1820,6 @@ ${precoVenda ? `
   <p><b>Lucro:</b> ${moeda(lucro)}</p>
   <p><b>Margem:</b> ${margem.toFixed(2)}%</p>
 ` : ``}
-
-${p.preco_ideal && precoVenda && precoVenda !== p.preco_ideal ? `
-  <p style="
-    margin-top:10px;
-    padding:10px 14px;
-    border-radius:12px;
-    background:#fff7ed;
-    border:1px solid #fed7aa;
-    color:#9a3412;
-    font-weight:800;
-  ">
-    ⚠️ Preço de venda diferente do preço sugerido
-  </p>
-` : ``}
-
-${p.preco_ideal ? `
-  <p><b>Preço ideal:</b> ${moeda(p.preco_ideal)}</p>
-` : ``}
-
 
 
   <hr>
