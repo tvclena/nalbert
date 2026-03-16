@@ -1271,7 +1271,48 @@ overflow-y:auto;
 height:100%;
 font-size:12px;
 }
+.btn-loading{
+  position:relative;
+  pointer-events:none;
+  opacity:.9;
+}
 
+.btn-loading::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:rgba(15,23,42,.75);
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.btn-loading::before{
+  content:"";
+  position:absolute;
+  width:16px;
+  height:16px;
+  border:2px solid white;
+  border-top-color:transparent;
+  border-radius:50%;
+  animation:spinBtn .6s linear infinite;
+  z-index:2;
+}
+
+@keyframes spinBtn{
+  to{ transform:rotate(360deg); }
+}
+
+
+
+
+
+
+
+
+
+  
   
 </style>
 </head>
@@ -2011,17 +2052,18 @@ margin-top:6px;
     placeholder="Preço de venda (R$)"
   >
 
-  <button 
-    class="btn-add"
-    style="
-      height:38px;
-      padding:0 18px;
-      white-space:nowrap;
-    "
-    onclick="salvarPrecoVenda(${cmvFinal})"
-  >
-    SALVAR
-  </button>
+<button 
+  id="btnSalvarPreco"
+  class="btn-add"
+  style="
+    height:38px;
+    padding:0 18px;
+    white-space:nowrap;
+  "
+  onclick="salvarPrecoVenda(${cmvFinal})"
+>
+  SALVAR
+</button>
 
 </div>
 
@@ -2507,20 +2549,41 @@ setTimeout(() => {
    AÇÕES
 ===================================================== */
 async function salvarPrecoVenda(cmvFinal){
+
+  const btn = document.getElementById("btnSalvarPreco");
+
   const preco = Number(precoVendaInput.value || 0);
   if (preco <= cmvFinal) {
     alert("Preço inválido");
     return;
   }
 
-  await sb.from("buffet")
-    .update({ preco_venda: preco })
-    .eq("id", pratoAtual.id);
+  btn.classList.add("btn-loading");
 
-  await carregarPratos();
-  abrirModal(pratos.find(p => p.id === pratoAtual.id));
+  try{
+
+    await sb.from("buffet")
+      .update({ preco_venda: preco })
+      .eq("id", pratoAtual.id);
+
+    await carregarPratos();
+
+    const pratoNovo = pratos.find(p => p.id === pratoAtual.id);
+
+    abrirModal(pratoNovo);
+
+  }catch(err){
+
+    console.error(err);
+    alert("Erro ao salvar");
+
+  }finally{
+
+    btn.classList.remove("btn-loading");
+
+  }
+
 }
-
 async function salvarIngrediente(){
 
   const prod = ingredienteSelecionado;
