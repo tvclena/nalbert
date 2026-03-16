@@ -2975,21 +2975,43 @@ Restaurar
 
 }).join("")
 
-}async function restaurar(id){
+}
+  
+async function restaurar(id){
 
-const senha = prompt("Senha:")
+const senha = prompt("Senha:");
 
-if(senha!=="8486"){
-toast("Senha incorreta")
-return
+if(senha !== "8486"){
+  alert("Senha incorreta");
+  return;
 }
 
-await sb.rpc("restaurar_historico",{p_id:id})
+const { error } = await sb.rpc("restaurar_historico",{ p_id:id });
 
-toast("Registro restaurado")
-
+if(error){
+  console.error(error);
+  alert("Erro ao restaurar");
+  return;
 }
 
+alert("Registro restaurado");
+
+// 🔄 recarrega dados atualizados
+await carregarCMVCache();
+await carregarPratos();
+aplicarFiltros();
+
+// 🔄 recarrega o prato aberto no modal
+const { data: pratoNovo } = await sb
+  .from("buffet")
+  .select("*")
+  .eq("id", pratoAtual.id)
+  .single();
+
+// 🔄 reabre modal atualizado
+abrirModal(pratoNovo);
+
+}
 document.addEventListener("input", e => {
 
   if(e.target.id !== "ingBusca") return;
