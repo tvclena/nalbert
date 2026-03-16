@@ -2980,9 +2980,11 @@ document.addEventListener("click", e => {
   const item = e.target.closest(".itemIngrediente");
   if(!item) return;
 
+  e.stopPropagation(); // 🔥 impede o modal de capturar o clique
+
   const id = item.dataset.id;
 
-  const prod = ingredientesBase.find(p => p.id == id); // 🔥 aqui
+  const prod = ingredientesBase.find(p => p.id == id);
 
   if(!prod){
     console.warn("Ingrediente não encontrado:", id);
