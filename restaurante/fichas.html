@@ -1167,63 +1167,86 @@ cursor:pointer;
 }
 
 /* =========================
-   RESUMO FINANCEIRO BONITO
+   DASHBOARD FINANCEIRO
 ========================= */
 
-.financeiro-box{
+.financeiro-dashboard{
   display:grid;
-  grid-template-columns:repeat(3,1fr);
+  grid-template-columns:repeat(5,1fr);
   gap:10px;
-  margin-top:12px;
+  margin-top:14px;
 }
 
-.financeiro-item{
+.fin-card{
   background:#f8fafc;
   border:1px solid var(--border);
-  border-radius:12px;
-  padding:10px 12px;
+  border-radius:14px;
+  padding:12px;
   font-size:12px;
   box-shadow:var(--shadow-xs);
 }
 
-.financeiro-item span{
+.fin-card span{
   display:block;
   font-size:11px;
   color:var(--muted);
 }
 
-.financeiro-item b{
+.fin-card b{
   display:block;
-  margin-top:4px;
-  font-size:16px;
+  font-size:18px;
   font-weight:900;
+  margin-top:4px;
+}
+
+.fin-card small{
+  display:block;
+  font-size:10px;
+  opacity:.7;
+  margin-top:2px;
 }
 
 /* cores */
 
-.financeiro-item.venda{
+.fin-card.custo{
+  background:#f1f5f9;
+}
+
+.fin-card.venda{
   background:#eef2ff;
   border-color:#c7d2fe;
   color:#3730a3;
 }
 
-.financeiro-item.lucro{
+.fin-card.lucro{
   background:#ecfdf5;
   border-color:#a7f3d0;
   color:#065f46;
 }
 
-.financeiro-item.margem{
+.fin-card.margem{
   background:#fff7ed;
   border-color:#fed7aa;
   color:#9a3412;
 }
 
+.fin-card.cmv{
+  background:#ecfeff;
+  border-color:#a5f3fc;
+  color:#155e75;
+}
+
+.fin-card.cmv.danger{
+  background:#fee2e2;
+  border-color:#fecaca;
+  color:#991b1b;
+}
+
 /* mobile */
 
-@media(max-width:720px){
-  .financeiro-box{
-    grid-template-columns:1fr;
+@media(max-width:900px){
+  .financeiro-dashboard{
+    grid-template-columns:repeat(2,1fr);
   }
 }
 </style>
@@ -1995,24 +2018,41 @@ color:#166534
 "></p>
 
 ${precoVenda ? `
-<div class="financeiro-box">
 
-  <div class="financeiro-item venda">
+<div class="financeiro-dashboard">
+
+  <div class="fin-card custo">
+    <span>Custo do prato</span>
+    <b>${moeda(cmvFinal)}</b>
+    <small>Ingredientes + operacionais</small>
+  </div>
+
+  <div class="fin-card venda">
     <span>Preço de venda</span>
     <b>${moeda(precoVenda)}</b>
+    <small>Valor cobrado ao cliente</small>
   </div>
 
-  <div class="financeiro-item lucro">
-    <span>Lucro estimado</span>
+  <div class="fin-card lucro">
+    <span>Lucro por prato</span>
     <b>${moeda(lucro)}</b>
+    <small>Venda − custo total</small>
   </div>
 
-  <div class="financeiro-item margem">
+  <div class="fin-card margem">
     <span>Margem de lucro</span>
-    <b>${margem.toFixed(2)}%</b>
+    <b>${margem.toFixed(1)}%</b>
+    <small>Percentual de ganho</small>
+  </div>
+
+  <div class="fin-card cmv ${cmvPercentual>35?'danger':''}">
+    <span>CMV</span>
+    <b>${cmvPercentual.toFixed(1)}%</b>
+    <small>Custo ÷ venda</small>
   </div>
 
 </div>
+
 ` : ``}
 
   <hr>
