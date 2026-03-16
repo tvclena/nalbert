@@ -1,18 +1,11 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-
 <meta charset="UTF-8">
-
-<title>Auditoria CMV • Sistema Completo</title>
-
-<meta name="viewport"
-content="width=device-width,
-initial-scale=1,
-viewport-fit=cover">
+<title>Auditoria CMV • Painel Completo</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -21,7 +14,6 @@ viewport-fit=cover">
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
 
 <style>
-
 :root{
 --bg:#f4f6fb;
 --card:#ffffff;
@@ -52,6 +44,7 @@ border-bottom:1px solid var(--border);
 display:flex;
 gap:10px;
 align-items:center;
+flex-wrap:wrap;
 }
 
 .header input,
@@ -69,7 +62,7 @@ font-size:13px;
 
 .container{
 padding:20px;
-max-width:1300px;
+max-width:1400px;
 margin:auto;
 }
 
@@ -96,7 +89,7 @@ font-size:11px;
 
 .card strong{
 display:block;
-font-size:24px;
+font-size:26px;
 margin-top:6px;
 }
 
@@ -110,6 +103,7 @@ padding:16px;
 margin-bottom:20px;
 height:260px;
 }
+
 /* TABLE */
 
 .table-wrap{
@@ -120,14 +114,14 @@ overflow:hidden;
 }
 
 .table-scroll{
-max-height:420px;
+max-height:450px;
 overflow:auto;
 }
 
 table{
 width:100%;
 border-collapse:collapse;
-font-size:12px;
+font-size:13px;
 }
 
 th{
@@ -224,6 +218,8 @@ overflow:auto;
 font-size:11px;
 }
 
+/* TOAST */
+
 .toast{
 position:fixed;
 bottom:20px;
@@ -237,8 +233,12 @@ font-size:11px;
 display:none;
 }
 
-</style>
+/* MOBILE */
 
+@media(max-width:900px){
+.cards{grid-template-columns:repeat(2,1fr);}
+}
+</style>
 </head>
 
 <body>
@@ -254,46 +254,28 @@ display:none;
 <option value="DELETE">DELETE</option>
 </select>
 
-<button class="btn" onclick="carregar()">Atualizar</button>
+<input id="buscaTabela" placeholder="Buscar tabela">
 
-<button class="btn" onclick="exportar()">Exportar</button>
+<button class="btn" onclick="carregar()">Atualizar</button>
+<button class="btn" onclick="exportar()">Exportar CSV</button>
 
 </div>
 
 <div class="container">
 
 <div class="cards">
-
-<div class="card">
-<small>Total Alterações</small>
-<strong id="total">0</strong>
-</div>
-
-<div class="card">
-<small>INSERT</small>
-<strong id="ins">0</strong>
-</div>
-
-<div class="card">
-<small>UPDATE</small>
-<strong id="upd">0</strong>
-</div>
-
-<div class="card">
-<small>DELETE</small>
-<strong id="del">0</strong>
-</div>
-
+<div class="card"><small>Total Alterações</small><strong id="total">0</strong></div>
+<div class="card"><small>INSERT</small><strong id="ins">0</strong></div>
+<div class="card"><small>UPDATE</small><strong id="upd">0</strong></div>
+<div class="card"><small>DELETE</small><strong id="del">0</strong></div>
 </div>
 
 <div class="chart-box">
-<canvas id="grafico" height="80"></canvas>
+<canvas id="grafico"></canvas>
 </div>
 
 <div class="table-wrap">
-
 <div class="table-scroll">
-
 <table>
 
 <thead>
@@ -309,29 +291,19 @@ display:none;
 <tbody id="tbody"></tbody>
 
 </table>
-
 </div>
-
 </div>
 
 </div>
 
 <div class="modal" id="modal">
-
 <div class="modal-box">
-
 <div class="modal-header">
-
 Detalhes da Alteração
-
 <button onclick="fechar()">Fechar</button>
-
 </div>
-
 <div class="modal-body" id="conteudo"></div>
-
 </div>
-
 </div>
 
 <div class="toast" id="toast"></div>
@@ -345,36 +317,25 @@ const sb = supabase.createClient(
 
 let chart;
 
-flatpickr("#rangeData",{
-mode:"range",
-dateFormat:"Y-m-d",
-locale:"pt"
-});
+flatpickr("#rangeData",{mode:"range",dateFormat:"Y-m-d",locale:"pt"});
 
 function toast(msg){
-
-toastEl.innerText=msg;
-toastEl.style.display="block";
-
-setTimeout(()=>toastEl.style.display="none",3000);
-
+const t=document.getElementById("toast");
+t.innerText=msg;
+t.style.display="block";
+setTimeout(()=>t.style.display="none",3000);
 }
 
 async function carregar(){
 
-let query = sb.from("historico_alteracao_fichas").select("*");
+let query=sb.from("historico_alteracao_fichas").select("*");
 
 if(filtroOperacao.value)
 query=query.eq("operacao",filtroOperacao.value);
 
-const {data,error}=await query
-.order("alterado_em",{ascending:false})
-.limit(500);
+const {data,error}=await query.order("alterado_em",{ascending:false}).limit(500);
 
-if(error){
-toast(error.message);
-return;
-}
+if(error){toast(error.message);return;}
 
 tbody.innerHTML="";
 
@@ -383,10 +344,14 @@ const dias={};
 
 data.forEach(r=>{
 
+if(buscaTabela.value){
+if(!r.tabela.toLowerCase().includes(buscaTabela.value.toLowerCase()))
+return;
+}
+
 const dia=r.alterado_em.slice(0,10);
 
 if(!dias[dia])dias[dia]=0;
-
 dias[dia]++;
 
 if(r.operacao==="INSERT")i++;
@@ -396,38 +361,15 @@ if(r.operacao==="DELETE")d++;
 const tr=document.createElement("tr");
 
 tr.innerHTML=`
-
 <td>${new Date(r.alterado_em).toLocaleString()}</td>
-
 <td>${r.tabela}</td>
-
-<td>
-<span class="badge ${r.operacao.toLowerCase()}">
-${r.operacao}
-</span>
-</td>
-
+<td><span class="badge ${r.operacao.toLowerCase()}">${r.operacao}</span></td>
 <td>${r.registro_id}</td>
-
 <td>
-
-<button class="btn"
-onclick='ver(${JSON.stringify(r)})'>
-Ver
-</button>
-
-<button class="btn"
-onclick='copiar(${JSON.stringify(r)})'>
-Copiar
-</button>
-
-<button class="btn btn-danger"
-onclick="restaurar('${r.id}')">
-Restaurar
-</button>
-
+<button class="btn" onclick='ver(${JSON.stringify(r)})'>Ver</button>
+<button class="btn" onclick='copiar(${JSON.stringify(r)})'>Copiar</button>
+<button class="btn btn-danger" onclick="restaurar('${r.id}')">Restaurar</button>
 </td>
-
 `;
 
 tbody.appendChild(tr);
@@ -448,65 +390,46 @@ chart=new Chart(grafico,{
 type:'bar',
 data:{
 labels,
-datasets:[{data:valores}]
+datasets:[{
+data:valores,
+backgroundColor:"#60a5fa",
+borderRadius:6,
+barThickness:28
+}]
 },
-options:{plugins:{legend:{display:false}}}
+options:{
+responsive:true,
+maintainAspectRatio:false,
+plugins:{legend:{display:false}},
+scales:{x:{grid:{display:false}},y:{beginAtZero:true}}
+}
 });
 
 }
 
 function ver(item){
-
 modal.style.display="flex";
 
 conteudo.innerHTML=`
-
 <div class="grid-compare">
-
-<div>
-
-<h3>Antes</h3>
-
-<pre>${JSON.stringify(item.dados_antes,null,2)}</pre>
-
+<div><h3>Antes</h3><pre>${JSON.stringify(item.dados_antes,null,2)}</pre></div>
+<div><h3>Depois</h3><pre>${JSON.stringify(item.dados_depois,null,2)}</pre></div>
 </div>
-
-<div>
-
-<h3>Depois</h3>
-
-<pre>${JSON.stringify(item.dados_depois,null,2)}</pre>
-
-</div>
-
-</div>
-
 `;
-
 }
 
-function fechar(){
-modal.style.display="none";
-}
+function fechar(){modal.style.display="none";}
 
 function copiar(item){
-
-navigator.clipboard.writeText(
-JSON.stringify(item,null,2)
-);
-
+navigator.clipboard.writeText(JSON.stringify(item,null,2));
 toast("Copiado");
-
 }
 
 async function restaurar(id){
 
 const senha=prompt("Senha:");
 
-if(senha!=="8486"){
-toast("Senha incorreta");
-return;
-}
+if(senha!=="8486"){toast("Senha incorreta");return;}
 
 await sb.rpc("restaurar_historico",{p_id:id});
 
@@ -519,27 +442,17 @@ carregar();
 function exportar(){
 
 let csv="";
-
 document.querySelectorAll("table tr").forEach(r=>{
-
-let cols=[...r.children]
-.map(c=>c.innerText)
-.join(",");
-
+let cols=[...r.children].map(c=>c.innerText).join(",");
 csv+=cols+"\n";
-
 });
 
 const blob=new Blob([csv]);
-
 const url=URL.createObjectURL(blob);
-
 const a=document.createElement("a");
 
 a.href=url;
-
 a.download="auditoria.csv";
-
 a.click();
 
 }
