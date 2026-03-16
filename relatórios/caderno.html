@@ -298,23 +298,41 @@ let pageIndex = 0;
 let listaFiltrada = [];
 let carregando = false;
 
-  
+async function fetchAll(table){
+  const pageSize = 1000
+  let from = 0
+  let to = pageSize - 1
+  let all = []
+
+  while(true){
+
+    const { data, error } = await sb
+      .from(table)
+      .select("*")
+      .range(from,to)
+
+    if(error){
+      console.error(error)
+      break
+    }
+
+    if(!data || data.length === 0) break
+
+    all = all.concat(data)
+
+    if(data.length < pageSize) break
+
+    from += pageSize
+    to += pageSize
+  }
+
+  return all
+}
 async function carregarDados(){
 
-  const { data: buffet } = await sb
-    .from("buffet")
-    .select("*")
-    .range(0,10000);
-
-  const { data: itens } = await sb
-    .from("buffet_itens")
-    .select("*")
-    .range(0,10000);
-
-  const { data: impostos } = await sb
-    .from("impostos")
-    .select("*")
-    .range(0,10000);
+const buffet = await fetchAll("buffet")
+const itens = await fetchAll("buffet_itens")
+const impostos = await fetchAll("impostos")
 
   pratos = buffet || [];
 
@@ -455,7 +473,7 @@ function renderProximaPagina(){
               <td>${qtd.toFixed(4)}</td>
               <td>${i.unidade_uso}</td>
               <td>R$ ${custoUnit.toFixed(2)}</td>
-              <td><b>R$ ${total.toFixed(2)}</b></td>
+              <td><b>R$ ${total.toFixed(4)}</b></td>
             </tr>
           `;
         }).join("")}
