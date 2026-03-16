@@ -1091,7 +1091,25 @@ flex:1;
 border:none;
 
 }
-  
+
+
+.foto-upload{
+  background:#f8fafc;
+  border-top:1px solid var(--border);
+  padding:12px;
+}
+
+.foto-upload label{
+  font-weight:800;
+  font-size:12px;
+  display:block;
+  margin-bottom:6px;
+}
+
+.foto-upload input{
+  width:100%;
+  font-size:12px;
+}
 </style>
 </head>
 
@@ -1172,18 +1190,36 @@ border:none;
   <div class="modal-box" onclick="event.stopPropagation()">
     <span class="close" onclick="fechar()">✕</span>
 
-    <div class="modal-header">
-      <div class="modal-left">
-        <img id="mFoto" class="modal-img">
-      </div>
+<div class="modal-header">
 
-      <div class="modal-main">
-        <div id="mHeader"></div>
+  <!-- COLUNA ESQUERDA -->
+  <div class="modal-left">
 
-        <!-- CONTEÚDO VAI PRAQUI -->
-        <div id="mBody" class="modal-body"></div>
-      </div>
+    <img id="mFoto" class="modal-img">
+
+    <!-- CAMPO FOTO -->
+    <div class="foto-upload">
+      <label>FOTO DO PRATO</label>
+
+      <input
+        type="file"
+        id="fotoPrato"
+        accept="image/*"
+      >
     </div>
+
+  </div>
+
+  <!-- COLUNA DIREITA -->
+  <div class="modal-main">
+
+    <div id="mHeader"></div>
+
+    <div id="mBody" class="modal-body"></div>
+
+  </div>
+
+</div>
   </div>
 </div>
 
@@ -1771,18 +1807,6 @@ mBody.innerHTML = `
   </select>
 </div>
 
-  <div style="margin:12px 0">
-    <label style="font-weight:800;font-size:13px">
-      FOTO DO PRATO
-    </label>
-
-    <input
-      type="file"
-      id="fotoPrato"
-      accept="image/*"
-      style="margin-top:6px"
-    >
-  </div>
 
 <div class="resumo">
   <div class="box">Custo base<b>${moeda(cmvBase)}</b></div>
