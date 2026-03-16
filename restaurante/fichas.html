@@ -613,11 +613,13 @@ button{
 
 .line-add{
   display:grid;
-  grid-template-columns: 1.8fr .6fr .6fr auto;
+  grid-template-columns: 2fr .7fr .7fr 180px;
   gap:10px;
   align-items:center;
 }
 
+
+  
 .line-select{
   height:40px;
   border-radius:12px;
@@ -656,10 +658,15 @@ button{
     grid-template-columns:1fr 1fr;
   }
 
-  .btn-line{
-    grid-column: span 2;
-    width:100%;
-  }
+.btn-line{
+  height:40px;
+  min-width:44px;
+  padding:0 14px;
+  border-radius:12px;
+  font-size:12px;
+  font-weight:800;
+  white-space:nowrap;
+}
 }
 /* ===== CARDS FINANCEIROS COMPACTOS ===== */
 .card-stats{
@@ -2513,7 +2520,7 @@ async function editarIngrediente(itemId){
   const btn = document.getElementById("btnSalvarIngrediente");
 
   // 🔥 melhora visual do botão
-  btn.innerText = "ATUALIZAR INGREDIENTE";
+btn.innerText = "ATUALIZAR";
   btn.classList.remove("btn-add");
   btn.classList.add("btn-edit");
 
