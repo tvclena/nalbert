@@ -2083,16 +2083,32 @@ ${listaItens.map(i=>`
   <h3 style="margin:0 0 10px">Novo ingrediente e atualização</h3>
 
   <div class="line-add">
-    <select id="ingProduto" class="line-select">
-      <option value="">Selecione o ingrediente</option>
-      ${ingredientesBase.map(i=>`
-        <option value="${i.id}"
-          data-custo="${i.valor}"
-          data-unidade="${i.unidade_medida}">
-          ${i.nome}
-        </option>
-      `).join("")}
-    </select>
+   <div style="position:relative">
+
+<input
+  id="ingBusca"
+  type="text"
+  placeholder="Buscar ingrediente..."
+  class="line-select"
+  autocomplete="off"
+>
+
+<div id="resultadoIngredientes" style="
+  position:absolute;
+  top:42px;
+  left:0;
+  right:0;
+  max-height:220px;
+  overflow-y:auto;
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:10px;
+  box-shadow:0 10px 25px rgba(0,0,0,.15);
+  display:none;
+  z-index:20;
+"></div>
+
+</div>
 
     <input id="ingQtd" type="number" step="0.001" placeholder="Qtd" class="line-qtd">
 
@@ -2481,10 +2497,15 @@ async function salvarPrecoVenda(cmvFinal){
 }
 
 async function salvarIngrediente(){
-  const prodId = ingProduto.value;
-  const qtd = Number(ingQtd.value||0);
-  if(!prodId || qtd<=0) return;
+const prod = ingredienteSelecionado;
+if(!prod) return alert("Selecione um ingrediente");
 
+const prodId = prod.id;
+
+const qtd = Number(ingQtd.value || 0);
+if(qtd <= 0) return alert("Quantidade inválida");
+
+const custoUnit = Number(prod.valor);
   const prod = ingredientesBase.find(p => p.id === prodId);
   const custoUnit = Number(prod.valor);
 
@@ -2908,7 +2929,67 @@ toast("Registro restaurado")
 
 }
 
+let ingredienteSelecionado = null;
 
+document.addEventListener("input", e => {
+
+  if(e.target.id !== "ingBusca") return;
+
+  const termo = e.target.value.toLowerCase().trim();
+  const box = document.getElementById("resultadoIngredientes");
+
+  if(!termo){
+    box.style.display="none";
+    return;
+  }
+
+  const resultados = ingredientesBase.filter(i =>
+    i.nome.toLowerCase().includes(termo)
+  );
+
+  if(resultados.length === 0){
+    box.innerHTML = `<div style="padding:10px;font-size:12px">Nenhum ingrediente</div>`;
+    box.style.display="block";
+    return;
+  }
+
+  box.innerHTML = resultados.map(i=>`
+
+    <div
+      class="itemIngrediente"
+      data-id="${i.id}"
+      style="
+        padding:10px;
+        cursor:pointer;
+        border-bottom:1px solid #f1f5f9;
+        font-size:13px;
+      "
+    >
+      ${i.nome}
+    </div>
+
+  `).join("");
+
+  box.style.display="block";
+
+});
+
+document.addEventListener("click", e => {
+
+  if(!e.target.classList.contains("itemIngrediente")) return;
+
+  const id = e.target.dataset.id;
+
+  const prod = ingredientesBase.find(p => p.id === id);
+
+  ingredienteSelecionado = prod;
+
+  ingBusca.value = prod.nome;
+  ingUnidade.value = prod.unidade_medida;
+
+  resultadoIngredientes.style.display = "none";
+
+});
 
   
 </script>
