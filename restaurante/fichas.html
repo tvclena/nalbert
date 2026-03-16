@@ -1137,9 +1137,21 @@ border:none;
 background:#000;
 color:#fff;
 padding:12px;
-overflow-y:auto;
-height:100%;
+
+max-height:220px;   /* altura da área */
+overflow-y:auto;    /* ativa scroll */
+
 font-size:12px;
+border-top:1px solid rgba(255,255,255,.1);
+}
+
+#historicoBox::-webkit-scrollbar{
+width:6px;
+}
+
+#historicoBox::-webkit-scrollbar-thumb{
+background:#22c55e;
+border-radius:6px;
 }
 
 .h-item{
@@ -1249,6 +1261,18 @@ cursor:pointer;
     grid-template-columns:repeat(2,1fr);
   }
 }
+
+
+#historicoBox{
+background:#000;
+color:#fff;
+padding:12px;
+overflow-y:auto;
+height:100%;
+font-size:12px;
+}
+
+  
 </style>
 </head>
 
@@ -2890,7 +2914,7 @@ const { data, error } = await sb
 .eq("tabela","buffet")
 .eq("registro_id",buffetId)
 .order("alterado_em",{ascending:false})
-.limit(50)
+.limit(10)
 
 if(error){
 console.error(error)
