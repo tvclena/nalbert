@@ -2498,34 +2498,30 @@ async function salvarPrecoVenda(cmvFinal){
 }
 
 async function salvarIngrediente(){
+
 const prod = ingredienteSelecionado;
 if(!prod) return alert("Selecione um ingrediente");
-
-const prodId = prod.id;
 
 const qtd = Number(ingQtd.value || 0);
 if(qtd <= 0) return alert("Quantidade inválida");
 
-const custoUnit = Number(prod.valor);
-  const prod = ingredientesBase.find(p => p.id === prodId);
-  const custoUnit = Number(prod.valor);
+const custoUnit = Number(prod.valor || 0);
 
-  await sb.from("buffet_itens").insert({
-    buffet_id: pratoAtual.id,
-    produto_id: prod.id,
-    nome: prod.nome,
-    quantidade: qtd,
-    unidade_uso: prod.unidade_medida,
-    custo_unitario: custoUnit,
-    custo_calculado: custoUnit * qtd
-  });
+await sb.from("buffet_itens").insert({
+  buffet_id: pratoAtual.id,
+  produto_id: prod.id,
+  nome: prod.nome,
+  quantidade: qtd,
+  unidade_uso: prod.unidade_medida,
+  custo_unitario: custoUnit,
+  custo_calculado: custoUnit * qtd
+});
 
 await carregarCMVCache();
-await carregarPratos();   // 🔁 atualiza lista
-aplicarFiltros();         // ✅ re-render com paginação
+await carregarPratos();
+aplicarFiltros();
 
-   
-salvarDraftPreco();   // 👈 AQUI salva o que foi digitado
+salvarDraftPreco();
 
 const { data: pratoNovo } = await sb
   .from("buffet")
