@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8"/>
+<meta charset="UTF-8">
+<title>Auditoria • CMV</title>
 
 <meta name="viewport"
 content="width=device-width,
@@ -9,11 +10,10 @@ initial-scale=1,
 maximum-scale=1,
 minimum-scale=1,
 user-scalable=no,
-viewport-fit=cover"/>
-
-<title>Auditoria • CMV</title>
+viewport-fit=cover">
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -22,304 +22,262 @@ viewport-fit=cover"/>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
 
 <style>
+
 :root{
-  --primary:#2563eb;
-  --danger:#dc2626;
-  --success:#16a34a;
-  --bg:#f4f6fb;
-  --card:#ffffff;
-  --text:#0f172a;
-  --muted:#64748b;
-  --border:#e5e7eb;
-  --radius:16px;
+--primary:#111827;
+--bg:#f3f5f9;
+--card:#ffffff;
+--text:#0f172a;
+--muted:#6b7280;
+--border:#e5e7eb;
+--radius:12px;
 }
 
 *{box-sizing:border-box}
 
 html,body{
-  margin:0;
-  font-family:Inter,system-ui;
-  background:var(--bg);
-  color:var(--text);
-  overflow-x:hidden;
+margin:0;
+font-family:Inter,sans-serif;
+background:var(--bg);
+color:var(--text);
 }
+
+/* HEADER */
 
 .header{
-  padding:16px;
-  background:#fff;
-  border-bottom:1px solid var(--border);
-  position:sticky;
-  top:0;
-  z-index:10;
+background:#fff;
+padding:6px 10px;
+display:flex;
+gap:6px;
+align-items:center;
+border-bottom:1px solid var(--border);
+position:sticky;
+top:0;
+z-index:50;
 }
 
-.header h1{
-  margin:0;
-  font-size:18px;
-  font-weight:800;
+.header input,
+.header select{
+height:30px;
+border-radius:6px;
+border:1px solid var(--border);
+padding:0 8px;
+font-size:11px;
+font-weight:600;
+background:#f9fafb;
 }
+
+.header input{flex:1}
+
+.header button{
+height:30px;
+padding:0 10px;
+border:none;
+border-radius:6px;
+background:var(--primary);
+color:#fff;
+font-size:10px;
+font-weight:700;
+cursor:pointer;
+}
+
+/* CONTAINER */
 
 .container{
-  padding:16px;
-  max-width:1200px;
-  margin:auto;
+padding:14px;
+max-width:1100px;
+margin:auto;
 }
 
+/* CARDS */
+
 .cards{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-  margin-bottom:16px;
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:10px;
+margin-bottom:14px;
 }
 
 .card{
-  background:var(--card);
-  padding:14px;
-  border-radius:var(--radius);
-  box-shadow:0 5px 15px rgba(0,0,0,.05);
-  text-align:center;
+background:var(--card);
+border:1px solid var(--border);
+border-radius:var(--radius);
+padding:12px;
+text-align:center;
 }
 
 .card small{
-  font-size:10px;
-  color:var(--muted);
+font-size:10px;
+color:var(--muted);
 }
 
 .card strong{
-  display:block;
-  font-size:18px;
-  margin-top:4px;
+font-size:18px;
+display:block;
+margin-top:4px;
 }
 
-.filters{
-  display:grid;
-  grid-template-columns:2fr 1fr;
-  gap:12px;
-  margin-bottom:16px;
-}
-
-.filter-group{
-  display:flex;
-  flex-direction:column;
-}
-
-.filter-group label{
-  font-size:11px;
-  font-weight:700;
-  color:var(--muted);
-  margin-bottom:6px;
-  text-transform:uppercase;
-}
-
-.filter-group input,
-.filter-group select{
-  height:44px;
-  padding:0 14px;
-  border-radius:12px;
-  border:1px solid var(--border);
-  font-size:14px;
-  background:#fff;
-}
+/* CHART */
 
 .chart-box{
-  background:#fff;
-  padding:10px;
-  border-radius:var(--radius);
-  margin-bottom:15px;
-  box-shadow:0 5px 15px rgba(0,0,0,.05);
+background:#fff;
+border:1px solid var(--border);
+border-radius:var(--radius);
+padding:10px;
+margin-bottom:14px;
 }
 
+/* TABLE */
+
 .table-wrap{
-  background:#fff;
-  border-radius:var(--radius);
-  overflow:auto;
-  box-shadow:0 5px 15px rgba(0,0,0,.05);
+background:#fff;
+border-radius:var(--radius);
+border:1px solid var(--border);
+overflow:auto;
 }
 
 table{
-  width:100%;
-  border-collapse:collapse;
-  font-size:11px;
-  min-width:600px;
-}
-
-th,td{
-  padding:8px;
-  border-bottom:1px solid var(--border);
+width:100%;
+border-collapse:collapse;
+font-size:11px;
+min-width:600px;
 }
 
 th{
-  font-size:9px;
-  text-transform:uppercase;
-  color:var(--muted);
-  background:#f8fafc;
+background:#f9fafb;
+font-size:9px;
+text-transform:uppercase;
+color:var(--muted);
+padding:7px;
+text-align:left;
+}
+
+td{
+padding:7px;
+border-bottom:1px solid var(--border);
 }
 
 .badge{
-  padding:3px 6px;
-  border-radius:999px;
-  font-size:8px;
-  font-weight:800;
+padding:2px 6px;
+border-radius:999px;
+font-size:9px;
+font-weight:700;
 }
 
 .insert{background:#dcfce7;color:#166534}
 .update{background:#fef9c3;color:#854d0e}
 .delete{background:#fee2e2;color:#991b1b}
 
+/* MODAL */
+
 .modal{
-  position:fixed;
-  inset:0;
-  background:rgba(15,23,42,.55);
-  backdrop-filter:blur(4px);
-  display:none;
-  align-items:center;
-  justify-content:center;
-  padding:20px;
-  z-index:999;
+position:fixed;
+inset:0;
+background:rgba(0,0,0,.5);
+display:none;
+align-items:center;
+justify-content:center;
+padding:20px;
 }
 
 .modal-box{
-  background:#fff;
-  width:100%;
-  max-width:680px;
-  border-radius:18px;
-  box-shadow:0 25px 80px rgba(0,0,0,.25);
-  overflow:hidden;
-  animation:fadeIn .18s ease;
+background:#fff;
+width:100%;
+max-width:700px;
+border-radius:14px;
+overflow:hidden;
 }
 
 .modal-header{
-  padding:16px 20px;
-  border-bottom:1px solid var(--border);
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  font-weight:700;
-  font-size:14px;
+padding:14px;
+border-bottom:1px solid var(--border);
+display:flex;
+justify-content:space-between;
+font-weight:700;
 }
 
 .modal-body{
-  padding:20px;
-  max-height:65vh;
-  overflow:auto;
+padding:18px;
+max-height:65vh;
+overflow:auto;
 }
 
 .modal-close{
-  cursor:pointer;
-  font-size:13px;
-  background:#f1f5f9;
-  border:none;
-  padding:6px 12px;
-  border-radius:8px;
+background:#f1f5f9;
+border:none;
+padding:6px 12px;
+border-radius:6px;
+cursor:pointer;
 }
 
-.info-grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:14px;
-  margin-bottom:16px;
-}
-
-.info-box{
-  background:#f8fafc;
-  border:1px solid var(--border);
-  border-radius:10px;
-  padding:10px 12px;
-}
-
-.info-box small{
-  display:block;
-  font-size:9px;
-  text-transform:uppercase;
-  color:var(--muted);
-  margin-bottom:4px;
-}
-
-.info-box strong{
-  font-size:12px;
-  word-break:break-word;
-}
-
-.json-block{
-  background:#0f172a;
-  color:#e2e8f0;
-  border-radius:10px;
-  padding:14px;
-  font-size:11px;
-  overflow:auto;
-}
-
-@keyframes fadeIn{
-  from{opacity:0; transform:translateY(10px);}
-  to{opacity:1; transform:translateY(0);}
-}
-
-.toast{
-  position:fixed;
-  bottom:15px;
-  left:50%;
-  transform:translateX(-50%);
-  background:#0f172a;
-  color:#fff;
-  padding:8px 14px;
-  border-radius:8px;
-  display:none;
-  font-size:11px;
-}
-
-@media(min-width:900px){
-  .cards{ grid-template-columns:repeat(4,1fr); }
-}
+/* MOBILE */
 
 @media(max-width:768px){
-  .filters{ grid-template-columns:1fr; }
+
+.cards{
+grid-template-columns:repeat(2,1fr);
 }
 
-body.modal-open{
-  overflow:hidden;
-  height:100vh;
+.header{
+flex-wrap:wrap;
 }
+
+}
+
 </style>
 </head>
 
 <body>
 
 <div class="header">
-  <h1>📊 Auditoria CMV</h1>
+
+<input type="text" id="rangeData" placeholder="Período">
+
+<select id="filtroOperacao">
+<option value="">Operação</option>
+<option value="INSERT">INSERT</option>
+<option value="UPDATE">UPDATE</option>
+<option value="DELETE">DELETE</option>
+</select>
+
+<button onclick="carregar()">Atualizar</button>
+
 </div>
 
 <div class="container">
 
 <div class="cards">
-  <div class="card"><small>Total</small><strong id="total">0</strong></div>
-  <div class="card"><small>Inserts</small><strong id="ins">0</strong></div>
-  <div class="card"><small>Updates</small><strong id="upd">0</strong></div>
-  <div class="card"><small>Deletes</small><strong id="del">0</strong></div>
+
+<div class="card">
+<small>Total</small>
+<strong id="total">0</strong>
 </div>
 
-<div class="filters">
-  <div class="filter-group">
-    <label>Período</label>
-    <input type="text" id="rangeData" placeholder="Selecione o período">
-  </div>
+<div class="card">
+<small>Inserts</small>
+<strong id="ins">0</strong>
+</div>
 
-  <div class="filter-group">
-    <label>Operação</label>
-    <select id="filtroOperacao">
-      <option value="">Todas</option>
-      <option value="INSERT">INSERT</option>
-      <option value="UPDATE">UPDATE</option>
-      <option value="DELETE">DELETE</option>
-    </select>
-  </div>
+<div class="card">
+<small>Updates</small>
+<strong id="upd">0</strong>
+</div>
+
+<div class="card">
+<small>Deletes</small>
+<strong id="del">0</strong>
+</div>
+
 </div>
 
 <div class="chart-box">
-  <canvas id="grafico" height="70"></canvas>
+<canvas id="grafico" height="70"></canvas>
 </div>
 
 <div class="table-wrap">
+
 <table>
+
 <thead>
 <tr>
 <th>Data</th>
@@ -329,215 +287,132 @@ body.modal-open{
 <th>Ações</th>
 </tr>
 </thead>
+
 <tbody id="tbody"></tbody>
+
 </table>
+
 </div>
 
 </div>
 
 <div class="modal" id="modal">
-  <div class="modal-box">
-    <div class="modal-header">
-      <span>Detalhes da Alteração</span>
-      <button class="modal-close" onclick="fechar()">Fechar</button>
-    </div>
-    <div class="modal-body" id="conteudo"></div>
-  </div>
+<div class="modal-box">
+
+<div class="modal-header">
+Detalhes
+<button class="modal-close" onclick="fechar()">Fechar</button>
 </div>
 
-<div class="toast" id="toast"></div>
+<div class="modal-body" id="conteudo"></div>
+
+</div>
+</div>
 
 <script>
+
 const sb = supabase.createClient(
 "https://dxkszikemntfusfyrzos.supabase.co",
 "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
 let chart;
-let dataInicioGlobal;
-let dataFimGlobal;
 
-function toast(msg){
-  const t=document.getElementById("toast");
-  t.innerText=msg;
-  t.style.display="block";
-  setTimeout(()=>t.style.display="none",3000);
-}
-
-function fechar(){
-  document.getElementById("modal").style.display="none";
-  document.body.classList.remove("modal-open");
-}
-
-flatpickr("#rangeData", {
-  mode: "range",
-  dateFormat: "Y-m-d",
-  locale: "pt",
-  defaultDate: [
-    new Date().fp_incr(-7),
-    new Date()
-  ],
-  onClose: function(selectedDates){
-    if(selectedDates.length === 2){
-      dataInicioGlobal = selectedDates[0].toISOString().slice(0,10);
-      dataFimGlobal = selectedDates[1].toISOString().slice(0,10);
-      carregar();
-    }
-  }
+flatpickr("#rangeData",{
+mode:"range",
+dateFormat:"Y-m-d",
+locale:"pt"
 });
-
-dataInicioGlobal = new Date().fp_incr(-7).toISOString().slice(0,10);
-dataFimGlobal = new Date().toISOString().slice(0,10);
 
 async function carregar(){
 
-  let query = sb.from("historico_alteracao_fichas").select("*");
+let query=sb.from("historico_alteracao_fichas").select("*");
 
-  if(dataInicioGlobal && dataFimGlobal){
-    query = query
-      .gte("alterado_em", dataInicioGlobal+"T00:00:00")
-      .lte("alterado_em", dataFimGlobal+"T23:59:59");
-  }
-
-  if(filtroOperacao.value){
-    query = query.eq("operacao", filtroOperacao.value);
-  }
-
-  const {data,error}=await query.order("alterado_em",{ascending:false}).limit(500);
-
-  if(error){toast(error.message);return;}
-
-  tbody.innerHTML="";
-  total.innerText=data.length;
-
-  let i=0,u=0,d=0;
-  const dias={};
-
-  data.forEach(r=>{
-    const dia=r.alterado_em.slice(0,10);
-    if(!dias[dia]) dias[dia]=0;
-    dias[dia]++;
-
-    if(r.operacao==="INSERT") i++;
-    if(r.operacao==="UPDATE") u++;
-    if(r.operacao==="DELETE") d++;
-
-    const tr=document.createElement("tr");
-    tr.innerHTML=`
-      <td>${new Date(r.alterado_em).toLocaleString()}</td>
-      <td>${r.tabela}</td>
-      <td><span class="badge ${r.operacao.toLowerCase()}">${r.operacao}</span></td>
-      <td>${r.registro_id}</td>
-      <td>
-        <button onclick='ver(${JSON.stringify(r)})'>Ver</button>
-        <button onclick="restaurar('${r.id}')">Restaurar</button>
-      </td>
-    `;
-    tbody.appendChild(tr);
-  });
-
-  ins.innerText=i;
-  upd.innerText=u;
-  del.innerText=d;
-
-  atualizarGrafico(dias);
+if(filtroOperacao.value){
+query=query.eq("operacao",filtroOperacao.value);
 }
 
-function atualizarGrafico(dias){
-  const labels=Object.keys(dias).sort();
-  const valores=labels.map(l=>dias[l]);
+const {data,error}=await query
+.order("alterado_em",{ascending:false})
+.limit(500);
 
-  if(chart) chart.destroy();
+if(error) return alert(error.message);
 
-  chart=new Chart(document.getElementById("grafico"),{
-    type:'bar',
-    data:{labels,datasets:[{data:valores}]},
-    options:{plugins:{legend:{display:false}}}
-  });
+tbody.innerHTML="";
+
+let i=0,u=0,d=0;
+
+const dias={};
+
+data.forEach(r=>{
+
+const dia=r.alterado_em.slice(0,10);
+
+if(!dias[dia]) dias[dia]=0;
+
+dias[dia]++;
+
+if(r.operacao==="INSERT") i++;
+if(r.operacao==="UPDATE") u++;
+if(r.operacao==="DELETE") d++;
+
+const tr=document.createElement("tr");
+
+tr.innerHTML=`
+<td>${new Date(r.alterado_em).toLocaleString()}</td>
+<td>${r.tabela}</td>
+<td><span class="badge ${r.operacao.toLowerCase()}">${r.operacao}</span></td>
+<td>${r.registro_id}</td>
+<td>
+<button onclick='ver(${JSON.stringify(r)})'>Ver</button>
+</td>
+`;
+
+tbody.appendChild(tr);
+
+});
+
+total.innerText=data.length;
+ins.innerText=i;
+upd.innerText=u;
+del.innerText=d;
+
+const labels=Object.keys(dias).sort();
+const valores=labels.map(l=>dias[l]);
+
+if(chart) chart.destroy();
+
+chart=new Chart(grafico,{
+type:'bar',
+data:{
+labels,
+datasets:[{data:valores}]
+},
+options:{
+plugins:{legend:{display:false}}
+}
+});
+
 }
 
 function ver(item){
-  document.body.classList.add("modal-open");
-  document.getElementById("modal").style.display="flex";
 
-  const formatData = new Date(item.alterado_em).toLocaleString();
+modal.style.display="flex";
 
-  // Função para montar campos bonitos
-  function montarBloco(obj){
-    if(!obj) return "<em style='color:#64748b;font-size:12px'>Sem dados</em>";
+conteudo.innerHTML=`
+<pre style="font-size:12px">
+${JSON.stringify(item,null,2)}
+</pre>
+`;
 
-    let html = "<div style='display:grid;gap:8px'>";
-    Object.keys(obj).forEach(chave=>{
-      html += `
-        <div style="
-          background:#f8fafc;
-          border:1px solid #e5e7eb;
-          border-radius:8px;
-          padding:8px 10px;
-          font-size:12px;
-          display:flex;
-          justify-content:space-between;
-          gap:10px;
-        ">
-          <span style="color:#64748b;font-weight:600">${chave}</span>
-          <span style="font-weight:600;text-align:right;word-break:break-word">
-            ${obj[chave]}
-          </span>
-        </div>
-      `;
-    });
-    html += "</div>";
-    return html;
-  }
-
-  conteudo.innerHTML = `
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
-      <div style="background:#f1f5f9;padding:10px;border-radius:8px">
-        <div style="font-size:10px;color:#64748b">Data</div>
-        <div style="font-weight:700">${formatData}</div>
-      </div>
-
-      <div style="background:#f1f5f9;padding:10px;border-radius:8px">
-        <div style="font-size:10px;color:#64748b">Operação</div>
-        <div style="font-weight:700">${item.operacao}</div>
-      </div>
-
-      <div style="background:#f1f5f9;padding:10px;border-radius:8px">
-        <div style="font-size:10px;color:#64748b">Tabela</div>
-        <div style="font-weight:700">${item.tabela}</div>
-      </div>
-
-      <div style="background:#f1f5f9;padding:10px;border-radius:8px">
-        <div style="font-size:10px;color:#64748b">Registro ID</div>
-        <div style="font-weight:700">${item.registro_id}</div>
-      </div>
-    </div>
-
-    <div style="margin-bottom:18px">
-      <div style="font-size:11px;font-weight:700;margin-bottom:8px;color:#0f172a">
-        Dados Antes
-      </div>
-      ${montarBloco(item.dados_antes)}
-    </div>
-
-    <div>
-      <div style="font-size:11px;font-weight:700;margin-bottom:8px;color:#0f172a">
-        Dados Depois
-      </div>
-      ${montarBloco(item.dados_depois)}
-    </div>
-  `;
 }
 
-async function restaurar(id){
-  const senha=prompt("Senha:");
-  if(senha!=="8486"){toast("Senha incorreta");return;}
-  await sb.rpc("restaurar_historico",{p_id:id});
-  toast("Restaurado");
-  carregar();
+function fechar(){
+modal.style.display="none";
 }
 
 carregar();
+
 </script>
 
 </body>
