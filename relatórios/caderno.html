@@ -338,8 +338,7 @@ const impostos = await fetchAll("impostos")
 
   itensMap = {};
   (itens||[]).forEach(i=>{
-    const id = String(i.buffet_id).trim();
-
+const id = String(i.buffet_id);
     if(!itensMap[id]) itensMap[id]=[];
 
     itensMap[id].push(i);
@@ -404,8 +403,8 @@ function renderProximaPagina(){
 
   pagina.forEach(p=>{
 
-    const itens = itensMap[String(p.id).trim()] || [];
-    const impostos = impostosMap[String(p.id).trim()] || [];
+ const itens = itensMap[String(p.id)] || [];
+const impostos = impostosMap[String(p.id)] || [];
 
     const cmvBase = itens.reduce((s,i)=>s+Number(i.custo_calculado||0),0);
 
