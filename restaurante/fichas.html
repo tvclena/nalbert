@@ -1882,18 +1882,49 @@ mBody.innerHTML = `
 
 
 <h3>Precificação</h3>
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-  <input id="markupPerc" type="number" step="0.01" placeholder="Markup (%)">
-  <input id="precoVendaInput" type="number" step="0.01" placeholder="Preço de venda (R$)">
+<div style="
+display:grid;
+grid-template-columns:1fr 1fr auto;
+gap:10px;
+align-items:end;
+margin-top:6px;
+">
+
+  <input 
+    id="markupPerc" 
+    type="number" 
+    step="0.01" 
+    placeholder="Markup (%)"
+  >
+
+  <input 
+    id="precoVendaInput" 
+    type="number" 
+    step="0.01" 
+    placeholder="Preço de venda (R$)"
+  >
+
+  <button 
+    class="btn-add"
+    style="
+      height:38px;
+      padding:0 18px;
+      white-space:nowrap;
+    "
+    onclick="salvarPrecoVenda(${cmvFinal})"
+  >
+    SALVAR
+  </button>
+
 </div>
 
-<p id="previewPreco" style="margin-top:8px;font-size:13px;font-weight:700;color:#166534"></p>
-
-
-  <button class="btn-add" style="margin-top:10px"
-    onclick="salvarPrecoVenda(${cmvFinal})">
-    SALVAR PREÇO DE VENDA
-  </button>
+<p id="previewPreco" 
+style="
+margin-top:8px;
+font-size:13px;
+font-weight:700;
+color:#166534
+"></p>
 
 ${precoVenda ? `
   <p><b>Preço atual:</b> ${moeda(precoVenda)}</p>
