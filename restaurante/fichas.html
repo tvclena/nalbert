@@ -2798,8 +2798,53 @@ btn.onclick = async () => {
   if(quantidade <= 0) return alert("Quantidade inválida");
 
   const custoUnit = Number(prod.custo_unitario || prod.valor || 0);
+
+  btn.classList.add("btn-loading");   // 🔥 overlay no botão
+
+  try{
+
     await sb
       .from("buffet_itens")
+      .update({
+        quantidade: quantidade,
+        custo_unitario: custoUnit,
+        custo_calculado: custoUnit * quantidade
+      })
+      .eq("id", itemId);
+
+    await carregarCMVCache();
+    await carregarPratos();
+    aplicarFiltros();
+
+    const { data: pratoNovo } = await sb
+      .from("buffet")
+      .select("*")
+      .eq("id", pratoAtual.id)
+      .single();
+
+    btn.innerText = "＋";
+    btn.classList.remove("btn-edit");
+    btn.classList.add("btn-add");
+    btn.onclick = salvarIngrediente;
+
+    busca.value = "";
+    qtd.value = "";
+    unidade.value = "";
+
+    abrirModal(pratoNovo);
+
+  }catch(err){
+
+    console.error(err);
+    alert("Erro ao atualizar ingrediente");
+
+  }finally{
+
+    btn.classList.remove("btn-loading");  // 🔥 remove overlay
+
+  }
+
+};
       .update({
         quantidade: quantidade,
         custo_unitario: custoUnit,
