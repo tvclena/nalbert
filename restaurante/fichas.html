@@ -1879,41 +1879,32 @@ const cmvPercentual = precoVenda
 
 const lucro = precoVenda ? precoVenda - cmvFinal : 0;
 const margem = precoVenda ? (lucro/precoVenda)*100 : 0;
-mHeader.innerHTML = `
+
+
+  mHeader.innerHTML = `
 <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-  <h2 id="tituloPrato" style="margin:0">${p.nome}</h2>
+
+  <h2 id="tituloPrato" style="margin:0">
+    ${p.nome}
+  </h2>
 
   <button class="btn-icon btn-edit"
     title="Editar nome do prato"
     onclick="editarNomePrato()">
     ✏️
   </button>
+
+  <span class="badge" style="
+    margin-left:6px;
+    background:#eef2ff;
+    color:#3730a3;
+    font-weight:800;
+  ">
+    ${p.tipo || "SEM TIPO"}
+  </span>
+
 </div>
-  <div class="badges primary">
-    <span class="badge">${p.tipo || "-"}</span>
-
-    <span class="badge" style="background:#dcfce7;color:#166534">
-      💰 Venda ${moeda(precoVenda)}
-    </span>
-
-<span class="badge" style="background:#eef2ff;color:#3730a3">
-  🧾 Custo ${moeda(cmvFinal)}
-</span>
-
-<span class="badge" style="
-  background:${cmvPercentual > 35 ? '#fee2e2' : '#dcfce7'};
-  color:${cmvPercentual > 35 ? '#991b1b' : '#166534'}">
-  📊 CMV ${cmvPercentual.toFixed(1)}%
-</span>
-
-    <span class="badge" style="
-      background:${margem < 30 ? '#fee2e2' : '#dcfce7'};
-      color:${margem < 30 ? '#991b1b' : '#166534'}">
-      📈 Margem ${margem.toFixed(1)}%
-    </span>
-  </div>
 `;
-
 
 mBody.innerHTML = `
 <h3>Descrição do prato (texto do cardápio)</h3>
