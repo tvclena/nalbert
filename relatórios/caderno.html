@@ -504,6 +504,19 @@ search.oninput=aplicarFiltros;
 tipoFilter.onchange=aplicarFiltros;
 
 carregarDados();
+
+
+window.addEventListener("scroll",()=>{
+
+  const scrollTop = window.pageYOffset;
+  const windowHeight = window.innerHeight;
+  const fullHeight = document.body.scrollHeight;
+
+  if(scrollTop + windowHeight >= fullHeight - 200){
+    renderProximaPagina();
+  }
+
+});
 </script>
 
 </body>
