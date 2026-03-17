@@ -618,103 +618,47 @@ container.appendChild(div)
 async function abrirConversa(telefone){
 
 clienteSelecionado = telefone
-selecionadas = []
+pagina = 0
 
-/* buscar nome do cliente */
+const container = document.getElementById("mensagens")
+container.innerHTML = ""
 
-const {data:cliente} = await db
-.from("memoria_clientes")
-.select("nome")
-.eq("telefone",telefone)
-.maybeSingle()
-
-const nomeCliente = cliente?.nome || telefone
-
-/* atualizar header */
-
-document.getElementById("clienteAtual").innerHTML = `
-${nomeCliente} • ${telefone}
-
-<span class="menuDots" onclick="abrirMenu(event,'${telefone}')">⋮</span>
-<div class="menu" id="menu-${telefone}">
-
-<button onclick="editarContato('${telefone}')">
-Editar contato
-</button>
-
-<button onclick="toggleBot('${telefone}')">
-Pausar / Reativar
-</button>
-
-</div>
-</div>
-
-<a href="https://wa.me/${telefone}" target="_blank" class="waBtn">
-<svg viewBox="0 0 32 32" width="18">
-<path fill="#25D366" d="M16 3C9 3 3.5 8.5 3.5 15.3c0 2.4.7 4.6 2 6.6L4 29l7.3-1.9c1.9 1 4 1.5 6.2 1.5 7 0 12.5-5.5 12.5-12.3C30 8.5 23 3 16 3z"/>
-</svg>
-</a>
-`
-
-/* carregar mensagens */
+/* busca só as últimas 20 */
 
 const {data} = await db
 .from("conversas_whatsapp")
 .select("*")
 .eq("telefone",telefone)
-.order("created_at",{ascending:true})
+.order("created_at",{ascending:false})
+.range(0, limite-1)
 
-const container = document.getElementById("mensagens")
-
-container.innerHTML = ""
+/* se vazio */
 
 if(!data || data.length === 0){
-
 const empty = document.createElement("div")
-
 empty.className="empty"
 empty.innerText="Nenhuma mensagem ainda"
-
 container.appendChild(empty)
-
+return
 }
 
-/* renderizar mensagens */
+/* inverter ordem */
 
-data.forEach(m=>{
+const mensagens = data.reverse()
 
-const div = document.createElement("div")
+mensagens.forEach(m=>renderMensagem(m))
 
-div.className = "msg " + (m.role === "assistant" ? "assistant" : "user")
+/* scroll pro final */
 
-const date = new Date(m.created_at)
+setTimeout(()=>{
+container.scrollTop = container.scrollHeight
+},50)
 
-const dataFormatada = date.toLocaleDateString("pt-BR",{
-timeZone:"America/Bahia"
-})
+/* ativa scroll infinito */
 
-const horaFormatada = date.toLocaleTimeString("pt-BR",{
-hour:"2-digit",
-minute:"2-digit",
-second:"2-digit",
-timeZone:"America/Bahia"
-})
+ativarScroll()
 
-div.innerHTML = `
-<div>${m.mensagem}</div>
-<div class="time">${dataFormatada} • ${horaFormatada}</div>
-`
-
-container.appendChild(div)
-
-})
-
-container.scrollTo({
-top:container.scrollHeight,
-behavior:"smooth"
-})
-/* verificar se bot está pausado */
-
+}
 const pausado = await verificarPausa(telefone)
 
 const sendBox = document.getElementById("sendBox")
@@ -991,7 +935,97 @@ abrirConversa(telefone)
 }
 
 
+function renderMensagem(m){
 
+const container = document.getElementById("mensagens")
+
+const div = document.createElement("div")
+
+div.className = "msg " + (m.role === "assistant" ? "assistant" : "user")
+
+const date = new Date(m.created_at)
+
+const dataFormatada = date.toLocaleDateString("pt-BR",{
+timeZone:"America/Bahia"
+})
+
+const horaFormatada = date.toLocaleTimeString("pt-BR",{
+hour:"2-digit",
+minute:"2-digit",
+timeZone:"America/Bahia"
+})
+
+div.innerHTML = `
+<div>${m.mensagem}</div>
+<div class="time">${dataFormatada} • ${horaFormatada}</div>
+`
+
+container.appendChild(div)
+
+}
+
+
+function ativarScroll(){
+
+const container = document.getElementById("mensagens")
+
+container.onscroll = async () => {
+
+if(container.scrollTop === 0 && !carregando){
+
+carregando = true
+pagina++
+
+const inicio = pagina * limite
+const fim = inicio + limite - 1
+
+const {data} = await db
+.from("conversas_whatsapp")
+.select("*")
+.eq("telefone",clienteSelecionado)
+.order("created_at",{ascending:false})
+.range(inicio, fim)
+
+if(data && data.length){
+
+const antigas = data.reverse()
+
+const alturaAntes = container.scrollHeight
+
+antigas.forEach(m=>{
+
+const div = document.createElement("div")
+
+div.className = "msg " + (m.role === "assistant" ? "assistant" : "user")
+
+const date = new Date(m.created_at)
+
+div.innerHTML = `
+<div>${m.mensagem}</div>
+<div class="time">
+${date.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}
+</div>
+`
+
+container.prepend(div)
+
+})
+
+/* mantém posição do scroll */
+
+setTimeout(()=>{
+container.scrollTop = container.scrollHeight - alturaAntes
+},0)
+
+}
+
+carregando = false
+
+}
+
+}
+
+}
 
 
 
