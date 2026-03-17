@@ -5,8 +5,12 @@
 <meta charset="UTF-8">
 <title>Gestor de Conversas • Mercatto Delícia</title>
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+<meta name="viewport"
+content="width=device-width,
+initial-scale=1,
+maximum-scale=1,
+user-scalable=no,
+viewport-fit=cover">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -487,8 +491,14 @@ Controle
 </div>
 </div>
 
-<div class="messages" id="mensagens">
-<div class="empty">Nenhuma conversa selecionada</div>
+<div id="chatIframeContainer" style="flex:1;display:flex">
+
+<iframe id="frameChat" style="
+width:100%;
+height:100%;
+border:none;
+background:#020617;
+"></iframe>
 </div>
 
 <div class="sendBox" id="sendBox" style="display:none">
@@ -547,8 +557,7 @@ const {data:memoria} = await db
 .from("memoria_clientes")
 .select("telefone,nome")
 
-const nomes={}
-
+let nomes = {}
 memoria.forEach(c=>{
 nomes[c.telefone]=c.nome
 })
@@ -610,8 +619,7 @@ ${pausado ? "ATIVAR BOT" : "DESATIVAR BOT"}
 
 `
 
-div.onclick=()=>abrirConversa(c.telefone)
-
+div.onclick = () => abrirChatIframe(c.telefone)
 container.appendChild(div)
 
 }
@@ -867,8 +875,7 @@ await db.from("conversas_whatsapp").insert({
 textarea.value = ""
 
 /* atualiza chat */
-abrirConversa(telefone)
-
+abrirChatIframe(telefone)
 } catch (err){
 alert("Erro ao enviar: " + err.message)
 }
@@ -1016,7 +1023,20 @@ carregando = false
 }
 
 
+function abrirChatIframe(telefone){
 
+  clienteSelecionado = telefone
+
+  document.getElementById("clienteAtual").innerText = nomes[telefone] || telefone
+
+  const frame = document.getElementById("frameChat")
+  frame.src = "chat.html?telefone=" + telefone
+
+  /* 🔥 ATIVA CAIXA DE ENVIO */
+  const sendBox = document.getElementById("sendBox")
+  sendBox.style.display = "flex"
+
+}
 
 
   
