@@ -615,37 +615,13 @@ for (const c of clientes){
   container.appendChild(div)
 }
 
-/* 🔥 AUTO ABRIR PRIMEIRA CONVERSA */
 
-if(clientes.length && !clienteSelecionado){
-  abrirChatIframe(clientes[0].telefone)
-}
 
 }
 
 /* ================= ABRIR CHAT ================= */
 
-function abrirChatIframe(telefone){
 
-  console.log("ABRINDO:", telefone)
-
-  clienteSelecionado = telefone
-
-  document.getElementById("clienteAtual").innerText =
-    nomes[telefone] || telefone
-
-  const frame = document.getElementById("frameChat")
-
-  /* 🔥 TESTE CAMINHO */
-
-  frame.src = "chat.html?telefone=" + telefone
-
-  /* ATIVA ENVIO */
-
-  const sendBox = document.getElementById("sendBox")
-  sendBox.style.display = "flex"
-
-}
 async function abrirConversa(telefone){
 
 clienteSelecionado = telefone
