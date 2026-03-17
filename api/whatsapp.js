@@ -281,7 +281,81 @@ return res.status(200).end()
 }
 
 const msg = change.messages[0]
+let mensagem = msg.text?.body || ""
+let tipo = "texto"
+let media_url = null
 
+/* ================= DETECTAR MIDIA ================= */
+
+if(msg.type !== "text"){
+
+  tipo = msg.type
+
+  let mediaId = null
+
+  if(msg.image) mediaId = msg.image.id
+  if(msg.video) mediaId = msg.video.id
+  if(msg.audio) mediaId = msg.audio.id
+  if(msg.document) mediaId = msg.document.id
+
+  console.log("📎 MIDIA RECEBIDA:", tipo, mediaId)
+
+  if(mediaId){
+
+    /* ================= PEGAR URL MIDIA ================= */
+
+    const metaRes = await fetch(
+      `https://graph.facebook.com/v19.0/${mediaId}`,
+      {
+        headers:{
+          Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`
+        }
+      }
+    )
+
+    const metaData = await metaRes.json()
+
+    const downloadUrl = metaData.url
+
+    console.log("⬇️ BAIXANDO MIDIA...")
+
+    /* ================= BAIXAR ARQUIVO ================= */
+
+    const fileRes = await fetch(downloadUrl,{
+      headers:{
+        Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`
+      }
+    })
+
+    const buffer = await fileRes.arrayBuffer()
+
+    const fileName = `${Date.now()}-${tipo}`
+
+    /* ================= UPLOAD SUPABASE ================= */
+
+    const { error: uploadError } = await supabase.storage
+      .from("buffet_whatsa_mercatto")
+      .upload(fileName, buffer, {
+        contentType: fileRes.headers.get("content-type")
+      })
+
+    if(uploadError){
+      console.log("❌ ERRO UPLOAD:", uploadError)
+    }else{
+
+      const { data: publicUrl } = supabase.storage
+        .from("buffet_whatsa_mercatto")
+        .getPublicUrl(fileName)
+
+      media_url = publicUrl.publicUrl
+
+      console.log("✅ MIDIA SALVA:", media_url)
+
+    }
+
+  }
+
+}
 const mensagem = msg.text?.body
 const cliente = msg.from
 
@@ -642,7 +716,9 @@ await supabase
 .from("conversas_whatsapp")
 .insert({
 telefone:cliente,
-mensagem:mensagem,
+mensagem:mensagem || `[${tipo.toUpperCase()}]`,
+media_url: media_url,
+tipo: tipo,
 role:"user"
 })
 
