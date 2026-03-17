@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>Chat • Mercatto PRO</title>
+<title>Chat • Mercatto</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -23,8 +23,23 @@ height:100vh;
 display:flex;
 flex-direction:column;
 overflow:hidden;
-background:#0b0f1a;
-color:white;
+background:#e5ddd5;
+color:#111;
+}
+
+/* ===== FUNDO WHATSAPP ===== */
+
+body::before{
+content:"MERCATTO";
+position:fixed;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+font-size:120px;
+font-weight:800;
+color:#000;
+opacity:0.04;
+pointer-events:none;
 }
 
 /* ===== HEADER ===== */
@@ -32,7 +47,8 @@ color:white;
 .header{
 padding:14px 18px;
 font-weight:700;
-background:linear-gradient(90deg,#22c55e,#16a34a);
+background:#075e54;
+color:white;
 }
 
 /* ===== MESSAGES ===== */
@@ -43,61 +59,52 @@ overflow:auto;
 padding:20px;
 display:flex;
 flex-direction:column;
-gap:12px;
-scroll-behavior:smooth;
+gap:10px;
 }
 
 /* ===== BOLHAS ===== */
 
 .msg{
 max-width:75%;
-padding:12px 14px;
-border-radius:16px;
+padding:10px 12px;
+border-radius:10px;
 font-size:14px;
-animation:fade .2s ease;
 position:relative;
 }
 
 .user{
-background:#1e293b;
+background:#ffffff;
 align-self:flex-start;
-border:1px solid #334155;
 }
 
 .assistant{
-background:#22c55e;
-color:white;
+background:#dcf8c6;
 align-self:flex-end;
 }
 
 /* ===== MIDIAS ===== */
 
 .msg img, .msg video{
-max-width:240px;
-border-radius:12px;
+max-width:220px;
+border-radius:10px;
 margin-bottom:6px;
 cursor:pointer;
 }
 
 .msg audio{
-width:220px;
-margin-bottom:6px;
+width:200px;
 }
 
 /* ===== DOC ===== */
 
 .fileBox{
-background:#1e293b;
-border-radius:10px;
-padding:10px;
+background:#fff;
+border-radius:8px;
+padding:8px;
 display:flex;
-gap:10px;
+gap:8px;
 align-items:center;
 cursor:pointer;
-}
-
-.fileIcon{
-font-size:20px;
 }
 
 /* ===== TIME ===== */
@@ -115,29 +122,29 @@ text-align:right;
 display:flex;
 gap:10px;
 padding:10px;
-background:#020617;
-border-top:1px solid #1e293b;
+background:#f0f0f0;
+border-top:1px solid #ddd;
 }
 
 textarea{
 flex:1;
-border-radius:10px;
+border-radius:20px;
 border:none;
-padding:10px;
+padding:10px 14px;
 resize:none;
-height:45px;
-background:#1e293b;
-color:white;
+height:40px;
+background:white;
 }
 
 button{
-background:#22c55e;
+background:#25d366;
 border:none;
-border-radius:10px;
-padding:10px 14px;
+border-radius:50%;
+width:45px;
+height:45px;
 color:white;
 cursor:pointer;
-font-weight:600;
+font-weight:700;
 }
 
 /* ===== PREVIEW ===== */
@@ -146,17 +153,10 @@ font-weight:600;
 position:absolute;
 bottom:80px;
 left:20px;
-background:#020617;
+background:white;
 padding:10px;
-border-radius:12px;
-box-shadow:0 10px 30px rgba(0,0,0,.5);
-}
-
-/* ===== ANIMAÇÃO ===== */
-
-@keyframes fade{
-from{opacity:0;transform:translateY(6px)}
-to{opacity:1}
+border-radius:10px;
+box-shadow:0 10px 20px rgba(0,0,0,.2);
 }
 
 </style>
@@ -165,20 +165,15 @@ to{opacity:1}
 
 <body>
 
-<div class="header">Chat • Mercatto</div>
+<div class="header">Mercatto • WhatsApp</div>
 
 <div id="msgs" class="messages"></div>
 
 <div class="inputBox">
-
 <input type="file" id="fileInput" hidden>
-
 <button onclick="fileInput.click()">📎</button>
-
-<textarea id="msg" placeholder="Digite..."></textarea>
-
-<button onclick="enviar()">Enviar</button>
-
+<textarea id="msg" placeholder="Mensagem..."></textarea>
+<button onclick="enviar()">➤</button>
 </div>
 
 <div id="preview" class="preview" style="display:none"></div>
@@ -197,17 +192,23 @@ const db = supabase.createClient(
 let telefone = new URLSearchParams(location.search).get("telefone")
 let canal = null
 let arquivo = null
+
 let mensagensRenderizadas = new Set()
 
-/* ===== SCROLL ===== */
+let page = 0
+const limit = 20
+let carregando = false
+let acabou = false
 
-function scroll(){
+/* ===== SCROLL AUTO ===== */
+
+function scrollBottom(){
 setTimeout(()=>msgs.scrollTop=msgs.scrollHeight,50)
 }
 
 /* ===== RENDER ===== */
 
-function render(m){
+function render(m, prepend=false){
 
 if(mensagensRenderizadas.has(m.id)) return
 mensagensRenderizadas.add(m.id)
@@ -230,8 +231,7 @@ html+=`<audio controls src="${m.media_url}"></audio>`
 if(m.tipo==="documento"){
 html+=`
 <div class="fileBox" onclick="window.open('${m.media_url}')">
-<div class="fileIcon">📄</div>
-<div>${m.nome_arquivo || "Arquivo"}</div>
+📄 ${m.nome_arquivo || "Arquivo"}
 </div>`
 }
 
@@ -245,31 +245,62 @@ const hora = new Date(m.created_at)
 
 div.innerHTML = html + `<div class="time">${hora}</div>`
 
+if(prepend){
+msgs.prepend(div)
+}else{
 msgs.appendChild(div)
+}
 
 }
 
-/* ===== CARREGAR ===== */
+/* ===== CARREGAR PAGINADO ===== */
 
-async function carregar(){
+async function carregarMais(){
 
-mensagensRenderizadas.clear()
+if(carregando || acabou) return
+carregando = true
+
+const from = page * limit
+const to = from + limit - 1
 
 const {data} = await db
 .from("conversas_whatsapp")
 .select("*")
 .eq("telefone",telefone)
-.order("created_at",{ascending:true})
+.order("created_at",{ascending:false})
+.range(from,to)
 
-msgs.innerHTML=""
+if(!data || data.length === 0){
+acabou = true
+carregando = false
+return
+}
 
-data.forEach(render)
+/* inverter pra ordem correta */
+data.reverse().forEach(m => render(m,true))
 
-scroll()
+page++
+carregando = false
 
+}
+
+/* ===== INIT ===== */
+
+async function iniciar(){
+
+await carregarMais()
+scrollBottom()
 realtime()
 
 }
+
+/* ===== SCROLL TOPO ===== */
+
+msgs.addEventListener("scroll", async () => {
+if(msgs.scrollTop < 50){
+await carregarMais()
+}
+})
 
 /* ===== REALTIME ===== */
 
@@ -285,7 +316,7 @@ table:"conversas_whatsapp",
 filter:`telefone=eq.${telefone}`
 },payload=>{
 render(payload.new)
-scroll()
+scrollBottom()
 })
 .subscribe()
 
@@ -333,8 +364,6 @@ if(!telefone) return
 
 const texto = msg.value.trim()
 
-/* UX IMEDIATO */
-
 const temp = {
 id:"temp-"+Date.now(),
 mensagem:texto,
@@ -343,7 +372,7 @@ role:"assistant"
 }
 
 render(temp)
-scroll()
+scrollBottom()
 
 msg.value=""
 
@@ -395,9 +424,9 @@ preview.style.display="none"
 
 }
 
-/* ===== INIT ===== */
+/* ===== START ===== */
 
-carregar()
+iniciar()
 
 </script>
 
