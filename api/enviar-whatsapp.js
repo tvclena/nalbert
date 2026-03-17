@@ -1,100 +1,65 @@
-const { createClient } = require("@supabase/supabase-js")
+import { createClient } from "@supabase/supabase-js";
 
-const supabase = createClient(
-process.env.SUPABASE_URL,
-process.env.SUPABASE_SERVICE_ROLE
-)
+export default async function handler(req, res) {
 
-module.exports = async function handler(req,res){
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Método não permitido" });
+  }
 
-/* CORS */
+  try {
 
-res.setHeader("Access-Control-Allow-Origin","*")
-res.setHeader("Access-Control-Allow-Methods","POST, OPTIONS")
-res.setHeader("Access-Control-Allow-Headers","Content-Type, Authorization")
+    /* 🔐 PROTEÇÃO */
+    if (req.headers.authorization !== `Bearer ${process.env.ADMIN_TOKEN}`) {
+      return res.status(401).json({ error: "Não autorizado" });
+    }
 
-if(req.method === "OPTIONS"){
-return res.status(200).end()
-}
+    const { telefone, mensagem } = req.body;
 
-if(req.method !== "POST"){
-return res.status(405).json({erro:"Método não permitido"})
-}
+    if (!telefone || !mensagem) {
+      return res.status(400).json({ error: "Dados inválidos" });
+    }
 
-/* TOKEN */
+    /* 📲 ENVIO WHATSAPP */
+    const response = await fetch(
+      `https://graph.facebook.com/v18.0/${process.env.WHATSAPP_PHONE_ID}/messages`,
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${process.env.WHATSAPP_TOKEN}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          messaging_product: "whatsapp",
+          to: telefone,
+          type: "text",
+          text: { body: mensagem }
+        })
+      }
+    );
 
-if(req.headers.authorization !== `Bearer ${process.env.ADMIN_TOKEN}`){
-return res.status(403).json({erro:"Acesso negado"})
-}
+    const data = await response.json();
 
-try{
+    if (!response.ok) {
+      console.error(data);
+      return res.status(500).json({ error: "Erro ao enviar WhatsApp", detalhe: data });
+    }
 
-const body =
-typeof req.body === "string"
-? JSON.parse(req.body)
-: req.body
+    /* 💾 SALVAR NO SUPABASE */
+    const supabase = createClient(
+      process.env.SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE
+    );
 
-const telefone = body.telefone
-const mensagem = body.mensagem
+    await supabase.from("conversas_whatsapp").insert({
+      telefone,
+      mensagem,
+      role: "assistant"
+    });
 
-if(!telefone || !mensagem){
-return res.status(400).json({erro:"telefone ou mensagem faltando"})
-}
+    return res.status(200).json({ ok: true });
 
-/* WHATSAPP */
-
-const url =
-`https://graph.facebook.com/v19.0/${process.env.WHATSAPP_PHONE_ID}/messages`
-
-const resposta = await fetch(url,{
-
-method:"POST",
-
-headers:{
-Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
-"Content-Type":"application/json"
-},
-
-body:JSON.stringify({
-
-messaging_product:"whatsapp",
-to:telefone,
-type:"text",
-text:{
-body:mensagem
-}
-
-})
-
-})
-
-const json = await resposta.json()
-
-console.log("WHATSAPP RESPONSE:",json)
-
-/* SALVAR HISTORICO */
-
-await supabase
-.from("conversas_whatsapp")
-.insert({
-telefone:telefone,
-mensagem:mensagem,
-role:"assistant"
-})
-
-return res.json({
-ok:true,
-whatsapp:json
-})
-
-}catch(e){
-
-console.log("ERRO ENVIO:",e)
-
-return res.status(500).json({
-erro:"erro envio whatsapp"
-})
-
-}
-
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Erro interno" });
+  }
 }
