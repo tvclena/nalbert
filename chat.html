@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>Chat</title>
+<title>Chat • Mercatto</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -30,7 +30,7 @@ radial-gradient(circle at 80% 70%, rgba(255,140,0,0.05), transparent 40%),
 #f5f5f4;
 }
 
-/* ===== MARCA ===== */
+/* ===== LOGO FUNDO ===== */
 
 .brandBg{
 position:absolute;
@@ -60,6 +60,7 @@ padding:20px;
 display:flex;
 flex-direction:column;
 gap:14px;
+z-index:2;
 }
 
 /* ===== BOLHAS ===== */
@@ -84,19 +85,21 @@ color:white;
 align-self:flex-end;
 }
 
-/* ===== MEDIA ===== */
+/* ===== MIDIA ===== */
 
 .msg img{
 max-width:240px;
 border-radius:12px;
 margin-bottom:6px;
 cursor:pointer;
+box-shadow:0 10px 20px rgba(0,0,0,.15);
 }
 
 .msg video{
 max-width:260px;
 border-radius:12px;
 margin-bottom:6px;
+box-shadow:0 10px 20px rgba(0,0,0,.15);
 }
 
 /* ===== TIME ===== */
@@ -116,6 +119,7 @@ gap:10px;
 padding:12px;
 background:white;
 border-top:1px solid #e5e7eb;
+z-index:2;
 }
 
 textarea{
@@ -147,6 +151,7 @@ background:white;
 padding:10px;
 border-radius:12px;
 box-shadow:0 10px 30px rgba(0,0,0,.2);
+z-index:5;
 }
 
 @keyframes fade{
@@ -168,9 +173,9 @@ to{opacity:1}
 
 <div class="inputBox" id="inputBox" style="display:none">
 
-<input type="file" id="file" hidden>
+<input type="file" id="fileInput" hidden>
 
-<button onclick="document.getElementById('file').click()">📎</button>
+<button onclick="fileInput.click()">📎</button>
 
 <textarea id="msg"></textarea>
 
@@ -189,9 +194,9 @@ const db = supabase.createClient(
 "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 )
 
-let telefone = new URLSearchParams(location.search).get("telefone")
+let telefone = null
 let canal = null
-let arquivoSelecionado = null
+let arquivo = null
 
 /* ===== RESET ===== */
 
@@ -209,11 +214,17 @@ empty.style.display="block"
 msgs.innerHTML=""
 }
 
-/* ===== LOAD ===== */
+/* ===== PEGAR TELEFONE ===== */
+
+function getTel(){
+return new URLSearchParams(location.search).get("telefone")
+}
+
+/* ===== CARREGAR ===== */
 
 async function carregar(){
 
-telefone = new URLSearchParams(location.search).get("telefone")
+telefone = getTel()
 
 if(!telefone){
 reset()
@@ -299,17 +310,17 @@ function scroll(){
 setTimeout(()=>msgs.scrollTop=msgs.scrollHeight,50)
 }
 
-/* ===== FILE ===== */
+/* ===== PREVIEW ===== */
 
-file.onchange = ()=>{
-arquivoSelecionado = file.files[0]
+fileInput.onchange = ()=>{
+arquivo = fileInput.files[0]
 
 preview.style.display="block"
 
-if(arquivoSelecionado.type.includes("image")){
-preview.innerHTML=`<img src="${URL.createObjectURL(arquivoSelecionado)}" width="120">`
+if(arquivo.type.includes("image")){
+preview.innerHTML=`<img src="${URL.createObjectURL(arquivo)}" width="120">`
 }else{
-preview.innerHTML=`<video src="${URL.createObjectURL(arquivoSelecionado)}" width="120" controls></video>`
+preview.innerHTML=`<video src="${URL.createObjectURL(arquivo)}" width="120" controls></video>`
 }
 }
 
@@ -342,10 +353,20 @@ const texto = msg.value.trim()
 let url=null
 let tipo="texto"
 
-if(arquivoSelecionado){
-url = await upload(arquivoSelecionado)
-tipo = arquivoSelecionado.type.includes("video") ? "video" : "imagem"
+if(arquivo){
+url = await upload(arquivo)
+tipo = arquivo.type.includes("video") ? "video" : "imagem"
 }
+
+await fetch("/api/send",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+telefone,
+mensagem:texto,
+media_url:url
+})
+})
 
 await db.from("conversas_whatsapp").insert({
 telefone,
@@ -356,17 +377,17 @@ role:"assistant"
 })
 
 msg.value=""
-arquivoSelecionado=null
+arquivo=null
 preview.style.display="none"
 
 }
 
-/* ===== WATCH TELEFONE ===== */
+/* ===== WATCH TROCA ===== */
 
-let last=telefone
+let last = getTel()
 
 setInterval(()=>{
-const atual = new URLSearchParams(location.search).get("telefone")
+const atual = getTel()
 if(atual!==last){
 last=atual
 carregar()
