@@ -9,22 +9,47 @@ const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE
 )
-const ADMIN_TOKEN = process.env.ADMIN_TOKEN
+const ADMINS = [
+  "557798253249",
+  "557798315510"
+]
+
+
+
+
+const TEMPLATES_PERMITIDOS = [
+"confirmao_reserva",
+"lembrete_reserva",
+"confirmacao_pedido",
+"video_mercatto",
+"reserva_especial" // 👈 FALTAVA ISSO
+]
+
+
+
+
+
+
+
+
+
+
+
 function agoraBahia(){
-
-return new Date(
-new Date().toLocaleString("en-US",{ timeZone:"America/Bahia" })
-)
-
+  return new Date(
+    new Date().toLocaleString("en-US",{ timeZone:"America/Bahia" })
+  )
 }
 
+// Quando precisar da data, use assim:
+const agora = agoraBahia();
 
 /* ================= RELATORIO AUTOMATICO ================= */
 
 async function enviarRelatorioAutomatico(){
 
-const ADMIN_NUMERO = "557798253249"
-
+const numerosAdmins = ADMINS
+  
 const agoraBahia = new Date(
 new Date().toLocaleString("en-US",{ timeZone:"America/Bahia" })
 )
@@ -49,8 +74,7 @@ let totalPessoas = 0
 
 reservas.forEach((r,i)=>{
 
-const hora = r.datahora.split("T")[1].substring(0,5)
-
+const hora = r.datahora?.split("T")[1]?.substring(0,5) || "--:--"
 resposta += `${i+1}️⃣\n`
 resposta += `Nome: ${r.nome}\n`
 resposta += `Pessoas: ${r.pessoas}\n`
@@ -95,9 +119,14 @@ if(!musicos.length) return 0
 
 let maior = 0
 
-musicos.forEach(m=>{
+musicos.forEach(m => {
+
 const valor = Number(m.valor) || 0
-if(valor > maior) maior = valor
+
+if(valor > maior){
+maior = valor
+}
+
 })
 
 return maior
@@ -106,9 +135,13 @@ return maior
 
 function pegarPoster(musicos){
 
-const comFoto = musicos.find(m=>m.foto)
+if(!musicos || !musicos.length) return null
 
-return comFoto ? comFoto.foto : null
+const comPoster = musicos.find(m => 
+m.foto && m.foto.startsWith("http")
+)
+
+return comPoster ? comPoster.foto : null
 
 }
 
@@ -132,57 +165,149 @@ return []
 return data || []
 
 }
-
-
-module.exports = async function handler(req,res){
-
-/* ================= CARDAPIO ================= */
+/* ================= BUSCAR CARDAPIO ================= */
 
 async function buscarCardapio(){
 
 const { data, error } = await supabase
 .from("buffet")
 .select("id,nome,tipo,descricao,preco_venda,foto_url")
-.eq("cardapio", true)
-.eq("ativo", true)
+.eq("ativo",true)
+.eq("cardapio",true)
 .order("tipo",{ascending:true})
 .order("nome",{ascending:true})
 
 if(error){
-console.log("Erro cardapio:",error)
+console.log("Erro cardápio:",error)
 return []
 }
 
 return data || []
 
 }
-/* ================= CRON RELATORIO ================= */
+function getHojeBahia(){
+  const agora = new Date().toLocaleString("sv-SE", {
+    timeZone: "America/Bahia"
+  })
+  return agora.split(" ")[0]
+}
+/* ================= BUSCAR BUFFET (SIMPLES) ================= */
 
-if(req.query.cron === "relatorio"){
 
-const phone_number_id = process.env.WHATSAPP_PHONE_ID
 
-const url = `https://graph.facebook.com/v19.0/${phone_number_id}/messages`
+async function buscarBuffetHoje(){
 
-const resposta = await enviarRelatorioAutomatico()
+const hojeISO = getHojeBahia()
 
-await fetch(url,{
-method:"POST",
-headers:{
-Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
-"Content-Type":"application/json"
-},
-body:JSON.stringify({
-messaging_product:"whatsapp",
-to:"557798253249",
-type:"text",
-text:{body:resposta}
-})
-})
+console.log("DATA CONSULTADA (BAHIA):", hojeISO)
 
-return res.status(200).send("Relatório enviado")
+const { data, error } = await supabase
+.from("buffet_lancamentos")
+.select("produto_nome,tipo,data")
+.eq("empresa","MERCATTO DELÍCIA")
+.eq("tipo","MONTAGEM")
+.gte("data", hojeISO)
+.lte("data", hojeISO)
+
+if(error){
+console.log("❌ ERRO AO BUSCAR BUFFET:", error)
+return []
+}
+
+if(!data || !data.length){
+console.log("⚠️ SEM DADOS DO BUFFET PARA HOJE")
+return []
+}
+
+/* REMOVE DUPLICADOS */
+const unicos = []
+const nomes = new Set()
+
+for(const item of data){
+
+if(!nomes.has(item.produto_nome)){
+nomes.add(item.produto_nome)
+unicos.push(item)
+}
 
 }
+
+console.log("✅ ITENS DO BUFFET:", unicos)
+
+return unicos
+}
+
+
+/* ================= VERIFICAR SE TEM PRODUTO (INTELIGENTE) ================= */
+
+function normalizar(txt){
+return txt
+.toLowerCase()
+.normalize("NFD")
+.replace(/[\u0300-\u036f]/g,"")
+}
+
+function temProduto(buffet, texto){
+
+const textoLimpo = normalizar(texto)
+
+/* QUEBRA TEXTO EM PALAVRAS */
+const palavras = textoLimpo.split(" ")
+
+for(const item of buffet){
+
+const nome = normalizar(item.produto_nome)
+
+/* SE QUALQUER PALAVRA BATER */
+const encontrou = palavras.some(p => nome.includes(p))
+
+if(encontrou){
+return item.produto_nome
+}
+
+}
+
+return null
+}
+/* ================= CLASSIFICAR MENSAGEM ================= */
+
+async function classificarMensagem(texto){
+
+  const resp = await openai.chat.completions.create({
+    model: "gpt-4.1-mini",
+    messages: [
+      {
+        role: "system",
+        content: `
+Classifique a mensagem do cliente em UMA dessas categorias:
+
+- reclamacao
+- feedback
+- elogio
+- neutro
+
+Responda apenas com UMA palavra.
+`
+      },
+      {
+        role: "user",
+        content: texto
+      }
+    ]
+  })
+
+  return resp.choices[0].message.content
+    .toLowerCase()
+    .trim()
+}
+
+
+
+
+module.exports = async function handler(req,res){
+let resposta = ""
+
+
 /* ================= WEBHOOK VERIFY ================= */
 
 if(req.method==="GET"){
@@ -280,85 +405,22 @@ console.log("Evento sem mensagem (status)")
 return res.status(200).end()
 }
 
-const msg = change.messages[0]
-let mensagem = msg.text?.body || ""
-let tipo = "texto"
-let media_url = null
+const mensagensRecebidas = change.messages || []
 
-/* ================= DETECTAR MIDIA ================= */
-
-if(msg.type !== "text"){
-
-  tipo = msg.type
-
-  let mediaId = null
-
-  if(msg.image) mediaId = msg.image.id
-  if(msg.video) mediaId = msg.video.id
-  if(msg.audio) mediaId = msg.audio.id
-  if(msg.document) mediaId = msg.document.id
-
-  console.log("📎 MIDIA RECEBIDA:", tipo, mediaId)
-
-  if(mediaId){
-
-    /* ================= PEGAR URL MIDIA ================= */
-
-    const metaRes = await fetch(
-      `https://graph.facebook.com/v19.0/${mediaId}`,
-      {
-        headers:{
-          Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`
-        }
-      }
-    )
-
-    const metaData = await metaRes.json()
-
-    const downloadUrl = metaData.url
-
-    console.log("⬇️ BAIXANDO MIDIA...")
-
-    /* ================= BAIXAR ARQUIVO ================= */
-
-    const fileRes = await fetch(downloadUrl,{
-      headers:{
-        Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`
-      }
-    })
-
-    const buffer = await fileRes.arrayBuffer()
-
-    const fileName = `${Date.now()}-${tipo}`
-
-    /* ================= UPLOAD SUPABASE ================= */
-
-    const { error: uploadError } = await supabase.storage
-      .from("buffet_whatsa_mercatto")
-      .upload(fileName, buffer, {
-        contentType: fileRes.headers.get("content-type")
-      })
-
-    if(uploadError){
-      console.log("❌ ERRO UPLOAD:", uploadError)
-    }else{
-
-      const { data: publicUrl } = supabase.storage
-        .from("buffet_whatsa_mercatto")
-        .getPublicUrl(fileName)
-
-      media_url = publicUrl.publicUrl
-
-      console.log("✅ MIDIA SALVA:", media_url)
-
-    }
-
-  }
-
+// ignora mensagens do próprio bot
+if(mensagensRecebidas[0]?.from === change.metadata.phone_number_id){
+console.log("Mensagem do próprio bot ignorada")
+return res.status(200).end()
 }
-const mensagem = msg.text?.body
-const cliente = msg.from
 
+const mensagensTexto = mensagensRecebidas
+  .map(m => m.text?.body)
+  .filter(Boolean)
+
+const mensagem = mensagensTexto.join(" ")
+
+const cliente = mensagensRecebidas[0]?.from
+const message_id = mensagensRecebidas[0]?.id
 /* ================= VERIFICAR PAUSA BOT ================= */
 
 const { data: pausaBot } = await supabase
@@ -398,7 +460,6 @@ const { data: memoriaCliente } = await supabase
 
 let nomeMemoria = memoriaCliente?.nome || null
 const ADMIN_NUMERO = "557798253249"
-const message_id = msg.id
 const phone_number_id = change.metadata.phone_number_id
 const url = `https://graph.facebook.com/v19.0/${phone_number_id}/messages`
 if(!mensagem){
@@ -408,9 +469,179 @@ return res.status(200).end()
 
 console.log("Cliente:",cliente)
 console.log("Mensagem:",mensagem)
-
 const texto = mensagem.toLowerCase()
+const textoNormalizado = normalizar(texto)
+/* ================= DETECTAR RECLAMAÇÃO ================= */
 
+const tipoMensagem = await classificarMensagem(mensagem)
+
+console.log("CLASSIFICAÇÃO:", tipoMensagem)
+
+if(
+  tipoMensagem === "reclamacao" ||
+  tipoMensagem === "feedback"
+){
+
+  console.log("🚨 RECLAMAÇÃO OU FEEDBACK DETECTADO")
+
+  /* BUSCAR NOME */
+  const nomeCliente = nomeMemoria || "Não identificado"
+
+  /* MENSAGEM PARA ADMIN */
+  const alertaAdmin = `
+🚨 *ALERTA DE CLIENTE*
+
+📱 Telefone: ${cliente}
+👤 Nome: ${nomeCliente}
+
+📝 Tipo: ${tipoMensagem.toUpperCase()}
+
+💬 Mensagem:
+"${mensagem}"
+`
+
+ /* ENVIAR PARA ADMINS */
+for(const admin of ADMINS){
+
+  console.log("ENVIANDO PARA ADMIN:", admin)
+
+  const resp = await fetch(url,{
+    method:"POST",
+    headers:{
+      Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+      "Content-Type":"application/json"
+    },
+    body: JSON.stringify({
+      messaging_product:"whatsapp",
+      to: admin,
+      type:"text",
+      text:{ body: alertaAdmin }
+    })
+  })
+
+  const data = await resp.json()
+  console.log("RESPOSTA WHATSAPP:", data)
+
+}
+
+  /* SALVAR NO BANCO (OPCIONAL MAS RECOMENDO) */
+  await supabase
+  .from("feedback_clientes")
+  .insert({
+    telefone: cliente,
+    nome: nomeCliente,
+    mensagem: mensagem,
+    tipo: tipoMensagem
+  })
+
+  /* RESPOSTA AUTOMÁTICA PARA CLIENTE */
+  resposta = `🙏 Sentimos muito por isso, ${nomeCliente}.
+
+Seu feedback é muito importante para nós e já foi encaminhado para nossa equipe.
+
+Vamos resolver o mais rápido possível. 💛`
+
+  /* ENVIA RESPOSTA */
+  await fetch(url,{
+    method:"POST",
+    headers:{
+      Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+      "Content-Type":"application/json"
+    },
+    body: JSON.stringify({
+      messaging_product:"whatsapp",
+      to: cliente,
+      type:"text",
+      text:{ body: resposta }
+    })
+  })
+
+  return res.status(200).end()
+}
+/* ================= PEDIDO DIRETO DO CLIENTE ================= */
+
+const pedidoClienteMatch = mensagem.match(/PEDIDO_DELIVERY_JSON:\s*({[\s\S]*?})/)
+
+if(pedidoClienteMatch){
+
+console.log("PEDIDO RECEBIDO DIRETAMENTE DO CLIENTE")
+
+let pedido
+
+let jsonTexto = pedidoClienteMatch[1]
+
+try{
+
+pedido = JSON.parse(jsonTexto)
+
+console.log("JSON DO CLIENTE OK:", pedido)
+
+}catch(err){
+
+console.log("ERRO JSON CLIENTE:", err)
+console.log("JSON RECEBIDO:", jsonTexto)
+
+return res.status(200).end()
+
+}
+
+/* CALCULAR TOTAL */
+
+const valorTotal = (pedido.itens || []).reduce((s,i)=>{
+
+const preco = Number(i.preco || 0)
+const qtd = Number(i.quantidade || 1)
+
+return s + (preco * qtd)
+
+},0)
+
+console.log("SALVANDO PEDIDO CLIENTE")
+
+await supabase
+.from("pedidos_pendentes")
+.delete()
+.eq("cliente_telefone",cliente)
+
+const {error} = await supabase
+.from("pedidos_pendentes")
+.insert({
+cliente_nome: pedido.nome,
+cliente_telefone: cliente,
+cliente_endereco: pedido.endereco || "",
+cliente_bairro: pedido.bairro || "",
+itens: pedido.itens || [],
+valor_total: valorTotal,
+forma_pagamento: pedido.pagamento || "",
+observacao: pedido.observacao || ""
+})
+
+if(error){
+console.log("ERRO AO SALVAR:",error)
+}else{
+console.log("PEDIDO SALVO")
+}
+
+/* ESTADO */
+
+await supabase
+.from("estado_conversa")
+.upsert({
+telefone:cliente,
+tipo:"confirmacao_pedido"
+})
+
+resposta = `🧾 *Resumo do seu pedido*
+
+${(pedido.itens || []).map(i=>`• ${i.quantidade}x ${i.nome}`).join("\n")}
+
+💰 Total: R$ ${valorTotal.toFixed(2)}
+
+Deseja confirmar o pedido?`
+
+}
+
+  
 /* ================= DETECTAR NOME AUTOMATICO ================= */
 
 let nomeDetectado = null
@@ -449,18 +680,135 @@ ultima_interacao:new Date().toISOString()
 })
 
 }
-if(
-texto === "sim" ||
-texto === "ok" ||
-texto === "confirmar"
-){
-console.log("CONFIRMAÇÃO SIMPLES DETECTADA")
-// não interrompe fluxo
+const confirmou =
+texto.includes("sim") ||
+texto.includes("ok") ||
+texto.includes("confirm") ||
+texto.includes("pode") ||
+texto.includes("manda") ||
+texto.includes("confirmar") ||
+texto.includes("pode sim") ||
+texto.includes("certo") ||
+texto.includes("isso mesmo") ||  
+texto.includes("enviar")
+
+
+
+
+  
+if(confirmou){
+
+const { data: estado } = await supabase
+.from("estado_conversa")
+.select("*")
+.eq("telefone",cliente)
+.maybeSingle()
+
+if(estado?.tipo === "confirmacao_pedido"){
+
+console.log("CONFIRMAÇÃO DE PEDIDO")
+
+const { data: pedidoPendente } = await supabase
+.from("pedidos_pendentes")
+.select("*")
+.eq("cliente_telefone",cliente)
+.order("created_at",{ascending:false})
+.limit(1)
+.single()
+
+
+  
+if(pedidoPendente){
+
+const pedido = {
+nome: pedidoPendente.cliente_nome,
+endereco: pedidoPendente.cliente_endereco,
+bairro: pedidoPendente.cliente_bairro,
+itens: pedidoPendente.itens,
+pagamento: pedidoPendente.forma_pagamento
+}
+
+  
+console.log("ENVIANDO PEDIDO PARA API")
+
+const api = await fetch(`${process.env.API_URL}/api/pedidos`,{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+pedido:{
+...pedido,
+telefone:cliente
+}
+})
+})
+
+const retorno = await api.json()
+
+console.log("RETORNO API:",retorno)
+
+resposta = `✅ *Pedido enviado com sucesso!*
+
+🧾 Número do pedido: ${retorno.pedido_id}
+
+Nossa cozinha já recebeu seu pedido.`
+
+await fetch(url,{
+method:"POST",
+headers:{
+Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+messaging_product:"whatsapp",
+to:cliente,
+type:"text",
+text:{body:resposta}
+})
+})
+
+await supabase
+.from("pedidos_pendentes")
+.delete()
+.eq("cliente_telefone",cliente)
+
+await supabase
+.from("pedidos")
+.insert([{
+cliente_nome: pedido.nome,
+cliente_telefone: cliente,
+cliente_endereco: pedido.endereco || "",
+cliente_bairro: pedido.bairro || "",
+tipo: pedido.tipo || "entrega",
+itens: pedido.itens || [],
+valor_total: pedido.itens.reduce((s,i)=>s+(i.preco*i.quantidade),0),
+forma_pagamento: pedido.pagamento || "",
+observacao: pedido.observacao || "",
+status: "novo"
+}])
+
+return res.status(200).end()
+/* limpar pedido pendente */
+
+await supabase
+.from("pedidos_pendentes")
+.delete()
+.eq("cliente_telefone",cliente)
+}
+
+/* limpar estado conversa */
+
+await supabase
+.from("estado_conversa")
+.delete()
+.eq("telefone",cliente)
+
+}
 }
 /* ================= RELATORIO ADMIN ================= */
 
-if(cliente === ADMIN_NUMERO && texto.includes("relatorio_reservas_dia")){
-
+if(ADMINS.includes(cliente) && texto.includes("Reservas do dia")){
 const agoraBahia = new Date(
 new Date().toLocaleString("en-US",{ timeZone:"America/Bahia" })
 )
@@ -565,7 +913,7 @@ textoDia = "amanhã"
 const dataISO = dataConsulta.toISOString().split("T")[0]
 
 const agendaDia = await buscarAgendaDoDia(dataISO)
-  
+const couvertHoje = calcularCouvert(agendaDia)
 const agora = new Date()
 
 const agoraBahia = new Date(
@@ -578,8 +926,7 @@ agoraBahia.getHours().toString().padStart(2,"0") +
 agoraBahia.getMinutes().toString().padStart(2,"0")
 
   
-const couvertHoje = calcularCouvert(agendaDia)
-
+resposta += `💰 Couvert artístico: R$ ${couvertHoje.toFixed(2)}`
 const posterHoje = pegarPoster(agendaDia)
 
 /* ================= AGENDA PARA IA ================= */
@@ -635,25 +982,40 @@ COUVERT: ${m.valor}
 /* ================= INTENÇÕES ================= */
 
 const querReserva =
-texto.includes("reserv") ||
-texto.includes("mesa")
+textoNormalizado.includes("reserv") ||
+textoNormalizado.includes("mesa")
 
 const querCardapio =
-texto.includes("cardap") ||
-texto.includes("menu")
+textoNormalizado.includes("cardap") ||
+textoNormalizado.includes("menu") ||
+textoNormalizado.includes("pratos")
+
+/* 🔥 BUFFET INTELIGENTE */
+const querBuffet =
+textoNormalizado.includes("buffet") ||
+textoNormalizado.includes("buffer") ||
+textoNormalizado.includes("almoco") ||
+textoNormalizado.includes("comida") ||
+textoNormalizado.includes("tem o que") ||
+textoNormalizado.includes("tem hoje") ||
+textoNormalizado.includes("o que tem") ||
+textoNormalizado.startsWith("tem ")
 
 const querVideo =
-texto.includes("video") ||
-texto.includes("vídeo")
+textoNormalizado.includes("video") ||
+textoNormalizado.includes("vídeo")
 
 const querFotos =
-texto.includes("foto") ||
-texto.includes("imagem")
+textoNormalizado.includes("foto") ||
+textoNormalizado.includes("imagem")
 
 const querEndereco =
-texto.includes("onde fica") ||
-texto.includes("endereço") ||
-texto.includes("localização")
+textoNormalizado.includes("onde fica") ||
+textoNormalizado.includes("endereco") ||
+textoNormalizado.includes("endereço") ||
+textoNormalizado.includes("localizacao") ||
+textoNormalizado.includes("localização")
+
 
 const querMusica =
 texto.includes("musica") ||
@@ -716,9 +1078,7 @@ await supabase
 .from("conversas_whatsapp")
 .insert({
 telefone:cliente,
-mensagem:mensagem || `[${tipo.toUpperCase()}]`,
-media_url: media_url,
-tipo: tipo,
+mensagem:mensagem,
 role:"user"
 })
 
@@ -760,11 +1120,11 @@ return res.status(200).end()
 
 /* ================= MUSICA AO VIVO ================= */
 
-if(querMusica && !jaFalouMusica){
+if(querMusica){
 
 console.log("RESPONDENDO AUTOMATICO MUSICA")
 
-let resposta=""
+resposta=""
 
 if(agendaDia.length){
 
@@ -881,50 +1241,6 @@ return res.status(200).end()
 }
   
 
-  
-  
-if(querCardapio){
-
-await fetch(url,{
-method:"POST",
-headers:{
-Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
-"Content-Type":"application/json"
-},
-body:JSON.stringify({
-messaging_product:"whatsapp",
-to:cliente,
-type:"document",
-document:{
-link:"https://SEU_CARDAPIO.pdf",
-filename:"Cardapio_Mercatto.pdf"
-}
-})
-})
-
-await fetch(url,{
-method:"POST",
-headers:{
-Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
-"Content-Type":"application/json"
-},
-body:JSON.stringify({
-messaging_product:"whatsapp",
-to:cliente,
-type:"text",
-text:{body:"Aqui está nosso cardápio completo 😊"}
-})
-})
-await supabase
-.from("conversas_whatsapp")
-.insert({
-telefone:cliente,
-mensagem:"[CARDAPIO ENVIADO]",
-role:"assistant"
-})
-return res.status(200).end()
-
-} 
 
 
 /* ================= HISTÓRICO ================= */
@@ -950,7 +1266,7 @@ role:"system",
 content:"ATENÇÃO: A mensagem atual do cliente é sobre música ao vivo. Ignore reservas e responda usando a agenda fornecida."
 })
 }
-let resposta=""
+resposta=""
 /* ================= BUSCAR CARDAPIO ================= */
 
 const cardapio = await buscarCardapio()
@@ -969,6 +1285,26 @@ FOTO: ${p.foto_url || "sem"}
 `
 
 })
+
+/* ================= BUSCAR BUFFET ================= */
+
+const buffet = await buscarBuffetHoje()
+
+let buffetTexto = ""
+
+if(!buffet.length){
+  buffetTexto = "SEM ITENS NO BUFFET HOJE"
+}else{
+  buffet.forEach(item => {
+    buffetTexto += `
+ITEM: ${item.produto_nome}
+CATEGORIA: ${item.tipo || "geral"}
+`
+  })
+}
+
+
+  
 /* ================= OPENAI ================= */
 
 try{
@@ -989,6 +1325,17 @@ agoraBahia.getMinutes().toString().padStart(2,"0")
 const dataAtualISO =
 agoraBahia.toISOString().split("T")[0]
 
+const diasSemana = [
+"domingo",
+"segunda-feira",
+"terça-feira",
+"quarta-feira",
+"quinta-feira",
+"sexta-feira",
+"sábado"
+]
+
+const diaSemanaAtual = diasSemana[agoraBahia.getDay()]
   
 /* ================= BUSCAR PROMPT ================= */
 
@@ -1047,8 +1394,11 @@ content:`
 CONTEXTO DO SISTEMA
 
 DATA ATUAL: ${dataAtual}
+DIA DA SEMANA: ${diaSemanaAtual}
 HORA ATUAL: ${horaAtualSistema}
 DATA ISO: ${dataAtualISO}
+
+Hoje é ${diaSemanaAtual}.
 
 Use essas informações para interpretar datas relativas como:
 hoje, amanhã, ontem, final de semana, etc.
@@ -1071,6 +1421,28 @@ Regras importantes:
 - Se pedir foto de um prato responda com ENVIAR_FOTO_PRATO.
 `
 },
+
+
+{
+role:"system",
+content:`
+BUFFET DE HOJE (DADOS REAIS):
+
+${buffetTexto}
+
+Regras:
+
+- Esses são os itens reais do buffet de hoje
+- Não invente itens
+- Se o cliente perguntar "o que tem hoje", liste os itens
+- Se perguntar "tem X", verifique nessa lista
+- Organize de forma bonita
+`
+},
+
+
+
+  
 ...mensagens
 
 ]
@@ -1078,30 +1450,75 @@ Regras importantes:
 })
 
 resposta = completion.choices[0].message.content
+
+console.log("RESPOSTA IA COMPLETA:", resposta)
+
+
+
+  
 /* ================= DETECTAR MIDIA ================= */
+const templateMatch = resposta.match(/ENVIAR_TEMPLATE:([a-zA-Z0-9_\-]+)/)
 
-if(resposta.includes("ENVIAR_CARDAPIO")){
 
-await fetch(url,{
-method:"POST",
-headers:{
-Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
-"Content-Type":"application/json"
-},
-body: JSON.stringify({
-messaging_product:"whatsapp",
-to:cliente,
-type:"document",
-document:{
-link:"https://SEU_CARDAPIO.pdf",
-filename:"Cardapio_Mercatto.pdf"
-}
+if(templateMatch){
+
+  const templateNome = templateMatch[1]
+
+  /* ✅ COLE AQUI */
+  const TEMPLATE_IDIOMAS = {
+    reserva_especial: "en",
+    confirmacao_reserva: "pt_BR",
+    lembrete_reserva: "pt_BR",
+    confirmacao_pedido: "pt_BR",
+    video_mercatto: "pt_BR"
+  }
+
+  const idiomaTemplate = TEMPLATE_IDIOMAS[templateNome] || "pt_BR"
+
+
+  
+  console.log("TENTANDO ENVIAR TEMPLATE:",templateNome)
+
+  if(!TEMPLATES_PERMITIDOS.includes(templateNome)){
+    console.log("Template não permitido:",templateNome)
+  }else{
+
+  const resp = await fetch(url,{
+  method:"POST",
+  headers:{
+    Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+    "Content-Type":"application/json"
+  },
+  body: JSON.stringify({
+    messaging_product:"whatsapp",
+    to:cliente,
+    type:"template",
+    template:{
+      name:templateNome,
+      language:{ code: idiomaTemplate }
+    }
+  })
 })
-})
 
-resposta = resposta.replace(/ENVIAR_CARDAPIO/g,"").trim()
+const data = await resp.json()
+
+console.log("📩 RESPOSTA META TEMPLATE:", data)
+
+    console.log("✅ TEMPLATE ENVIADO")
+
+    // 🔥 ESSA LINHA RESOLVE TUDO
+    return res.status(200).end()
+  }
+
+  resposta = resposta.replace(templateMatch[0],"").trim()
 }
 
+
+
+
+
+
+  
 if(resposta.includes("ENVIAR_FOTOS")){
 
 await fetch(url,{
@@ -1200,7 +1617,7 @@ resposta = resposta.replace(/ENVIAR_POSTER/g,"").trim()
 }
 
   
-if(resposta.includes("ENVIAR_VIDEO")){
+if(resposta.includes("ENVIAR_TEMPLATE_VIDEO")){
 
 await fetch(url,{
 method:"POST",
@@ -1211,23 +1628,28 @@ Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
 body: JSON.stringify({
 messaging_product:"whatsapp",
 to:cliente,
-type:"video",
-video:{
-link:"https://dxkszikemntfusfyrzos.supabase.co/storage/v1/object/public/MERCATTO/WhatsApp%20Video%202026-03-10%20at%2021.08.40.mp4",
-caption:"Conheça o Mercatto Delícia"
+type:"template",
+template:{
+name:"video_mercatto",
+language:{
+code:"pt_BR"
+}
 }
 })
 })
 
-resposta = resposta.replace(/ENVIAR_VIDEO/g,"").trim()
+resposta = resposta.replace(/ENVIAR_TEMPLATE_VIDEO/g,"").trim()
+
 }
 
-if(resposta.includes("ENVIAR_FOTO_PRATO")){
+const fotoMatch = resposta.match(/ENVIAR_FOTO_PRATO\s+(.+)/)
 
-const respostaLower = resposta.toLowerCase()
+if(fotoMatch){
 
-const prato = cardapio.find(p => 
-respostaLower.includes(p.nome.toLowerCase())
+const nomePratoIA = fotoMatch[1].trim()
+
+const prato = cardapio.find(p =>
+normalizar(p.nome).includes(normalizar(nomePratoIA))
 )
 
 if(prato && prato.foto_url){
@@ -1257,12 +1679,116 @@ mensagem:`[FOTO DO PRATO ENVIADA: ${prato.nome}]`,
 role:"assistant"
 })
 
+}else{
+console.log("❌ PRATO NÃO ENCONTRADO:", nomePratoIA)
 }
 
-resposta = resposta.replace(/ENVIAR_FOTO_PRATO/g,"").trim()
+resposta = resposta.replace(/ENVIAR_FOTO_PRATO\s+(.+)/,"").trim()
 
 }
 console.log("Resposta IA:",resposta)
+
+/* ================= PEDIDO DELIVERY ================= */
+
+const pedidoMatch = resposta.match(/PEDIDO_DELIVERY_JSON:\s*({[\s\S]*?})/)
+
+if(pedidoMatch){
+
+let pedido = null
+
+let jsonTexto = pedidoMatch[1]
+
+console.log("JSON EXTRAIDO:", jsonTexto)
+
+/* LIMPAR JSON */
+
+jsonTexto = jsonTexto
+.replace(/,\s*}/g,"}")
+.replace(/,\s*]/g,"]")
+.replace(/\n/g,"")
+.replace(/\t/g,"")
+.trim()
+
+try{
+
+pedido = JSON.parse(jsonTexto)
+
+console.log("JSON DO PEDIDO OK:", pedido)
+
+}catch(err){
+
+console.log("ERRO AO PARSEAR JSON DO PEDIDO")
+console.log("JSON RECEBIDO:", jsonTexto)
+console.log("ERRO:", err)
+
+}
+
+if(pedido){
+
+console.log("Pedido detectado:",pedido)
+
+/* CALCULAR TOTAL */
+
+const valorTotal = (pedido.itens || []).reduce((s,i)=>{
+
+const preco = Number(i.preco || 0)
+const qtd = Number(i.quantidade || 1)
+
+return s + (preco * qtd)
+
+},0)
+
+console.log("TOTAL PEDIDO:",valorTotal)
+
+/* SALVAR PEDIDO PENDENTE */
+
+console.log("SALVANDO EM pedidos_pendentes")
+
+await supabase
+.from("pedidos_pendentes")
+.delete()
+.eq("cliente_telefone",cliente)
+
+const {data,error} = await supabase
+.from("pedidos_pendentes")
+.insert({
+cliente_nome: pedido.nome,
+cliente_telefone: cliente,
+cliente_endereco: pedido.endereco || "",
+cliente_bairro: pedido.bairro || "",
+itens: pedido.itens || [],
+valor_total: valorTotal,
+forma_pagamento: pedido.pagamento || "",
+observacao: pedido.observacao || ""
+})
+.select()
+
+if(error){
+console.log("ERRO AO SALVAR PEDIDO:",error)
+}else{
+console.log("PEDIDO SALVO COM SUCESSO:",data)
+}
+
+/* MARCAR ESTADO */
+
+await supabase
+.from("estado_conversa")
+.upsert({
+telefone:cliente,
+tipo:"confirmacao_pedido"
+})
+
+resposta = `🧾 *Resumo do seu pedido*
+
+${(pedido.itens || []).map(i=>`• ${i.quantidade}x ${i.nome}`).join("\n")}
+
+💰 Total: R$ ${valorTotal.toFixed(2)}
+
+Deseja confirmar o pedido?`
+
+}
+
+}
 
 }catch(e){
 
@@ -1535,6 +2061,10 @@ catch(err){
 }
 console.log("Reserva detectada:",reserva)
 
+
+
+
+  
 /* ================= ATUALIZAR MEMORIA CLIENTE ================= */
 
 if(reserva?.nome){
@@ -1549,7 +2079,7 @@ ultima_interacao:new Date().toISOString()
 
 }
   
-/* NORMALIZAR DATA */
+
 
 /* NORMALIZAR DATA */
 
@@ -1614,7 +2144,7 @@ mesa:mesa,
 cardapio:"",
 comandaIndividual: reserva.comandaIndividual || "Não",
   datahora:datahora,
-observacoes:"Reserva via WhatsApp",
+observacoes:"Reserva via Automação WhatsApp",
 valorEstimado:0,
 pagamentoAntecipado:0,
 banco:"",
@@ -1662,33 +2192,31 @@ telefone:cliente,
 mensagem:resposta,
 role:"assistant"
 })
+/* ================= TEMPO NATURAL ================= */
+
+const tempoDigitando = Math.min(
+Math.max(resposta.length * 35, 1500), // mínimo 1.5s
+6000 // máximo 6s
+)
+
+await new Promise(resolve => setTimeout(resolve, tempoDigitando))
 
 /* ================= ENVIAR WHATSAPP ================= */
 
-
 await fetch(url,{
-
 method:"POST",
-
 headers:{
 Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
 "Content-Type":"application/json"
 },
-
 body:JSON.stringify({
-
 messaging_product:"whatsapp",
-
 to:cliente,
-
 type:"text",
-
 text:{
 body:resposta
 }
-
 })
-
 })
 
 }catch(error){
