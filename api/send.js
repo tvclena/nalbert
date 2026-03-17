@@ -9,25 +9,24 @@ export default async function handler(req, res) {
 
   try {
 
-    /* ================= MÉTODO ================= */
-
     if (req.method !== "POST") {
       return res.status(405).json({ error: "Método não permitido" })
     }
-
-    /* ================= BODY ================= */
 
     const body = typeof req.body === "string"
       ? JSON.parse(req.body)
       : req.body
 
-    const { telefone, mensagem, media_url, tipo, nome_arquivo } = body
+    let { telefone, mensagem, media_url, tipo, nome_arquivo } = body
 
     if (!telefone) {
       return res.status(400).json({ error: "Telefone obrigatório" })
     }
 
-    /* ================= ENV ================= */
+    /* 🔥 fallback inteligente */
+    if (!mensagem && !media_url) {
+      mensagem = "📎 Arquivo"
+    }
 
     const PHONE_ID = process.env.WHATSAPP_PHONE_ID
     const TOKEN = process.env.WHATSAPP_TOKEN
@@ -36,8 +35,6 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: "Credenciais não configuradas" })
     }
 
-    /* ================= NORMALIZAR ================= */
-
     const numero = telefone.replace(/\D/g, "")
 
     let payload = {
@@ -45,17 +42,12 @@ export default async function handler(req, res) {
       to: numero
     }
 
-    /* =====================================================
-       🔥 MÍDIA
-    ===================================================== */
+    /* ================= MÍDIA ================= */
 
     if (media_url) {
 
       const tipoDetectado = tipo || detectarTipo(media_url, nome_arquivo)
 
-      console.log("📎 Enviando mídia:", tipoDetectado)
-
-      /* ===== IMAGEM ===== */
       if (tipoDetectado === "imagem") {
         payload.type = "image"
         payload.image = {
@@ -64,7 +56,6 @@ export default async function handler(req, res) {
         }
       }
 
-      /* ===== VIDEO ===== */
       else if (tipoDetectado === "video") {
         payload.type = "video"
         payload.video = {
@@ -73,7 +64,6 @@ export default async function handler(req, res) {
         }
       }
 
-      /* ===== AUDIO ===== */
       else if (tipoDetectado === "audio") {
         payload.type = "audio"
         payload.audio = {
@@ -81,7 +71,6 @@ export default async function handler(req, res) {
         }
       }
 
-      /* ===== DOCUMENTO ===== */
       else {
         payload.type = "document"
         payload.document = {
@@ -93,28 +82,16 @@ export default async function handler(req, res) {
 
     }
 
-    /* =====================================================
-       🔥 TEXTO
-    ===================================================== */
+    /* ================= TEXTO ================= */
 
-    else if (mensagem) {
-
+    else {
       payload.type = "text"
       payload.text = {
         body: mensagem
       }
-
     }
 
-    else {
-      return res.status(400).json({
-        error: "Nada para enviar"
-      })
-    }
-
-    /* =====================================================
-       🚀 ENVIO WHATSAPP
-    ===================================================== */
+    /* ================= ENVIO ================= */
 
     const response = await fetch(
       `https://graph.facebook.com/v19.0/${PHONE_ID}/messages`,
@@ -130,23 +107,16 @@ export default async function handler(req, res) {
 
     const data = await response.json()
 
-    console.log("📤 RESPOSTA META:", data)
-
-    /* =====================================================
-       ❌ ERRO WHATSAPP
-    ===================================================== */
+    console.log("📤 META:", data)
 
     if (data.error) {
       return res.status(200).json({
         ok: false,
-        erro: data.error.message,
-        detalhe: data.error.error_data?.details || null
+        erro: data.error.message
       })
     }
 
-    /* =====================================================
-       💾 SALVAR NO SUPABASE
-    ===================================================== */
+    /* ================= SALVAR ================= */
 
     const tipoFinal = tipo || (
       media_url
@@ -154,26 +124,14 @@ export default async function handler(req, res) {
         : "texto"
     )
 
-    const { error: erroBanco } = await supabase
-      .from("conversas_whatsapp")
-      .insert({
-        telefone: numero,
-        mensagem: mensagem || `[${tipoFinal.toUpperCase()}]`,
-        media_url: media_url || null,
-        tipo: tipoFinal,
-        nome_arquivo: nome_arquivo || null,
-        role: "assistant"
-      })
-
-    if (erroBanco) {
-      console.error("❌ ERRO AO SALVAR:", erroBanco)
-    } else {
-      console.log("✅ SALVO NO BANCO")
-    }
-
-    /* =====================================================
-       ✅ SUCESSO
-    ===================================================== */
+    await supabase.from("conversas_whatsapp").insert({
+      telefone: numero,
+      mensagem: mensagem || `[${tipoFinal}]`,
+      media_url: media_url || null,
+      tipo: tipoFinal,
+      nome_arquivo: nome_arquivo || null,
+      role: "assistant"
+    })
 
     return res.status(200).json({
       ok: true,
@@ -182,20 +140,17 @@ export default async function handler(req, res) {
 
   } catch (err) {
 
-    console.error("🔥 ERRO SERVIDOR:", err)
+    console.error("🔥 ERRO:", err)
 
     return res.status(500).json({
       ok: false,
-      error: "Erro interno no servidor"
+      error: "Erro interno"
     })
-
   }
 
 }
 
-/* =====================================================
-   🔍 DETECTAR TIPO AUTOMATICAMENTE
-===================================================== */
+/* ================= DETECTOR ================= */
 
 function detectarTipo(url, nome){
 
