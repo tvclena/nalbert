@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>Chat • Mercatto</title>
+<title>Chat • Mercatto PRO</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -66,8 +66,8 @@ z-index:2;
 /* ===== BOLHAS ===== */
 
 .msg{
-max-width:70%;
-padding:12px 14px;
+max-width:75%;
+padding:12px;
 border-radius:16px;
 font-size:14px;
 animation:fade .2s;
@@ -85,21 +85,44 @@ color:white;
 align-self:flex-end;
 }
 
-/* ===== MIDIA ===== */
+/* ===== MIDIAS ===== */
 
 .msg img{
 max-width:240px;
 border-radius:12px;
-margin-bottom:6px;
 cursor:pointer;
-box-shadow:0 10px 20px rgba(0,0,0,.15);
+margin-bottom:6px;
 }
 
 .msg video{
 max-width:260px;
 border-radius:12px;
 margin-bottom:6px;
-box-shadow:0 10px 20px rgba(0,0,0,.15);
+}
+
+.msg audio{
+width:220px;
+margin-bottom:6px;
+}
+
+/* ===== DOC ===== */
+
+.fileBox{
+background:white;
+border-radius:12px;
+padding:10px;
+display:flex;
+gap:10px;
+align-items:center;
+cursor:pointer;
+}
+
+.fileIcon{
+font-size:22px;
+}
+
+.fileName{
+font-size:13px;
 }
 
 /* ===== TIME ===== */
@@ -145,7 +168,7 @@ cursor:pointer;
 
 .preview{
 position:absolute;
-bottom:80px;
+bottom:90px;
 left:20px;
 background:white;
 padding:10px;
@@ -201,9 +224,7 @@ let arquivo = null
 /* ===== RESET ===== */
 
 document.addEventListener("keydown",(e)=>{
-if(e.key==="Escape"){
-reset()
-}
+if(e.key==="Escape") reset()
 })
 
 function reset(){
@@ -214,7 +235,7 @@ empty.style.display="block"
 msgs.innerHTML=""
 }
 
-/* ===== PEGAR TELEFONE ===== */
+/* ===== GET TELEFONE ===== */
 
 function getTel(){
 return new URLSearchParams(location.search).get("telefone")
@@ -283,14 +304,32 @@ div.className="msg "+(m.role==="assistant"?"assistant":"user")
 
 let html=""
 
+/* IMAGEM */
 if(m.tipo==="imagem"){
 html+=`<img src="${m.media_url}" onclick="window.open('${m.media_url}')">`
 }
 
+/* VIDEO */
 if(m.tipo==="video"){
 html+=`<video controls src="${m.media_url}"></video>`
 }
 
+/* AUDIO */
+if(m.tipo==="audio"){
+html+=`<audio controls src="${m.media_url}"></audio>`
+}
+
+/* DOCUMENTO */
+if(m.tipo==="documento"){
+html+=`
+<div class="fileBox" onclick="window.open('${m.media_url}')">
+<div class="fileIcon">📄</div>
+<div class="fileName">${m.nome_arquivo || "Arquivo"}</div>
+</div>
+`
+}
+
+/* TEXTO */
 if(m.mensagem){
 html+=`<div>${m.mensagem}</div>`
 }
@@ -319,8 +358,12 @@ preview.style.display="block"
 
 if(arquivo.type.includes("image")){
 preview.innerHTML=`<img src="${URL.createObjectURL(arquivo)}" width="120">`
-}else{
+}else if(arquivo.type.includes("video")){
 preview.innerHTML=`<video src="${URL.createObjectURL(arquivo)}" width="120" controls></video>`
+}else if(arquivo.type.includes("audio")){
+preview.innerHTML=`<audio src="${URL.createObjectURL(arquivo)}" controls></audio>`
+}else{
+preview.innerHTML=`📄 ${arquivo.name}`
 }
 }
 
@@ -338,8 +381,7 @@ const {data} = db.storage
 .from("buffet_whatsa_mercatto")
 .getPublicUrl(nome)
 
-return data.publicUrl
-
+return {url:data.publicUrl,nome}
 }
 
 /* ===== ENVIAR ===== */
@@ -350,13 +392,25 @@ if(!telefone) return
 
 const texto = msg.value.trim()
 
-let url=null
-let tipo="texto"
+let media = null
+let tipo = "texto"
+let nomeArquivo = null
 
 if(arquivo){
-url = await upload(arquivo)
-tipo = arquivo.type.includes("video") ? "video" : "imagem"
+
+const up = await upload(arquivo)
+
+media = up.url
+nomeArquivo = up.nome
+
+if(arquivo.type.includes("image")) tipo="imagem"
+else if(arquivo.type.includes("video")) tipo="video"
+else if(arquivo.type.includes("audio")) tipo="audio"
+else tipo="documento"
+
 }
+
+/* API (WHATSAPP) */
 
 await fetch("/api/send",{
 method:"POST",
@@ -364,15 +418,18 @@ headers:{"Content-Type":"application/json"},
 body:JSON.stringify({
 telefone,
 mensagem:texto,
-media_url:url
+media_url:media
 })
 })
+
+/* BANCO */
 
 await db.from("conversas_whatsapp").insert({
 telefone,
 mensagem:texto,
 tipo,
-media_url:url,
+media_url:media,
+nome_arquivo:nomeArquivo,
 role:"assistant"
 })
 
