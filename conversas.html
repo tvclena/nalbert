@@ -513,7 +513,9 @@ const db = supabase.createClient(
 "https://dxkszikemntfusfyrzos.supabase.co",
 "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 )
-
+let pagina = 0
+const limite = 20
+let carregando = false
 /* realtime bot */
 
 db
@@ -740,8 +742,8 @@ const menu=document.getElementById("menu-"+telefone)
 
 menu.style.display="flex"
 
-menu.style.top=e.clientY+"px"
-menu.style.left=e.clientX+"px"
+menu.style.top = e.pageY + "px"
+menu.style.left = e.pageX + "px"
 
 }
 
