@@ -21,52 +21,34 @@ margin:0;
 font-family:Inter;
 height:100vh;
 display:flex;
-background:#f5f5f4;
-}
-
-/* ===== SIDEBAR ===== */
-
-.sidebar{
-width:320px;
-background:#111827;
-color:white;
-display:flex;
 flex-direction:column;
+overflow:hidden;
+
+background:
+radial-gradient(circle at 20% 30%, rgba(255,140,0,0.05), transparent 40%),
+radial-gradient(circle at 80% 70%, rgba(255,140,0,0.05), transparent 40%),
+#f5f5f4;
 }
 
-.sidebar h2{
-padding:16px;
-margin:0;
-font-size:16px;
-border-bottom:1px solid #374151;
-}
+/* ===== LOGO FUNDO ===== */
 
-.chatItem{
-padding:14px;
-border-bottom:1px solid #374151;
-cursor:pointer;
-}
-
-.chatItem:hover{
-background:#1f2937;
-}
-
-/* ===== CHAT ===== */
-
-.chat{
-flex:1;
-display:flex;
-flex-direction:column;
-position:relative;
-}
-
-.brand{
+.brandBg{
 position:absolute;
 top:50%;
 left:50%;
 transform:translate(-50%,-50%);
-font-size:60px;
-color:#00000010;
+font-size:80px;
+font-weight:900;
+color:rgba(255,140,0,0.05);
+pointer-events:none;
+}
+
+/* ===== EMPTY ===== */
+
+.empty{
+margin:auto;
+color:#9ca3af;
+font-weight:600;
 }
 
 /* ===== MESSAGES ===== */
@@ -77,16 +59,18 @@ overflow:auto;
 padding:20px;
 display:flex;
 flex-direction:column;
-gap:10px;
+gap:14px;
+z-index:2;
 }
 
-/* ===== BUBBLES ===== */
+/* ===== BOLHAS ===== */
 
 .msg{
-max-width:70%;
+max-width:75%;
 padding:12px;
-border-radius:14px;
+border-radius:16px;
 font-size:14px;
+animation:fade .2s;
 }
 
 .user{
@@ -101,31 +85,101 @@ color:white;
 align-self:flex-end;
 }
 
+/* ===== MIDIAS ===== */
+
+.msg img{
+max-width:240px;
+border-radius:12px;
+cursor:pointer;
+margin-bottom:6px;
+}
+
+.msg video{
+max-width:260px;
+border-radius:12px;
+margin-bottom:6px;
+}
+
+.msg audio{
+width:220px;
+margin-bottom:6px;
+}
+
+/* ===== DOC ===== */
+
+.fileBox{
+background:white;
+border-radius:12px;
+padding:10px;
+display:flex;
+gap:10px;
+align-items:center;
+cursor:pointer;
+}
+
+.fileIcon{
+font-size:22px;
+}
+
+.fileName{
+font-size:13px;
+}
+
+/* ===== TIME ===== */
+
+.time{
+font-size:11px;
+opacity:.6;
+text-align:right;
+margin-top:6px;
+}
+
 /* ===== INPUT ===== */
 
-.input{
+.inputBox{
 display:flex;
-padding:10px;
 gap:10px;
-border-top:1px solid #e5e7eb;
+padding:12px;
 background:white;
+border-top:1px solid #e5e7eb;
+z-index:2;
 }
 
 textarea{
 flex:1;
 border-radius:10px;
-border:1px solid #ddd;
+border:1px solid #e5e7eb;
 padding:10px;
 resize:none;
+height:50px;
+font-family:Inter;
 }
 
 button{
 background:#22c55e;
 color:white;
 border:none;
-padding:10px 14px;
 border-radius:10px;
+padding:10px 14px;
 cursor:pointer;
+}
+
+/* ===== PREVIEW ===== */
+
+.preview{
+position:absolute;
+bottom:90px;
+left:20px;
+background:white;
+padding:10px;
+border-radius:12px;
+box-shadow:0 10px 30px rgba(0,0,0,.2);
+z-index:5;
+}
+
+@keyframes fade{
+from{opacity:0;transform:translateY(6px)}
+to{opacity:1}
 }
 
 </style>
@@ -134,27 +188,25 @@ cursor:pointer;
 
 <body>
 
-<!-- SIDEBAR -->
-<div class="sidebar">
-<h2>Conversas</h2>
-<div id="lista"></div>
-</div>
+<div class="brandBg">MERCATTO</div>
 
-<!-- CHAT -->
-<div class="chat">
+<div id="empty" class="empty">Selecione uma conversa</div>
 
-<div class="brand" id="brand">Selecione uma conversa</div>
+<div id="msgs" class="messages" style="display:none"></div>
 
-<div id="msgs" class="messages"></div>
+<div class="inputBox" id="inputBox" style="display:none">
 
-<div class="input" id="inputBox" style="display:none">
 <input type="file" id="fileInput" hidden>
+
 <button onclick="fileInput.click()">📎</button>
+
 <textarea id="msg"></textarea>
+
 <button onclick="enviar()">Enviar</button>
-</div>
 
 </div>
+
+<div id="preview" class="preview" style="display:none"></div>
 
 <script>
 
@@ -162,97 +214,96 @@ cursor:pointer;
 
 const db = supabase.createClient(
 "https://dxkszikemntfusfyrzos.supabase.co",
-"SEU_TOKEN"
+"sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 )
+/* ================= UPLOAD MIDIA (🔥 AQUI) ================= */
 
-/* ================= VAR ================= */
+async function uploadMidia(file){
 
-let telefone = null
-let page = 0
-let loading = false
-let canal = null
-let ids = new Set()
-let arquivo = null
+  const safeName = file.name.replace(/\s/g,"_")
 
-/* ================= LISTA ================= */
+  const fileName = Date.now() + "-" + safeName
 
-async function carregarConversas(){
+  const { data, error } = await db.storage
+    .from("buffet_whatsa_mercatto")
+    .upload(fileName, file, {
+      contentType: file.type,
+      upsert: true
+    })
 
-const { data } = await db
-.from("conversas_whatsapp")
-.select("telefone")
-.order("created_at",{ascending:false})
+  if(error){
+    console.error("❌ ERRO UPLOAD:", error)
+    alert("Erro ao enviar arquivo")
+    return null
+  }
 
-const unicos = [...new Set(data.map(i=>i.telefone))]
+  const { data: publicUrl } = db.storage
+    .from("buffet_whatsa_mercatto")
+    .getPublicUrl(fileName)
 
-lista.innerHTML=""
-
-unicos.forEach(t=>{
-
-const div = document.createElement("div")
-div.className="chatItem"
-div.innerText = t
-
-div.onclick = ()=>abrirChat(t)
-
-lista.appendChild(div)
-
-})
-
+  return publicUrl.publicUrl
 }
 
-/* ================= ABRIR CHAT ================= */
+let telefone = null
+let canal = null
+let arquivo = null
 
-async function abrirChat(t){
+/* ===== RESET ===== */
 
-telefone = t
-page = 0
-ids.clear()
+document.addEventListener("keydown",(e)=>{
+if(e.key==="Escape") reset()
+})
 
-brand.style.display="none"
-inputBox.style.display="flex"
+function reset(){
+telefone=null
+msgs.style.display="none"
+inputBox.style.display="none"
+empty.style.display="block"
+msgs.innerHTML=""
+}
+
+/* ===== GET TELEFONE ===== */
+
+function getTel(){
+return new URLSearchParams(location.search).get("telefone")
+}
+
+/* ===== CARREGAR ===== */
+
+async function carregar(){
+
+telefone = getTel()
+
+if(!telefone){
+reset()
+return
+}
+
+const {data} = await db
+.from("conversas_whatsapp")
+.select("*")
+.eq("telefone",telefone)
+.order("created_at",{ascending:true})
+
 msgs.innerHTML=""
 
-await carregarMais(true)
+if(!data || !data.length){
+reset()
+return
+}
+
+empty.style.display="none"
+msgs.style.display="flex"
+inputBox.style.display="flex"
+
+data.forEach(render)
+scroll()
+
 realtime()
 
 }
 
-/* ================= PAGINAÇÃO ================= */
-
-async function carregarMais(initial=false){
-
-if(loading) return
-loading = true
-
-const from = page*20
-const to = from+19
-
-const { data } = await db
-.from("conversas_whatsapp")
-.select("*")
-.eq("telefone",telefone)
-.order("created_at",{ascending:false})
-.range(from,to)
-
-data.reverse().forEach(renderTopo)
-
-if(initial) scrollFinal()
-
-page++
-loading=false
-
-}
-
-/* ================= SCROLL ================= */
-
-msgs.onscroll = async ()=>{
-if(msgs.scrollTop < 50){
-await carregarMais()
-}
-}
-
-/* ================= REALTIME ================= */
+/* ===== REALTIME ===== */
 
 function realtime(){
 
@@ -264,89 +315,119 @@ event:"INSERT",
 schema:"public",
 table:"conversas_whatsapp",
 filter:`telefone=eq.${telefone}`
-},payload=>{
-const m = payload.new
-if(ids.has(m.id)) return
-render(m)
-scrollFinal()
-})
-.subscribe()
+},p=>{
+render(p.new)
+scroll()
+}).subscribe()
 
 }
 
-/* ================= RENDER ================= */
+/* ===== RENDER ===== */
 
 function render(m){
-
-if(ids.has(m.id)) return
-ids.add(m.id)
-
-msgs.appendChild(montar(m))
-
-}
-
-function renderTopo(m){
-
-if(ids.has(m.id)) return
-ids.add(m.id)
-
-msgs.prepend(montar(m))
-
-}
-
-function montar(m){
 
 const div = document.createElement("div")
 div.className="msg "+(m.role==="assistant"?"assistant":"user")
 
 let html=""
 
-if(m.tipo==="imagem") html+=`<img src="${m.media_url}" width="200">`
-if(m.tipo==="video") html+=`<video src="${m.media_url}" width="200" controls></video>`
-if(m.tipo==="audio") html+=`<audio src="${m.media_url}" controls></audio>`
+/* IMAGEM */
+if(m.tipo==="imagem"){
+html+=`<img src="${m.media_url}" onclick="window.open('${m.media_url}')">`
+}
 
+/* VIDEO */
+if(m.tipo==="video"){
+html+=`<video controls src="${m.media_url}"></video>`
+}
+
+/* AUDIO */
+if(m.tipo==="audio"){
+html+=`<audio controls src="${m.media_url}"></audio>`
+}
+
+/* DOCUMENTO */
 if(m.tipo==="documento"){
-html+=`<div onclick="window.open('${m.media_url}')">📄 ${m.nome_arquivo}</div>`
+html+=`
+<div class="fileBox" onclick="window.open('${m.media_url}')">
+<div class="fileIcon">📄</div>
+<div class="fileName">${m.nome_arquivo || "Arquivo"}</div>
+</div>
+`
 }
 
-if(m.mensagem) html+=`<div>${m.mensagem}</div>`
-
-div.innerHTML = html
-
-return div
+/* TEXTO */
+if(m.mensagem){
+html+=`<div>${m.mensagem}</div>`
 }
 
-/* ================= SCROLL FINAL ================= */
+const hora = new Date(m.created_at)
+.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})
 
-function scrollFinal(){
-setTimeout(()=>msgs.scrollTop = msgs.scrollHeight,50)
+div.innerHTML=html+`<div class="time">${hora}</div>`
+
+msgs.appendChild(div)
+
 }
 
-/* ================= UPLOAD ================= */
+/* ===== SCROLL ===== */
 
-async function uploadMidia(file){
-
-const name = Date.now()+"-"+file.name
-
-await db.storage.from("media-chat").upload(name,file)
-
-const { data } = db.storage.from("media-chat").getPublicUrl(name)
-
-return data.publicUrl
+function scroll(){
+setTimeout(()=>msgs.scrollTop=msgs.scrollHeight,50)
 }
 
-/* ================= ENVIAR ================= */
+/* ===== PREVIEW ===== */
+
+fileInput.onchange = ()=>{
+arquivo = fileInput.files[0]
+
+preview.style.display="block"
+
+if(arquivo.type.includes("image")){
+preview.innerHTML=`<img src="${URL.createObjectURL(arquivo)}" width="120">`
+}else if(arquivo.type.includes("video")){
+preview.innerHTML=`<video src="${URL.createObjectURL(arquivo)}" width="120" controls></video>`
+}else if(arquivo.type.includes("audio")){
+preview.innerHTML=`<audio src="${URL.createObjectURL(arquivo)}" controls></audio>`
+}else{
+preview.innerHTML=`📄 ${arquivo.name}`
+}
+}
+
+/* ===== UPLOAD ===== */
+
+async function upload(file){
+
+const nome = Date.now()+"-"+file.name
+
+await db.storage
+.from("buffet_whatsa_mercatto")
+.upload(nome,file)
+
+const {data} = db.storage
+.from("buffet_whatsa_mercatto")
+.getPublicUrl(nome)
+
+return {url:data.publicUrl,nome}
+}
+
+/* ===== ENVIAR ===== */
 
 async function enviar(){
 
+if(!telefone) return
+
 const texto = msg.value.trim()
 
-let media=null, tipo="texto", nome=null
+let media = null
+let tipo = "texto"
+let nomeArquivo = null
 
 if(arquivo){
 
 media = await uploadMidia(arquivo)
-nome = arquivo.name
+
+nomeArquivo = arquivo.name
 
 if(arquivo.type.includes("image")) tipo="imagem"
 else if(arquivo.type.includes("video")) tipo="video"
@@ -354,33 +435,52 @@ else if(arquivo.type.includes("audio")) tipo="audio"
 else tipo="documento"
 
 }
+/* API (WHATSAPP) */
 
 await fetch("/api/send",{
 method:"POST",
 headers:{"Content-Type":"application/json"},
 body:JSON.stringify({
 telefone,
-mensagem:texto || null,
+mensagem:texto,
 media_url:media,
 tipo,
-nome_arquivo:nome
+nome_arquivo:nomeArquivo
 })
+})
+
+/* BANCO */
+
+await db.from("conversas_whatsapp").insert({
+telefone,
+mensagem:texto,
+tipo,
+media_url:media,
+nome_arquivo:nomeArquivo,
+role:"assistant"
 })
 
 msg.value=""
 arquivo=null
+preview.style.display="none"
 
 }
 
-/* ================= FILE ================= */
+/* ===== WATCH TROCA ===== */
 
-fileInput.onchange = ()=>{
-arquivo = fileInput.files[0]
+let last = getTel()
+
+setInterval(()=>{
+const atual = getTel()
+if(atual!==last){
+last=atual
+carregar()
 }
+},400)
 
-/* ================= INIT ================= */
+/* ===== INIT ===== */
 
-carregarConversas()
+carregar()
 
 </script>
 
