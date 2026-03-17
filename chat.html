@@ -161,65 +161,102 @@ const db = supabase.createClient(
 
 /* ================= PARAM ================= */
 
-const urlParams = new URLSearchParams(window.location.search)
-let telefone = urlParams.get("telefone")
+let canalRealtime = null
 
-/* ================= RESET (ESC) ================= */
+function getTelefone(){
+  const urlParams = new URLSearchParams(window.location.search)
+  return urlParams.get("telefone")
+}
+
+let telefone = getTelefone()
+
+/* ================= RESET ================= */
 
 document.addEventListener("keydown", (e)=>{
-if(e.key === "Escape"){
-resetarTela()
-}
+  if(e.key === "Escape"){
+    resetarTela()
+  }
 })
 
 function resetarTela(){
 
-telefone = null
+  telefone = null
 
-document.getElementById("msgs").style.display = "none"
-document.getElementById("msgs").innerHTML = ""
+  document.getElementById("msgs").style.display = "none"
+  document.getElementById("msgs").innerHTML = ""
 
-document.getElementById("empty").style.display = "block"
+  document.getElementById("empty").style.display = "block"
 
+  if(canalRealtime){
+    db.removeChannel(canalRealtime)
+    canalRealtime = null
+  }
 }
 
 /* ================= CARREGAR ================= */
 
 async function carregar(){
 
-if(!telefone){
-resetarTela()
-return
+  telefone = getTelefone()
+
+  if(!telefone){
+    resetarTela()
+    return
+  }
+
+  const {data,error} = await db
+  .from("conversas_whatsapp")
+  .select("*")
+  .eq("telefone", telefone)
+  .order("created_at",{ascending:true})
+
+  if(error){
+    console.error(error)
+    return
+  }
+
+  const container = document.getElementById("msgs")
+  container.innerHTML = ""
+
+  if(!data || data.length === 0){
+    resetarTela()
+    return
+  }
+
+  document.getElementById("empty").style.display = "none"
+  container.style.display = "flex"
+
+  data.forEach(m=>render(m))
+
+  scrollFinal()
+
+  iniciarRealtime()
 }
 
-const {data,error} = await db
-.from("conversas_whatsapp")
-.select("*")
-.eq("telefone", telefone)
-.order("created_at",{ascending:true})
+/* ================= REALTIME DINÂMICO ================= */
 
-if(error){
-console.error(error)
-return
-}
+function iniciarRealtime(){
 
-const container = document.getElementById("msgs")
+  if(canalRealtime){
+    db.removeChannel(canalRealtime)
+  }
 
-container.innerHTML = ""
-
-if(!data || data.length === 0){
-resetarTela()
-return
-}
-
-/* MOSTRAR CHAT */
-
-document.getElementById("empty").style.display = "none"
-container.style.display = "flex"
-
-data.forEach(m=>render(m))
-
-scrollFinal()
+  canalRealtime = db
+  .channel("chat-"+telefone)
+  .on(
+    "postgres_changes",
+    {
+      event:"INSERT",
+      schema:"public",
+      table:"conversas_whatsapp",
+      filter:`telefone=eq.${telefone}`
+    },
+    payload=>{
+      render(payload.new)
+      scrollFinal()
+    }
+  )
+  .subscribe()
 
 }
 
@@ -227,70 +264,119 @@ scrollFinal()
 
 function render(m){
 
-const container = document.getElementById("msgs")
+  const container = document.getElementById("msgs")
 
-const div = document.createElement("div")
+  const div = document.createElement("div")
+  div.className = "msg " + (m.role === "assistant" ? "assistant" : "user")
 
-div.className = "msg " + (m.role === "assistant" ? "assistant" : "user")
+  const date = new Date(m.created_at)
 
-const date = new Date(m.created_at)
+  const hora = date.toLocaleTimeString("pt-BR",{
+    hour:"2-digit",
+    minute:"2-digit"
+  })
 
-const hora = date.toLocaleTimeString("pt-BR",{
-hour:"2-digit",
-minute:"2-digit"
-})
+  let conteudo = ""
 
-div.innerHTML = `
-<div>${m.mensagem}</div>
-<div class="time">${hora}</div>
-`
+  /* TEXTO */
+  if(m.tipo === "texto" || !m.tipo){
+    conteudo += `<div>${m.mensagem || ""}</div>`
+  }
 
-container.appendChild(div)
+  /* IMAGEM */
+  if(m.tipo === "imagem" && m.media_url){
+    conteudo += `
+      <img src="${m.media_url}" 
+      onerror="this.style.display='none'"
+      style="
+        max-width:240px;
+        border-radius:14px;
+        margin-bottom:6px;
+        cursor:pointer;
+        box-shadow:0 8px 20px rgba(0,0,0,0.15);
+      "
+      onclick="window.open('${m.media_url}')">
+    `
+  }
 
+  /* VIDEO */
+  if(m.tipo === "video" && m.media_url){
+    conteudo += `
+      <video controls style="
+        max-width:260px;
+        border-radius:14px;
+        margin-bottom:6px;
+        box-shadow:0 8px 20px rgba(0,0,0,0.15);
+      ">
+        <source src="${m.media_url}">
+      </video>
+    `
+  }
+
+  /* TEXTO JUNTO */
+  if(m.mensagem){
+    conteudo += `<div>${m.mensagem}</div>`
+  }
+
+  div.innerHTML = `
+    ${conteudo}
+    <div class="time">${hora}</div>
+  `
+
+  container.appendChild(div)
 }
 
 /* ================= SCROLL ================= */
 
 function scrollFinal(){
+  const container = document.getElementById("msgs")
 
-const container = document.getElementById("msgs")
-
-setTimeout(()=>{
-container.scrollTop = container.scrollHeight
-},50)
-
+  setTimeout(()=>{
+    container.scrollTop = container.scrollHeight
+  },50)
 }
 
-/* ================= REALTIME ================= */
+/* ================= OBSERVADOR (🔥 TROCA AUTOMÁTICA) ================= */
 
-if(telefone){
+/* detecta quando muda o telefone no iframe */
 
-db
-.channel("chat-"+telefone)
-.on(
-"postgres_changes",
-{
-event:"INSERT",
-schema:"public",
-table:"conversas_whatsapp",
-filter:`telefone=eq.${telefone}`
-},
-payload=>{
+let ultimoTelefone = telefone
 
-render(payload.new)
-scrollFinal()
+setInterval(()=>{
+  const novo = getTelefone()
 
-}
-)
-.subscribe()
-
-}
+  if(novo !== ultimoTelefone){
+    ultimoTelefone = novo
+    carregar()
+  }
+},500)
 
 /* ================= INIT ================= */
 
 carregar()
 
-</script>
+/* ================= UPLOAD ================= */
 
+async function uploadMidia(file){
+
+  const fileName = Date.now() + "-" + file.name
+
+  const { error } = await db.storage
+    .from("buffet_whatsa_mercatto")
+    .upload(fileName, file)
+
+  if(error){
+    console.error(error)
+    return null
+  }
+
+  const { data } = db.storage
+    .from("buffet_whatsa_mercatto")
+    .getPublicUrl(fileName)
+
+  return data.publicUrl
+}
+
+</script>
 </body>
 </html>
