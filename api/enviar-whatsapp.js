@@ -2,24 +2,50 @@ import { createClient } from "@supabase/supabase-js";
 
 export default async function handler(req, res) {
 
+  /* ===== CORS ===== */
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Método não permitido" });
   }
 
   try {
 
-    /* 🔐 PROTEÇÃO */
-    if (req.headers.authorization !== `Bearer ${process.env.ADMIN_TOKEN}`) {
+    /* ===== AUTH ===== */
+    const auth = req.headers.authorization;
+
+    if (auth !== `Bearer ${process.env.ADMIN_TOKEN}`) {
       return res.status(401).json({ error: "Não autorizado" });
     }
 
-    const { telefone, mensagem } = req.body;
+    /* ===== BODY ===== */
+    const body = typeof req.body === "string"
+      ? JSON.parse(req.body)
+      : req.body;
+
+    let { telefone, mensagem } = body;
 
     if (!telefone || !mensagem) {
-      return res.status(400).json({ error: "Dados inválidos" });
+      return res.status(400).json({ error: "Telefone ou mensagem inválidos" });
     }
 
-    /* 📲 ENVIO WHATSAPP */
+    /* ===== NORMALIZAR TELEFONE ===== */
+    telefone = telefone.replace(/\D/g, "");
+
+    if (!telefone.startsWith("55")) {
+      telefone = "55" + telefone;
+    }
+
+    console.log("📲 Enviando para:", telefone);
+    console.log("💬 Mensagem:", mensagem);
+
+    /* ===== ENVIO WHATSAPP (META API) ===== */
     const response = await fetch(
       `https://graph.facebook.com/v18.0/${process.env.WHATSAPP_PHONE_ID}/messages`,
       {
@@ -39,27 +65,48 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
+    console.log("📩 RESPOSTA META:", JSON.stringify(data));
+
     if (!response.ok) {
-      console.error(data);
-      return res.status(500).json({ error: "Erro ao enviar WhatsApp", detalhe: data });
+      return res.status(500).json({
+        error: "Erro ao enviar WhatsApp",
+        detalhe: data
+      });
     }
 
-    /* 💾 SALVAR NO SUPABASE */
+    /* ===== SUPABASE ===== */
     const supabase = createClient(
       process.env.SUPABASE_URL,
       process.env.SUPABASE_SERVICE_ROLE
     );
 
-    await supabase.from("conversas_whatsapp").insert({
-      telefone,
-      mensagem,
-      role: "assistant"
+    const { error: erroSupabase } = await supabase
+      .from("conversas_whatsapp")
+      .insert({
+        telefone,
+        mensagem,
+        role: "assistant"
+      });
+
+    if (erroSupabase) {
+      console.error("❌ ERRO SUPABASE:", erroSupabase);
+    }
+
+    /* ===== SUCESSO ===== */
+    return res.status(200).json({
+      ok: true,
+      enviado_para: telefone,
+      resposta_meta: data
     });
 
-    return res.status(200).json({ ok: true });
-
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: "Erro interno" });
+
+    console.error("🔥 ERRO GERAL:", err);
+
+    return res.status(500).json({
+      error: "Erro interno",
+      detalhe: err.message
+    });
+
   }
 }
