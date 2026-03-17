@@ -29,12 +29,32 @@ box-sizing:border-box;
 body{
 margin:0;
 font-family:Inter;
-background:#020617;
-color:white;
 height:100vh;
 display:flex;
 flex-direction:column;
 overflow:hidden;
+
+/* 🔥 FUNDO TIPO WHATSAPP + MARCA */
+background:
+radial-gradient(circle at 20% 30%, rgba(255,140,0,0.06) 0%, transparent 40%),
+radial-gradient(circle at 80% 70%, rgba(255,140,0,0.06) 0%, transparent 40%),
+#f5f5f4;
+}
+
+/* 🔥 MARCA NO FUNDO */
+
+body::before{
+content:"MERCATTO DELÍCIA";
+position:fixed;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+font-size:80px;
+font-weight:800;
+color:rgba(255,140,0,0.05);
+white-space:nowrap;
+pointer-events:none;
+z-index:0;
 }
 
 /* MENSAGENS */
@@ -46,6 +66,8 @@ padding:20px;
 display:flex;
 flex-direction:column;
 gap:14px;
+position:relative;
+z-index:1;
 }
 
 /* BOLHAS */
@@ -57,20 +79,24 @@ border-radius:16px;
 font-size:14px;
 line-height:1.5;
 animation:fade .2s ease;
+backdrop-filter:blur(2px);
 }
 
-/* USER */
+/* CLIENTE */
 
 .user{
-background:#1e293b;
+background:#ffffff;
 align-self:flex-start;
+color:#111827;
+border:1px solid #e5e7eb;
 }
 
-/* BOT */
+/* VOCÊ / BOT */
 
 .assistant{
 background:#22c55e;
 align-self:flex-end;
+color:white;
 }
 
 /* HORA */
@@ -96,7 +122,7 @@ width:5px;
 }
 
 ::-webkit-scrollbar-thumb{
-background:#334155;
+background:#d1d5db;
 border-radius:10px;
 }
 
@@ -188,7 +214,7 @@ container.scrollTop = container.scrollHeight
 
 }
 
-/* ================= REALTIME (🔥 TOP) ================= */
+/* ================= REALTIME ================= */
 
 db
 .channel("chat-"+telefone)
