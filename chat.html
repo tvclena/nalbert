@@ -13,13 +13,13 @@ viewport-fit=cover">
 
 <title>Chat</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 
-/* BASE */
+/* ================= BASE ================= */
 
 *{
 box-sizing:border-box;
@@ -34,30 +34,42 @@ display:flex;
 flex-direction:column;
 overflow:hidden;
 
-/* 🔥 FUNDO TIPO WHATSAPP + MARCA */
+/* 🔥 FUNDO WHATSAPP PREMIUM */
 background:
-radial-gradient(circle at 20% 30%, rgba(255,140,0,0.06) 0%, transparent 40%),
-radial-gradient(circle at 80% 70%, rgba(255,140,0,0.06) 0%, transparent 40%),
+radial-gradient(circle at 20% 30%, rgba(255,140,0,0.06), transparent 40%),
+radial-gradient(circle at 80% 70%, rgba(255,140,0,0.06), transparent 40%),
 #f5f5f4;
 }
 
-/* 🔥 MARCA NO FUNDO */
+/* 🔥 MARCA CENTRAL */
 
-body::before{
-content:"MERCATTO DELÍCIA";
-position:fixed;
+.brandBg{
+position:absolute;
 top:50%;
 left:50%;
 transform:translate(-50%,-50%);
-font-size:80px;
-font-weight:800;
+font-size:70px;
+font-weight:900;
 color:rgba(255,140,0,0.05);
 white-space:nowrap;
 pointer-events:none;
-z-index:0;
 }
 
-/* MENSAGENS */
+/* ================= EMPTY STATE ================= */
+
+.emptyState{
+margin:auto;
+text-align:center;
+z-index:2;
+}
+
+.emptyState h1{
+font-size:20px;
+color:#9ca3af;
+font-weight:600;
+}
+
+/* ================= CHAT ================= */
 
 .messages{
 flex:1;
@@ -66,8 +78,7 @@ padding:20px;
 display:flex;
 flex-direction:column;
 gap:14px;
-position:relative;
-z-index:1;
+z-index:2;
 }
 
 /* BOLHAS */
@@ -79,10 +90,9 @@ border-radius:16px;
 font-size:14px;
 line-height:1.5;
 animation:fade .2s ease;
-backdrop-filter:blur(2px);
 }
 
-/* CLIENTE */
+/* RECEBIDA */
 
 .user{
 background:#ffffff;
@@ -91,7 +101,7 @@ color:#111827;
 border:1px solid #e5e7eb;
 }
 
-/* VOCÊ / BOT */
+/* ENVIADA */
 
 .assistant{
 background:#22c55e;
@@ -99,7 +109,7 @@ align-self:flex-end;
 color:white;
 }
 
-/* HORA */
+/* TIME */
 
 .time{
 font-size:11px;
@@ -132,7 +142,13 @@ border-radius:10px;
 
 <body>
 
-<div class="messages" id="msgs"></div>
+<div class="brandBg">MERCATTO DELÍCIA</div>
+
+<div id="empty" class="emptyState">
+<h1>Selecione uma conversa</h1>
+</div>
+
+<div class="messages" id="msgs" style="display:none"></div>
 
 <script>
 
@@ -143,18 +159,38 @@ const db = supabase.createClient(
 "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 )
 
-/* ================= PEGAR TELEFONE ================= */
+/* ================= PARAM ================= */
 
 const urlParams = new URLSearchParams(window.location.search)
-const telefone = urlParams.get("telefone")
+let telefone = urlParams.get("telefone")
 
-if(!telefone){
-document.body.innerHTML = "<div style='margin:auto'>Telefone não informado</div>"
+/* ================= RESET (ESC) ================= */
+
+document.addEventListener("keydown", (e)=>{
+if(e.key === "Escape"){
+resetarTela()
+}
+})
+
+function resetarTela(){
+
+telefone = null
+
+document.getElementById("msgs").style.display = "none"
+document.getElementById("msgs").innerHTML = ""
+
+document.getElementById("empty").style.display = "block"
+
 }
 
 /* ================= CARREGAR ================= */
 
 async function carregar(){
+
+if(!telefone){
+resetarTela()
+return
+}
 
 const {data,error} = await db
 .from("conversas_whatsapp")
@@ -168,7 +204,18 @@ return
 }
 
 const container = document.getElementById("msgs")
-container.innerHTML=""
+
+container.innerHTML = ""
+
+if(!data || data.length === 0){
+resetarTela()
+return
+}
+
+/* MOSTRAR CHAT */
+
+document.getElementById("empty").style.display = "none"
+container.style.display = "flex"
 
 data.forEach(m=>render(m))
 
@@ -216,6 +263,8 @@ container.scrollTop = container.scrollHeight
 
 /* ================= REALTIME ================= */
 
+if(telefone){
+
 db
 .channel("chat-"+telefone)
 .on(
@@ -234,6 +283,8 @@ scrollFinal()
 }
 )
 .subscribe()
+
+}
 
 /* ================= INIT ================= */
 
