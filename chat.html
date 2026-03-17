@@ -7,7 +7,7 @@
 
 <title>Chat • Mercatto PRO</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
@@ -23,32 +23,16 @@ height:100vh;
 display:flex;
 flex-direction:column;
 overflow:hidden;
-
-background:
-radial-gradient(circle at 20% 30%, rgba(255,140,0,0.05), transparent 40%),
-radial-gradient(circle at 80% 70%, rgba(255,140,0,0.05), transparent 40%),
-#f5f5f4;
+background:#0b0f1a;
+color:white;
 }
 
-/* ===== LOGO FUNDO ===== */
+/* ===== HEADER ===== */
 
-.brandBg{
-position:absolute;
-top:50%;
-left:50%;
-transform:translate(-50%,-50%);
-font-size:80px;
-font-weight:900;
-color:rgba(255,140,0,0.05);
-pointer-events:none;
-}
-
-/* ===== EMPTY ===== */
-
-.empty{
-margin:auto;
-color:#9ca3af;
-font-weight:600;
+.header{
+padding:14px 18px;
+font-weight:700;
+background:linear-gradient(90deg,#22c55e,#16a34a);
 }
 
 /* ===== MESSAGES ===== */
@@ -59,24 +43,25 @@ overflow:auto;
 padding:20px;
 display:flex;
 flex-direction:column;
-gap:14px;
-z-index:2;
+gap:12px;
+scroll-behavior:smooth;
 }
 
 /* ===== BOLHAS ===== */
 
 .msg{
 max-width:75%;
-padding:12px;
+padding:12px 14px;
 border-radius:16px;
 font-size:14px;
-animation:fade .2s;
+animation:fade .2s ease;
+position:relative;
 }
 
 .user{
-background:#fff;
-border:1px solid #e5e7eb;
+background:#1e293b;
 align-self:flex-start;
+border:1px solid #334155;
 }
 
 .assistant{
@@ -87,17 +72,11 @@ align-self:flex-end;
 
 /* ===== MIDIAS ===== */
 
-.msg img{
+.msg img, .msg video{
 max-width:240px;
 border-radius:12px;
+margin-bottom:6px;
 cursor:pointer;
-margin-bottom:6px;
-}
-
-.msg video{
-max-width:260px;
-border-radius:12px;
-margin-bottom:6px;
 }
 
 .msg audio{
@@ -108,8 +87,8 @@ margin-bottom:6px;
 /* ===== DOC ===== */
 
 .fileBox{
-background:white;
-border-radius:12px;
+background:#1e293b;
+border-radius:10px;
 padding:10px;
 display:flex;
 gap:10px;
@@ -118,20 +97,16 @@ cursor:pointer;
 }
 
 .fileIcon{
-font-size:22px;
-}
-
-.fileName{
-font-size:13px;
+font-size:20px;
 }
 
 /* ===== TIME ===== */
 
 .time{
-font-size:11px;
+font-size:10px;
 opacity:.6;
+margin-top:4px;
 text-align:right;
-margin-top:6px;
 }
 
 /* ===== INPUT ===== */
@@ -139,43 +114,45 @@ margin-top:6px;
 .inputBox{
 display:flex;
 gap:10px;
-padding:12px;
-background:white;
-border-top:1px solid #e5e7eb;
-z-index:2;
+padding:10px;
+background:#020617;
+border-top:1px solid #1e293b;
 }
 
 textarea{
 flex:1;
 border-radius:10px;
-border:1px solid #e5e7eb;
+border:none;
 padding:10px;
 resize:none;
-height:50px;
-font-family:Inter;
+height:45px;
+background:#1e293b;
+color:white;
 }
 
 button{
 background:#22c55e;
-color:white;
 border:none;
 border-radius:10px;
 padding:10px 14px;
+color:white;
 cursor:pointer;
+font-weight:600;
 }
 
 /* ===== PREVIEW ===== */
 
 .preview{
 position:absolute;
-bottom:90px;
+bottom:80px;
 left:20px;
-background:white;
+background:#020617;
 padding:10px;
 border-radius:12px;
-box-shadow:0 10px 30px rgba(0,0,0,.2);
-z-index:5;
+box-shadow:0 10px 30px rgba(0,0,0,.5);
 }
+
+/* ===== ANIMAÇÃO ===== */
 
 @keyframes fade{
 from{opacity:0;transform:translateY(6px)}
@@ -188,19 +165,17 @@ to{opacity:1}
 
 <body>
 
-<div class="brandBg">MERCATTO</div>
+<div class="header">Chat • Mercatto</div>
 
-<div id="empty" class="empty">Selecione uma conversa</div>
+<div id="msgs" class="messages"></div>
 
-<div id="msgs" class="messages" style="display:none"></div>
-
-<div class="inputBox" id="inputBox" style="display:none">
+<div class="inputBox">
 
 <input type="file" id="fileInput" hidden>
 
 <button onclick="fileInput.click()">📎</button>
 
-<textarea id="msg"></textarea>
+<textarea id="msg" placeholder="Digite..."></textarea>
 
 <button onclick="enviar()">Enviar</button>
 
@@ -210,74 +185,75 @@ to{opacity:1}
 
 <script>
 
-/* ================= CONFIG ================= */
+/* ===== SUPABASE ===== */
 
 const db = supabase.createClient(
 "https://dxkszikemntfusfyrzos.supabase.co",
 "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 )
-/* ================= UPLOAD MIDIA (🔥 AQUI) ================= */
 
-async function uploadMidia(file){
+/* ===== VARS ===== */
 
-  const safeName = file.name.replace(/\s/g,"_")
-
-  const fileName = Date.now() + "-" + safeName
-
-  const { data, error } = await db.storage
-    .from("buffet_whatsa_mercatto")
-    .upload(fileName, file, {
-      contentType: file.type,
-      upsert: true
-    })
-
-  if(error){
-    console.error("❌ ERRO UPLOAD:", error)
-    alert("Erro ao enviar arquivo")
-    return null
-  }
-
-  const { data: publicUrl } = db.storage
-    .from("buffet_whatsa_mercatto")
-    .getPublicUrl(fileName)
-
-  return publicUrl.publicUrl
-}
-
-let telefone = null
+let telefone = new URLSearchParams(location.search).get("telefone")
 let canal = null
 let arquivo = null
+let mensagensRenderizadas = new Set()
 
-/* ===== RESET ===== */
+/* ===== SCROLL ===== */
 
-document.addEventListener("keydown",(e)=>{
-if(e.key==="Escape") reset()
-})
-
-function reset(){
-telefone=null
-msgs.style.display="none"
-inputBox.style.display="none"
-empty.style.display="block"
-msgs.innerHTML=""
+function scroll(){
+setTimeout(()=>msgs.scrollTop=msgs.scrollHeight,50)
 }
 
-/* ===== GET TELEFONE ===== */
+/* ===== RENDER ===== */
 
-function getTel(){
-return new URLSearchParams(location.search).get("telefone")
+function render(m){
+
+if(mensagensRenderizadas.has(m.id)) return
+mensagensRenderizadas.add(m.id)
+
+const div = document.createElement("div")
+div.className="msg "+(m.role==="assistant"?"assistant":"user")
+
+let html=""
+
+/* MIDIA */
+if(m.tipo==="imagem"){
+html+=`<img src="${m.media_url}" onclick="window.open('${m.media_url}')">`
+}
+if(m.tipo==="video"){
+html+=`<video controls src="${m.media_url}"></video>`
+}
+if(m.tipo==="audio"){
+html+=`<audio controls src="${m.media_url}"></audio>`
+}
+if(m.tipo==="documento"){
+html+=`
+<div class="fileBox" onclick="window.open('${m.media_url}')">
+<div class="fileIcon">📄</div>
+<div>${m.nome_arquivo || "Arquivo"}</div>
+</div>`
+}
+
+/* TEXTO */
+if(m.mensagem){
+html+=`<div>${m.mensagem}</div>`
+}
+
+const hora = new Date(m.created_at)
+.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})
+
+div.innerHTML = html + `<div class="time">${hora}</div>`
+
+msgs.appendChild(div)
+
 }
 
 /* ===== CARREGAR ===== */
 
 async function carregar(){
 
-telefone = getTel()
-
-if(!telefone){
-reset()
-return
-}
+mensagensRenderizadas.clear()
 
 const {data} = await db
 .from("conversas_whatsapp")
@@ -287,16 +263,8 @@ const {data} = await db
 
 msgs.innerHTML=""
 
-if(!data || !data.length){
-reset()
-return
-}
-
-empty.style.display="none"
-msgs.style.display="flex"
-inputBox.style.display="flex"
-
 data.forEach(render)
+
 scroll()
 
 realtime()
@@ -315,65 +283,12 @@ event:"INSERT",
 schema:"public",
 table:"conversas_whatsapp",
 filter:`telefone=eq.${telefone}`
-},p=>{
-render(p.new)
+},payload=>{
+render(payload.new)
 scroll()
-}).subscribe()
+})
+.subscribe()
 
-}
-
-/* ===== RENDER ===== */
-
-function render(m){
-
-const div = document.createElement("div")
-div.className="msg "+(m.role==="assistant"?"assistant":"user")
-
-let html=""
-
-/* IMAGEM */
-if(m.tipo==="imagem"){
-html+=`<img src="${m.media_url}" onclick="window.open('${m.media_url}')">`
-}
-
-/* VIDEO */
-if(m.tipo==="video"){
-html+=`<video controls src="${m.media_url}"></video>`
-}
-
-/* AUDIO */
-if(m.tipo==="audio"){
-html+=`<audio controls src="${m.media_url}"></audio>`
-}
-
-/* DOCUMENTO */
-if(m.tipo==="documento"){
-html+=`
-<div class="fileBox" onclick="window.open('${m.media_url}')">
-<div class="fileIcon">📄</div>
-<div class="fileName">${m.nome_arquivo || "Arquivo"}</div>
-</div>
-`
-}
-
-/* TEXTO */
-if(m.mensagem){
-html+=`<div>${m.mensagem}</div>`
-}
-
-const hora = new Date(m.created_at)
-.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})
-
-div.innerHTML=html+`<div class="time">${hora}</div>`
-
-msgs.appendChild(div)
-
-}
-
-/* ===== SCROLL ===== */
-
-function scroll(){
-setTimeout(()=>msgs.scrollTop=msgs.scrollHeight,50)
 }
 
 /* ===== PREVIEW ===== */
@@ -387,8 +302,6 @@ if(arquivo.type.includes("image")){
 preview.innerHTML=`<img src="${URL.createObjectURL(arquivo)}" width="120">`
 }else if(arquivo.type.includes("video")){
 preview.innerHTML=`<video src="${URL.createObjectURL(arquivo)}" width="120" controls></video>`
-}else if(arquivo.type.includes("audio")){
-preview.innerHTML=`<audio src="${URL.createObjectURL(arquivo)}" controls></audio>`
 }else{
 preview.innerHTML=`📄 ${arquivo.name}`
 }
@@ -396,7 +309,7 @@ preview.innerHTML=`📄 ${arquivo.name}`
 
 /* ===== UPLOAD ===== */
 
-async function upload(file){
+async function uploadMidia(file){
 
 const nome = Date.now()+"-"+file.name
 
@@ -408,7 +321,8 @@ const {data} = db.storage
 .from("buffet_whatsa_mercatto")
 .getPublicUrl(nome)
 
-return {url:data.publicUrl,nome}
+return data.publicUrl
+
 }
 
 /* ===== ENVIAR ===== */
@@ -419,14 +333,29 @@ if(!telefone) return
 
 const texto = msg.value.trim()
 
-let media = null
-let tipo = "texto"
-let nomeArquivo = null
+/* UX IMEDIATO */
+
+const temp = {
+id:"temp-"+Date.now(),
+mensagem:texto,
+created_at:new Date().toISOString(),
+role:"assistant"
+}
+
+render(temp)
+scroll()
+
+msg.value=""
+
+/* MIDIA */
+
+let media=null
+let tipo="texto"
+let nomeArquivo=null
 
 if(arquivo){
 
 media = await uploadMidia(arquivo)
-
 nomeArquivo = arquivo.name
 
 if(arquivo.type.includes("image")) tipo="imagem"
@@ -435,7 +364,8 @@ else if(arquivo.type.includes("audio")) tipo="audio"
 else tipo="documento"
 
 }
-/* API (WHATSAPP) */
+
+/* API */
 
 await fetch("/api/send",{
 method:"POST",
@@ -460,23 +390,10 @@ nome_arquivo:nomeArquivo,
 role:"assistant"
 })
 
-msg.value=""
 arquivo=null
 preview.style.display="none"
 
 }
-
-/* ===== WATCH TROCA ===== */
-
-let last = getTel()
-
-setInterval(()=>{
-const atual = getTel()
-if(atual!==last){
-last=atual
-carregar()
-}
-},400)
 
 /* ===== INIT ===== */
 
