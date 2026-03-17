@@ -210,12 +210,40 @@ to{opacity:1}
 
 <script>
 
-/* ===== CONFIG ===== */
+/* ================= CONFIG ================= */
 
 const db = supabase.createClient(
 "https://dxkszikemntfusfyrzos.supabase.co",
-"sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
+"SEU_TOKEN"
 )
+
+/* ================= UPLOAD MIDIA (🔥 AQUI) ================= */
+
+async function uploadMidia(file){
+
+  const safeName = file.name.replace(/\s/g,"_")
+
+  const fileName = Date.now() + "-" + safeName
+
+  const { data, error } = await db.storage
+    .from("buffet_whatsa_mercatto")
+    .upload(fileName, file, {
+      contentType: file.type,
+      upsert: true
+    })
+
+  if(error){
+    console.error("❌ ERRO UPLOAD:", error)
+    alert("Erro ao enviar arquivo")
+    return null
+  }
+
+  const { data: publicUrl } = db.storage
+    .from("buffet_whatsa_mercatto")
+    .getPublicUrl(fileName)
+
+  return publicUrl.publicUrl
+}
 
 let telefone = null
 let canal = null
@@ -398,10 +426,9 @@ let nomeArquivo = null
 
 if(arquivo){
 
-const up = await upload(arquivo)
+media = await uploadMidia(arquivo)
 
-media = up.url
-nomeArquivo = up.nome
+nomeArquivo = arquivo.name
 
 if(arquivo.type.includes("image")) tipo="imagem"
 else if(arquivo.type.includes("video")) tipo="video"
@@ -409,7 +436,6 @@ else if(arquivo.type.includes("audio")) tipo="audio"
 else tipo="documento"
 
 }
-
 /* API (WHATSAPP) */
 
 await fetch("/api/send",{
