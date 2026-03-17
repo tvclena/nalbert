@@ -1,7 +1,8 @@
 export default async function handler(req, res) {
 
   try {
-    /* ===== VALIDAR MÉTODO ===== */
+
+    /* ===== MÉTODO ===== */
     if (req.method !== "POST") {
       return res.status(405).json({ error: "Método não permitido" })
     }
@@ -11,30 +12,98 @@ export default async function handler(req, res) {
       ? JSON.parse(req.body)
       : req.body
 
-    const { telefone, mensagem } = body
+    const { telefone, mensagem, media_url, tipo, nome_arquivo } = body
 
-    if (!telefone || !mensagem) {
-      return res.status(400).json({ error: "Faltando telefone ou mensagem" })
+    if (!telefone) {
+      return res.status(400).json({ error: "Telefone obrigatório" })
     }
 
     /* ===== ENV ===== */
     const PHONE_ID = process.env.WHATSAPP_PHONE_ID
     const TOKEN = process.env.WHATSAPP_TOKEN
 
-    if (!PHONE_ID) {
-      console.error("❌ PHONE_ID não definido")
-      return res.status(500).json({ error: "PHONE_ID não definido" })
+    if (!PHONE_ID || !TOKEN) {
+      return res.status(500).json({ error: "Credenciais não configuradas" })
     }
 
-    if (!TOKEN) {
-      console.error("❌ TOKEN não definido")
-      return res.status(500).json({ error: "TOKEN não definido" })
-    }
-
-    /* ===== NORMALIZAR TELEFONE ===== */
+    /* ===== NORMALIZAR ===== */
     const numero = telefone.replace(/\D/g, "")
 
-    /* ===== REQUEST ===== */
+    let payload = {
+      messaging_product: "whatsapp",
+      to: numero
+    }
+
+    /* =====================================================
+       🔥 PRIORIDADE: MÍDIA
+    ===================================================== */
+
+    if (media_url) {
+
+      const tipoDetectado = tipo || detectarTipo(media_url, nome_arquivo)
+
+      console.log("📎 Enviando mídia:", tipoDetectado)
+
+      /* ===== IMAGEM ===== */
+      if (tipoDetectado === "imagem") {
+        payload.type = "image"
+        payload.image = {
+          link: media_url,
+          caption: mensagem || ""
+        }
+      }
+
+      /* ===== VIDEO ===== */
+      else if (tipoDetectado === "video") {
+        payload.type = "video"
+        payload.video = {
+          link: media_url,
+          caption: mensagem || ""
+        }
+      }
+
+      /* ===== AUDIO ===== */
+      else if (tipoDetectado === "audio") {
+        payload.type = "audio"
+        payload.audio = {
+          link: media_url
+        }
+      }
+
+      /* ===== DOCUMENTO ===== */
+      else {
+        payload.type = "document"
+        payload.document = {
+          link: media_url,
+          filename: nome_arquivo || "arquivo"
+        }
+      }
+
+    }
+
+    /* =====================================================
+       🔥 TEXTO (SEM MÍDIA)
+    ===================================================== */
+
+    else if (mensagem) {
+
+      payload.type = "text"
+      payload.text = {
+        body: mensagem
+      }
+
+    }
+
+    else {
+      return res.status(400).json({
+        error: "Nada para enviar (sem texto ou mídia)"
+      })
+    }
+
+    /* =====================================================
+       🚀 ENVIO WHATSAPP
+    ===================================================== */
+
     const response = await fetch(
       `https://graph.facebook.com/v19.0/${PHONE_ID}/messages`,
       {
@@ -43,28 +112,21 @@ export default async function handler(req, res) {
           Authorization: `Bearer ${TOKEN}`,
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({
-          messaging_product: "whatsapp",
-          to: numero,
-          type: "text",
-          text: { body: mensagem }
-        })
+        body: JSON.stringify(payload)
       }
     )
 
     const data = await response.json()
 
-    console.log("📤 ENVIO:", data)
+    console.log("📤 RESPOSTA META:", data)
 
-    /* ===== TRATAR ERRO DO WHATSAPP ===== */
+    /* ===== ERRO META ===== */
     if (data.error) {
-
       return res.status(200).json({
         ok: false,
         erro: data.error.message,
         detalhe: data.error.error_data?.details || null
       })
-
     }
 
     /* ===== SUCESSO ===== */
@@ -84,4 +146,20 @@ export default async function handler(req, res) {
 
   }
 
+}
+
+/* =====================================================
+   🔍 DETECTOR AUTOMÁTICO DE TIPO
+===================================================== */
+
+function detectarTipo(url, nome){
+
+  const ref = (url || "") + " " + (nome || "")
+  const lower = ref.toLowerCase()
+
+  if (lower.match(/\.(jpg|jpeg|png|webp|gif)/)) return "imagem"
+  if (lower.match(/\.(mp4|mov|webm)/)) return "video"
+  if (lower.match(/\.(mp3|wav|ogg|m4a)/)) return "audio"
+
+  return "documento"
 }
