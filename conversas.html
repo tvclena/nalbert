@@ -655,7 +655,14 @@ const pausado = await verificarPausa(telefone)
 const sendBox = document.getElementById("sendBox")
 
 sendBox.style.display = "flex"
-}
+
+if(!pausado){
+  sendBox.style.opacity = "0.5"
+  sendBox.style.pointerEvents = "none"
+}else{
+  sendBox.style.opacity = "1"
+  sendBox.style.pointerEvents = "auto"
+}}
 async function excluirSelecionadas(){
 
 if(selecionadas.length===0){
