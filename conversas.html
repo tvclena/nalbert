@@ -18,7 +18,6 @@ viewport-fit=cover">
 <style>
 
 :root{
-:root{
 --bg:#0f172a;
 --sidebar:#f4f4f5;
 --chat:#020617;
@@ -522,8 +521,12 @@ carregarClientes()
 )
 .subscribe()
 
-let clienteSelecionado=null
-let selecionadas=[]
+/* ================= GLOBAL ================= */
+
+let nomes = {}
+let clienteSelecionado = null
+
+/* ================= CARREGAR CLIENTES ================= */
 
 async function carregarClientes(){
 
@@ -536,72 +539,111 @@ const {data:memoria} = await db
 .from("memoria_clientes")
 .select("telefone,nome")
 
-let nomes = {}
+/* 🔥 CORREÇÃO DO NOMES */
+
+nomes = {}
+
 memoria.forEach(c=>{
-nomes[c.telefone]=c.nome
+  nomes[c.telefone] = c.nome
 })
 
-const map={}
+/* AGRUPAR CLIENTES */
+
+const map = {}
 
 data.forEach(m=>{
-if(!map[m.telefone]) map[m.telefone]=m
+  if(!map[m.telefone]) map[m.telefone] = m
 })
 
 const clientes = Object.values(map)
 
-const container=document.getElementById("clientes")
-container.innerHTML=""
+/* RENDER */
+
+const container = document.getElementById("clientes")
+container.innerHTML = ""
 
 for (const c of clientes){
 
-const div=document.createElement("div")
+  const div = document.createElement("div")
 
-const inicial = c.telefone.slice(-2)
+  const inicial = c.telefone.slice(-2)
 
-const pausado = await verificarPausa(c.telefone)
+  const pausado = await verificarPausa(c.telefone)
 
-div.className = pausado ? "client pausado" : "client"
+  div.className = pausado ? "client pausado" : "client"
 
-div.innerHTML=`
+  div.innerHTML = `
+    <div class="avatar">${inicial}</div>
 
-<div class="avatar">${inicial}</div>
+    <div>
+      <div class="phone">
+        ${nomes[c.telefone] || c.telefone}
+      </div>
 
-<div>
-<div class="phone">
-${nomes[c.telefone] ? nomes[c.telefone] : c.telefone}
-</div>
+      <div class="preview">${c.mensagem}</div>
 
-<div class="preview">${c.mensagem}</div>
-<div class="status ${pausado?'off':'on'}">
-● ${pausado?'BOT PAUSADO':'BOT ATIVO'}
-</div></div>
+      <div class="status ${pausado?'off':'on'}">
+        ● ${pausado?'BOT PAUSADO':'BOT ATIVO'}
+      </div>
+    </div>
 
-<div class="menuDots" onclick="abrirMenu(event,'${c.telefone}')">⋮</div>
-<div class="menu" id="menu-${c.telefone}">
+    <div class="menuDots" onclick="abrirMenu(event,'${c.telefone}')">⋮</div>
 
-<button onclick="editarContato('${c.telefone}')">
-Editar contato
-</button>
+    <div class="menu" id="menu-${c.telefone}">
+      <button onclick="editarContato('${c.telefone}')">
+        Editar contato
+      </button>
 
-<button onclick="toggleBot('${c.telefone}')" style="
-background:${pausado?'#22c55e':'#ef4444'};
-color:white;
-padding:6px 10px;
-border-radius:6px;
-font-size:12px;
-">
-${pausado ? "ATIVAR BOT" : "DESATIVAR BOT"}
-</button>
+      <button onclick="toggleBot('${c.telefone}')" style="
+        background:${pausado?'#22c55e':'#ef4444'};
+        color:white;
+        padding:6px 10px;
+        border-radius:6px;
+        font-size:12px;
+      ">
+        ${pausado ? "ATIVAR BOT" : "DESATIVAR BOT"}
+      </button>
+    </div>
+  `
 
-</div>
-</div>
+  /* 🔥 CLICK CORRETO */
 
-`
+  div.addEventListener("click", () => {
+    abrirChatIframe(c.telefone)
+  })
 
-div.onclick = () => abrirChatIframe(c.telefone)
-container.appendChild(div)
+  container.appendChild(div)
+}
+
+/* 🔥 AUTO ABRIR PRIMEIRA CONVERSA */
+
+if(clientes.length && !clienteSelecionado){
+  abrirChatIframe(clientes[0].telefone)
+}
 
 }
+
+/* ================= ABRIR CHAT ================= */
+
+function abrirChatIframe(telefone){
+
+  console.log("ABRINDO:", telefone)
+
+  clienteSelecionado = telefone
+
+  document.getElementById("clienteAtual").innerText =
+    nomes[telefone] || telefone
+
+  const frame = document.getElementById("frameChat")
+
+  /* 🔥 TESTE CAMINHO */
+
+  frame.src = "chat.html?telefone=" + telefone
+
+  /* ATIVA ENVIO */
+
+  const sendBox = document.getElementById("sendBox")
+  sendBox.style.display = "flex"
 
 }
 async function abrirConversa(telefone){
@@ -1003,14 +1045,17 @@ carregando = false
 
 function abrirChatIframe(telefone){
 
+  console.log("ABRINDO:", telefone)
+
   clienteSelecionado = telefone
 
-  document.getElementById("clienteAtual").innerText = nomes[telefone] || telefone
+  document.getElementById("clienteAtual").innerText =
+    nomes[telefone] || telefone
 
   const frame = document.getElementById("frameChat")
-  frame.src = "chat.html?telefone=" + telefone
 
-  /* 🔥 ATIVA CAIXA DE ENVIO */
+  frame.src = "./chat.html?telefone=" + telefone
+
   const sendBox = document.getElementById("sendBox")
   sendBox.style.display = "flex"
 
