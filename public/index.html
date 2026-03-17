@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>WhatsApp • Painel</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+
+<style>
+body{
+  margin:0;
+  font-family:Inter;
+  background:#0b0f14;
+  color:#fff;
+}
+
+.container{
+  display:flex;
+  height:100vh;
+}
+
+.sidebar{
+  width:280px;
+  background:#111827;
+  padding:20px;
+  border-right:1px solid #1f2937;
+}
+
+.chat{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+}
+
+.messages{
+  flex:1;
+  padding:20px;
+  overflow:auto;
+}
+
+.input{
+  display:flex;
+  padding:10px;
+  border-top:1px solid #1f2937;
+}
+
+input{
+  flex:1;
+  padding:12px;
+  border:none;
+  outline:none;
+  background:#1f2937;
+  color:#fff;
+  border-radius:10px;
+}
+
+button{
+  margin-left:10px;
+  padding:12px 20px;
+  border:none;
+  background:#16a34a;
+  color:#fff;
+  border-radius:10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <div class="sidebar">
+    <h2>Conversas</h2>
+    <div id="lista"></div>
+  </div>
+
+  <div class="chat">
+    <div class="messages" id="msgs"></div>
+
+    <div class="input">
+      <input id="txt" placeholder="Digite..." />
+      <button onclick="enviar()">Enviar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let numeroAtual = "";
+
+async function enviar(){
+  const texto = document.getElementById("txt").value;
+
+  await fetch("/api/send", {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({
+      numero: numeroAtual,
+      mensagem: texto
+    })
+  });
+
+  location.reload();
+}
+</script>
+
+</body>
+</html>
