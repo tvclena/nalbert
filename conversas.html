@@ -3,1093 +3,402 @@
 <head>
 
 <meta charset="UTF-8">
-<title>Gestor de Conversas • Mercatto Delícia</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-<meta name="viewport"
-content="width=device-width,
-initial-scale=1,
-maximum-scale=1,
-user-scalable=no,
-viewport-fit=cover">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<title>Chat • Mercatto</title>
 
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 
-:root{
---bg:#0f172a;
---sidebar:#f4f4f5;
---chat:#020617;
+/* ===== BASE ===== */
 
---card:#ffffff;
---border:#e5e7eb;
-
---text:#111827;
---muted:#6b7280;
-
---brand:#22c55e;
---danger:#ef4444;
-}
-
-/* RESET */
-
-*{
-box-sizing:border-box;
--webkit-tap-highlight-color:transparent;
-}
+*{box-sizing:border-box}
 
 body{
 margin:0;
 font-family:Inter;
-background:var(--bg);
-color:var(--text);
 height:100vh;
 display:flex;
-overflow:hidden;
-}
-
-/* ================= SIDEBAR ================= */
-
-.sidebar{
-width:380px;
-background:var(--sidebar);
-border-right:1px solid var(--border);
-display:flex;
 flex-direction:column;
-}
-
-/* HEADER */
-
-.header{
-padding:20px;
-font-weight:800;
-font-size:18px;
-color:#111827;
-border-bottom:1px solid var(--border);
-}
-
-/* SEARCH */
-
-.search{
-padding:14px;
-border-bottom:1px solid var(--border);
-}
-
-.search input{
-width:100%;
-padding:12px 14px;
-border-radius:12px;
-border:1px solid var(--border);
-background:white;
-color:#111827;
-font-size:14px;
-outline:none;
-}
-
-/* CLIENT LIST */
-
-.clients{
-flex:1;
-overflow:auto;
-padding-bottom:10px;
-}
-
-/* CARD CLIENTE (🔥 PRINCIPAL) */
-
-.client{
-display:flex;
-gap:14px;
-align-items:center;
-
-background:white;
-
-margin:10px 16px;
-padding:14px;
-
-border-radius:16px;
-
-box-shadow:0 2px 6px rgba(0,0,0,0.05);
-
-cursor:pointer;
-transition:.2s;
-}
-
-.client:hover{
-transform:scale(1.01);
-}
-
-/* PAUSADO */
-
-.client.pausado{
-background:#fee2e2;
-}
-
-/* AVATAR */
-
-.avatar{
-width:52px;
-height:52px;
-border-radius:50%;
-background:#e5e7eb;
-
-display:flex;
-align-items:center;
-justify-content:center;
-
-font-weight:700;
-color:#111827;
-
-flex-shrink:0;
-}
-
-/* TEXTOS */
-
-.phone{
-font-weight:700;
-font-size:15px;
-color:#111827;
-}
-
-.preview{
-font-size:13px;
-color:var(--muted);
-white-space:nowrap;
 overflow:hidden;
-text-overflow:ellipsis;
-max-width:200px;
+
+background:
+radial-gradient(circle at 20% 30%, rgba(255,140,0,0.05), transparent 40%),
+radial-gradient(circle at 80% 70%, rgba(255,140,0,0.05), transparent 40%),
+#f5f5f4;
 }
 
-/* STATUS */
+/* ===== LOGO FUNDO ===== */
 
-.status{
-font-size:11px;
-margin-top:4px;
-font-weight:600;
-}
-
-.status.on{
-color:#16a34a;
-}
-
-.status.off{
-color:#dc2626;
-}
-
-/* MENU */
-
-.menuDots{
-margin-left:auto;
-cursor:pointer;
-font-size:18px;
-opacity:.5;
-color:#111827;
-}
-
-.menuDots:hover{
-opacity:1;
-}
-
-.menu{
+.brandBg{
 position:absolute;
-background:white;
-border:1px solid var(--border);
-border-radius:10px;
-padding:6px;
-display:none;
-flex-direction:column;
-z-index:1000;
-box-shadow:0 10px 30px rgba(0,0,0,0.15);
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+font-size:80px;
+font-weight:900;
+color:rgba(255,140,0,0.05);
+pointer-events:none;
 }
 
-.menu button{
-background:none;
-border:none;
-color:#111827;
-padding:8px 12px;
-text-align:left;
-cursor:pointer;
-border-radius:6px;
-}
+/* ===== EMPTY ===== */
 
-.menu button:hover{
-background:#f3f4f6;
-}
-
-/* ================= CHAT ================= */
-
-.chat{
-flex:1;
-display:flex;
-flex-direction:column;
-background:var(--chat);
-}
-
-/* HEADER CHAT */
-
-.chat-header{
-padding:18px 22px;
-border-bottom:1px solid #334155;
-display:flex;
-justify-content:space-between;
-align-items:center;
-color:white;
-}
-
-.chat-title{
-font-weight:700;
-font-size:15px;
-}
-
-/* BOTÕES */
-
-button{
-padding:8px 14px;
-border:none;
-border-radius:10px;
-cursor:pointer;
+.empty{
+margin:auto;
+color:#9ca3af;
 font-weight:600;
-font-size:13px;
 }
 
-/* ================= MENSAGENS ================= */
+/* ===== MESSAGES ===== */
 
 .messages{
 flex:1;
 overflow:auto;
-padding:28px;
+padding:20px;
 display:flex;
 flex-direction:column;
-gap:16px;
+gap:14px;
+z-index:2;
 }
 
-/* BOLHAS */
+/* ===== BOLHAS ===== */
 
 .msg{
-max-width:60%;
-padding:14px 16px;
-border-radius:14px;
+max-width:70%;
+padding:12px 14px;
+border-radius:16px;
 font-size:14px;
-line-height:1.5;
-animation:fade .2s ease;
+animation:fade .2s;
 }
 
 .user{
-background:#1e293b;
+background:#fff;
+border:1px solid #e5e7eb;
 align-self:flex-start;
-color:white;
 }
 
 .assistant{
 background:#22c55e;
-align-self:flex-end;
 color:white;
+align-self:flex-end;
 }
 
-/* TIME */
+/* ===== MIDIA ===== */
+
+.msg img{
+max-width:240px;
+border-radius:12px;
+margin-bottom:6px;
+cursor:pointer;
+box-shadow:0 10px 20px rgba(0,0,0,.15);
+}
+
+.msg video{
+max-width:260px;
+border-radius:12px;
+margin-bottom:6px;
+box-shadow:0 10px 20px rgba(0,0,0,.15);
+}
+
+/* ===== TIME ===== */
 
 .time{
 font-size:11px;
-margin-top:6px;
 opacity:.6;
 text-align:right;
+margin-top:6px;
 }
 
-/* EMPTY */
+/* ===== INPUT ===== */
 
-.empty{
-margin:auto;
-opacity:.5;
-font-size:14px;
+.inputBox{
+display:flex;
+gap:10px;
+padding:12px;
+background:white;
+border-top:1px solid #e5e7eb;
+z-index:2;
+}
+
+textarea{
+flex:1;
+border-radius:10px;
+border:1px solid #e5e7eb;
+padding:10px;
+resize:none;
+height:50px;
+font-family:Inter;
+}
+
+button{
+background:#22c55e;
 color:white;
+border:none;
+border-radius:10px;
+padding:10px 14px;
+cursor:pointer;
 }
 
-/* ANIMAÇÃO */
+/* ===== PREVIEW ===== */
+
+.preview{
+position:absolute;
+bottom:80px;
+left:20px;
+background:white;
+padding:10px;
+border-radius:12px;
+box-shadow:0 10px 30px rgba(0,0,0,.2);
+z-index:5;
+}
 
 @keyframes fade{
 from{opacity:0;transform:translateY(6px)}
 to{opacity:1}
 }
 
-/* ================= SEND BOX ================= */
-
-.sendBox{
-padding:16px;
-border-top:1px solid #334155;
-background:#020617;
-display:flex;
-gap:10px;
-}
-
-.sendBox textarea{
-flex:1;
-resize:none;
-border-radius:10px;
-border:1px solid #334155;
-background:#020617;
-color:white;
-padding:10px;
-font-family:Inter;
-height:60px;
-}
-
-.sendBox button{
-background:#22c55e;
-color:white;
-}
-
-/* ================= POPUP ================= */
-
-.popupOverlay{
-position:fixed;
-inset:0;
-background:rgba(0,0,0,.75);
-backdrop-filter:blur(6px);
-display:none;
-align-items:center;
-justify-content:center;
-z-index:9999;
-}
-
-.popupBox{
-width:92%;
-height:88%;
-max-width:1200px;
-background:#020617;
-border-radius:16px;
-border:1px solid #334155;
-display:flex;
-flex-direction:column;
-overflow:hidden;
-box-shadow:0 40px 100px rgba(0,0,0,.8);
-}
-
-.popupHeader{
-display:flex;
-justify-content:space-between;
-align-items:center;
-padding:16px 20px;
-border-bottom:1px solid #334155;
-}
-
-.popupTitle{
-font-weight:700;
-font-size:16px;
-color:white;
-}
-
-.popupActions{
-display:flex;
-gap:10px;
-}
-
-.popupContent{
-flex:1;
-display:flex;
-}
-
-.popupContent iframe{
-width:100%;
-height:100%;
-border:none;
-background:#020617;
-}
-
-/* ================= BOTÕES POPUP ================= */
-
-.tabBtn{
-background:#020617;
-border:1px solid #1e293b;
-color:#e2e8f0;
-padding:10px 18px;
-border-radius:30px;
-font-weight:600;
-cursor:pointer;
-transition:0.2s;
-}
-
-.tabBtn:hover{
-background:#1e293b;
-}
-
-.tabBtn.active{
-background:#3b82f6;
-border-color:#3b82f6;
-color:white;
-box-shadow:0 0 10px rgba(59,130,246,0.4);
-}
-
-/* ================= SCROLL ================= */
-
-::-webkit-scrollbar{
-width:6px;
-}
-
-::-webkit-scrollbar-thumb{
-background:#d1d5db;
-border-radius:10px;
-}
-  
-
-  
-
-  
 </style>
+
 </head>
 
 <body>
 
-<div class="sidebar">
+<div class="brandBg">MERCATTO</div>
 
-<div class="header">
-Conversas
-</div>
+<div id="empty" class="empty">Selecione uma conversa</div>
 
-<div class="search">
-<input id="buscar" placeholder="Buscar telefone...">
-</div>
+<div id="msgs" class="messages" style="display:none"></div>
 
-<div class="clients" id="clientes"></div>
+<div class="inputBox" id="inputBox" style="display:none">
 
-</div>
+<input type="file" id="fileInput" hidden>
 
-<div class="chat">
-<div class="chat-header">
+<button onclick="fileInput.click()">📎</button>
 
-<div class="chat-title" id="clienteAtual">
-Selecione um cliente
-</div>
+<textarea id="msg"></textarea>
 
-<div style="display:flex;gap:10px">
-
-<button onclick="abrirRepertorio()" style="background:#2563eb;color:white">
-Controle
-</button>
-
-</div>
-</div>
-
-<div id="chatIframeContainer" style="flex:1;display:flex">
-
-<iframe id="frameChat" style="
-width:100%;
-height:100%;
-border:none;
-background:#020617;
-"></iframe>
-</div>
-
-<div class="sendBox" id="sendBox" style="display:none">
-
-<textarea id="msgManual" placeholder="Digite a mensagem"></textarea>
-
-<button onclick="enviarManual()">
-Enviar
-</button>
-
-<button onclick="falarComAgente()" style="background:#2563eb">
-Agente
-</button>
+<button onclick="enviar()">Enviar</button>
 
 </div>
 
-</div>
+<div id="preview" class="preview" style="display:none"></div>
 
 <script>
+
+/* ===== CONFIG ===== */
 
 const db = supabase.createClient(
 "https://dxkszikemntfusfyrzos.supabase.co",
 "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 )
-let pagina = 0
-const limite = 20
-let carregando = false
-/* realtime bot */
 
-db
-.channel("controle_bot_changes")
-.on(
-"postgres_changes",
-{
-event:"*",
+let telefone = null
+let canal = null
+let arquivo = null
+
+/* ===== RESET ===== */
+
+document.addEventListener("keydown",(e)=>{
+if(e.key==="Escape"){
+reset()
+}
+})
+
+function reset(){
+telefone=null
+msgs.style.display="none"
+inputBox.style.display="none"
+empty.style.display="block"
+msgs.innerHTML=""
+}
+
+/* ===== PEGAR TELEFONE ===== */
+
+function getTel(){
+return new URLSearchParams(location.search).get("telefone")
+}
+
+/* ===== CARREGAR ===== */
+
+async function carregar(){
+
+telefone = getTel()
+
+if(!telefone){
+reset()
+return
+}
+
+const {data} = await db
+.from("conversas_whatsapp")
+.select("*")
+.eq("telefone",telefone)
+.order("created_at",{ascending:true})
+
+msgs.innerHTML=""
+
+if(!data || !data.length){
+reset()
+return
+}
+
+empty.style.display="none"
+msgs.style.display="flex"
+inputBox.style.display="flex"
+
+data.forEach(render)
+scroll()
+
+realtime()
+
+}
+
+/* ===== REALTIME ===== */
+
+function realtime(){
+
+if(canal) db.removeChannel(canal)
+
+canal = db.channel("chat-"+telefone)
+.on("postgres_changes",{
+event:"INSERT",
 schema:"public",
-table:"controle_bot"
-},
-payload=>{
-carregarClientes()
-}
-)
-.subscribe()
-
-/* ================= GLOBAL ================= */
-
-let nomes = {}
-let clienteSelecionado = null
-
-/* ================= CARREGAR CLIENTES ================= */
-
-async function carregarClientes(){
-document.getElementById("frameChat").src = ""
-const {data} = await db
-.from("conversas_whatsapp")
-.select("*")
-.order("created_at",{ascending:false})
-
-const {data:memoria} = await db
-.from("memoria_clientes")
-.select("telefone,nome")
-
-/* 🔥 CORREÇÃO DO NOMES */
-
-nomes = {}
-
-memoria.forEach(c=>{
-  nomes[c.telefone] = c.nome
-})
-
-/* AGRUPAR CLIENTES */
-
-const map = {}
-
-data.forEach(m=>{
-  if(!map[m.telefone]) map[m.telefone] = m
-})
-
-const clientes = Object.values(map)
-
-/* RENDER */
-
-const container = document.getElementById("clientes")
-container.innerHTML = ""
-
-for (const c of clientes){
-
-  const div = document.createElement("div")
-
-  const inicial = c.telefone.slice(-2)
-
-  const pausado = await verificarPausa(c.telefone)
-
-  div.className = pausado ? "client pausado" : "client"
-
-  div.innerHTML = `
-    <div class="avatar">${inicial}</div>
-
-    <div>
-      <div class="phone">
-        ${nomes[c.telefone] || c.telefone}
-      </div>
-
-      <div class="preview">${c.mensagem}</div>
-
-      <div class="status ${pausado?'off':'on'}">
-        ● ${pausado?'BOT PAUSADO':'BOT ATIVO'}
-      </div>
-    </div>
-
-    <div class="menuDots" onclick="abrirMenu(event,'${c.telefone}')">⋮</div>
-
-    <div class="menu" id="menu-${c.telefone}">
-      <button onclick="editarContato('${c.telefone}')">
-        Editar contato
-      </button>
-
-      <button onclick="toggleBot('${c.telefone}')" style="
-        background:${pausado?'#22c55e':'#ef4444'};
-        color:white;
-        padding:6px 10px;
-        border-radius:6px;
-        font-size:12px;
-      ">
-        ${pausado ? "ATIVAR BOT" : "DESATIVAR BOT"}
-      </button>
-    </div>
-  `
-
-  /* 🔥 CLICK CORRETO */
-
-  div.addEventListener("click", () => {
-    abrirChatIframe(c.telefone)
-  })
-
-  container.appendChild(div)
-}
-
-
+table:"conversas_whatsapp",
+filter:`telefone=eq.${telefone}`
+},p=>{
+render(p.new)
+scroll()
+}).subscribe()
 
 }
 
-/* ================= ABRIR CHAT ================= */
+/* ===== RENDER ===== */
 
+function render(m){
 
-async function abrirConversa(telefone){
+const div = document.createElement("div")
+div.className="msg "+(m.role==="assistant"?"assistant":"user")
 
-clienteSelecionado = telefone
-pagina = 0
+let html=""
 
-const container = document.getElementById("mensagens")
-container.innerHTML = ""
-
-const {data} = await db
-.from("conversas_whatsapp")
-.select("*")
-.eq("telefone",telefone)
-.order("created_at",{ascending:false})
-.range(0, limite-1)
-
-if(!data || data.length === 0){
-const empty = document.createElement("div")
-empty.className="empty"
-empty.innerText="Nenhuma mensagem ainda"
-container.appendChild(empty)
-return
+if(m.tipo==="imagem"){
+html+=`<img src="${m.media_url}" onclick="window.open('${m.media_url}')">`
 }
 
-const mensagens = data.reverse()
-mensagens.forEach(m=>renderMensagem(m))
+if(m.tipo==="video"){
+html+=`<video controls src="${m.media_url}"></video>`
+}
 
-setTimeout(()=>{
-container.scrollTop = container.scrollHeight
-},50)
+if(m.mensagem){
+html+=`<div>${m.mensagem}</div>`
+}
 
-ativarScroll()
+const hora = new Date(m.created_at)
+.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})
 
-/* 🔥 ISSO TEM QUE FICAR AQUI DENTRO */
+div.innerHTML=html+`<div class="time">${hora}</div>`
 
-const pausado = await verificarPausa(telefone)
-const sendBox = document.getElementById("sendBox")
+msgs.appendChild(div)
 
-sendBox.style.display = "flex"
+}
 
-if(!pausado){
-  sendBox.style.opacity = "0.5"
-  sendBox.style.pointerEvents = "none"
+/* ===== SCROLL ===== */
+
+function scroll(){
+setTimeout(()=>msgs.scrollTop=msgs.scrollHeight,50)
+}
+
+/* ===== PREVIEW ===== */
+
+fileInput.onchange = ()=>{
+arquivo = fileInput.files[0]
+
+preview.style.display="block"
+
+if(arquivo.type.includes("image")){
+preview.innerHTML=`<img src="${URL.createObjectURL(arquivo)}" width="120">`
 }else{
-  sendBox.style.opacity = "1"
-  sendBox.style.pointerEvents = "auto"
-}}
-async function excluirSelecionadas(){
-
-if(selecionadas.length===0){
-alert("Selecione mensagens")
-return
+preview.innerHTML=`<video src="${URL.createObjectURL(arquivo)}" width="120" controls></video>`
+}
 }
 
-if(!confirm("Excluir mensagens selecionadas?")) return
+/* ===== UPLOAD ===== */
 
-await db
-.from("conversas_whatsapp")
-.delete()
-.in("id",selecionadas)
+async function upload(file){
 
-abrirConversa(clienteSelecionado)
+const nome = Date.now()+"-"+file.name
 
-}
+await db.storage
+.from("buffet_whatsa_mercatto")
+.upload(nome,file)
 
-async function excluirConversa(){
+const {data} = db.storage
+.from("buffet_whatsa_mercatto")
+.getPublicUrl(nome)
 
-if(!clienteSelecionado) return
-
-if(!confirm("Excluir conversa completa?")) return
-
-await db
-.from("conversas_whatsapp")
-.delete()
-.eq("telefone",clienteSelecionado)
-
-document.getElementById("mensagens").innerHTML='<div class="empty">Conversa excluída</div>'
-
-carregarClientes()
+return data.publicUrl
 
 }
 
-document.getElementById("buscar").addEventListener("input",function(){
+/* ===== ENVIAR ===== */
 
-const filtro=this.value.toLowerCase()
+async function enviar(){
 
-document.querySelectorAll(".client").forEach(c=>{
+if(!telefone) return
 
-const texto=c.innerText.toLowerCase()
+const texto = msg.value.trim()
 
-c.style.display=texto.includes(filtro)?"flex":"none"
+let url=null
+let tipo="texto"
 
-})
-
-})
-
-
-carregarClientes()
-function abrirRepertorio(){
-
-const frame = document.getElementById("frameRepertorio")
-
-if(!frame.src){
-frame.src="prompt.html"
+if(arquivo){
+url = await upload(arquivo)
+tipo = arquivo.type.includes("video") ? "video" : "imagem"
 }
 
-document.getElementById("popupRepertorio").style.display="flex"
-
-}
-function fecharRepertorio(){
-document.getElementById("popupRepertorio").style.display="none"
-}
-
-function abrirIframe(url){
-document.getElementById("frameRepertorio").src=url
-}
-
-
-/* MENU */
-
-function abrirMenu(e,telefone){
-
-e.stopPropagation()
-
-document.querySelectorAll(".menu").forEach(m=>{
-m.style.display="none"
-})
-
-const menu=document.getElementById("menu-"+telefone)
-
-menu.style.display="flex"
-
-menu.style.top = e.pageY + "px"
-menu.style.left = e.pageX + "px"
-
-}
-
-/* FECHAR MENU */
-
-document.addEventListener("click",()=>{
-document.querySelectorAll(".menu").forEach(m=>{
-m.style.display="none"
+await fetch("/api/send",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+telefone,
+mensagem:texto,
+media_url:url
 })
 })
-
-/* VERIFICAR PAUSA */
-
-async function verificarPausa(telefone){
-
-const {data,error} = await db
-.from("controle_bot")
-.select("pausado")
-.eq("telefone",telefone)
-.limit(1)
-.maybeSingle()
-
-if(error) return false
-
-return data?.pausado === true
-
-}
-
-/* TOGGLE BOT */
-
-async function toggleBot(telefone){
-
-const {data,error} = await db
-.from("controle_bot")
-.select("pausado")
-.eq("telefone",telefone)
-.limit(1)
-.maybeSingle()
-
-if(error){
-console.error(error)
-return
-}
-
-const novoStatus = !(data?.pausado === true)
-
-if(data){
-
-await db
-.from("controle_bot")
-.update({pausado:novoStatus})
-.eq("telefone",telefone)
-
-}else{
-
-await db
-.from("controle_bot")
-.insert({
-telefone:telefone,
-pausado:true
-})
-
-}
-
-carregarClientes()
-
-}
-
-
-async function enviarManual(){
-
-if(!clienteSelecionado){
-alert("Selecione um cliente")
-return
-}
-
-const textarea = document.getElementById("msgManual")
-const msg = textarea.value.trim()
-
-if(!msg){
-alert("Digite uma mensagem")
-return
-}
-
-const telefone = clienteSelecionado.replace(/\D/g,"").trim()
-
-try {
-
-const res = await fetch("/api/send", {
-  method:"POST",
-  headers:{
-    "Content-Type":"application/json"
-  },
-  body:JSON.stringify({
-    telefone,
-    mensagem:msg
-  })
-})
-
-const data = await res.json()
-
-if(!res.ok){
-  alert("Erro: " + JSON.stringify(data))
-  return
-}
-
-/* ✅ SALVA NO BANCO (IMPORTANTE) */
 
 await db.from("conversas_whatsapp").insert({
-  telefone: telefone,
-  mensagem: msg,
-  role: "assistant"
+telefone,
+mensagem:texto,
+tipo,
+media_url:url,
+role:"assistant"
 })
 
-textarea.value = ""
-
-/* atualiza chat */
-abrirChatIframe(telefone)
-} catch (err){
-alert("Erro ao enviar: " + err.message)
-}
-
-}
-function falarComAgente(){
-
-abrirIframe("agente.html")
-
-document.getElementById("popupRepertorio").style.display="flex"
+msg.value=""
+arquivo=null
+preview.style.display="none"
 
 }
 
-async function editarContato(telefone){
+/* ===== WATCH TROCA ===== */
 
-const {data} = await db
-.from("memoria_clientes")
-.select("nome")
-.eq("telefone",telefone)
-.maybeSingle()
+let last = getTel()
 
-const nomeAtual = data?.nome || ""
-
-const novoNome = prompt("Editar nome do contato:",nomeAtual)
-
-if(!novoNome) return
-
-if(data){
-
-await db
-.from("memoria_clientes")
-.update({nome:novoNome})
-.eq("telefone",telefone)
-
-}else{
-
-await db
-.from("memoria_clientes")
-.insert({
-telefone:telefone,
-nome:novoNome
-})
-
+setInterval(()=>{
+const atual = getTel()
+if(atual!==last){
+last=atual
+carregar()
 }
+},400)
 
-carregarClientes()
+/* ===== INIT ===== */
 
-if(clienteSelecionado === telefone){
-abrirChatIframe(telefone)}
+carregar()
 
-}
-
-
-function renderMensagem(m){
-
-const container = document.getElementById("mensagens")
-
-const div = document.createElement("div")
-
-div.className = "msg " + (m.role === "assistant" ? "assistant" : "user")
-
-const date = new Date(m.created_at)
-
-const dataFormatada = date.toLocaleDateString("pt-BR",{
-timeZone:"America/Bahia"
-})
-
-const horaFormatada = date.toLocaleTimeString("pt-BR",{
-hour:"2-digit",
-minute:"2-digit",
-timeZone:"America/Bahia"
-})
-
-div.innerHTML = `
-<div>${m.mensagem}</div>
-<div class="time">${dataFormatada} • ${horaFormatada}</div>
-`
-
-container.appendChild(div)
-
-}
-
-
-function ativarScroll(){
-
-const container = document.getElementById("mensagens")
-
-container.onscroll = async () => {
-
-if(container.scrollTop === 0 && !carregando){
-
-carregando = true
-pagina++
-
-const inicio = pagina * limite
-const fim = inicio + limite - 1
-
-const {data} = await db
-.from("conversas_whatsapp")
-.select("*")
-.eq("telefone",clienteSelecionado)
-.order("created_at",{ascending:false})
-.range(inicio, fim)
-
-if(data && data.length){
-
-const antigas = data.reverse()
-
-const alturaAntes = container.scrollHeight
-
-antigas.forEach(m=>{
-
-const div = document.createElement("div")
-
-div.className = "msg " + (m.role === "assistant" ? "assistant" : "user")
-
-const date = new Date(m.created_at)
-
-div.innerHTML = `
-<div>${m.mensagem}</div>
-<div class="time">
-${date.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}
-</div>
-`
-
-container.prepend(div)
-
-})
-
-/* mantém posição do scroll */
-
-setTimeout(()=>{
-container.scrollTop = container.scrollHeight - alturaAntes
-},0)
-
-}
-
-carregando = false
-
-}
-
-}
-
-}
-
-
-function abrirChatIframe(telefone){
-
-  console.log("ABRINDO:", telefone)
-
-  clienteSelecionado = telefone
-
-  document.getElementById("clienteAtual").innerText =
-    nomes[telefone] || telefone
-
-  const frame = document.getElementById("frameChat")
-
-  frame.src = "./chat.html?telefone=" + telefone
-
-  const sendBox = document.getElementById("sendBox")
-  sendBox.style.display = "flex"
-
-}
-
-
-  
-
-
-
-
-
-
-  
-
-  
 </script>
-<div id="popupRepertorio" class="popupOverlay">
 
-<div class="popupBox">
-
-<div class="popupHeader">
-
-<div class="popupTitle">
-Controle
-</div>
-
-<div class="popupActions">
-
-<button class="tabBtn active"
-onclick="abrirIframe('prompt.html')">
-Prompt de comando
-</button>
-
-
-<button class="tabBtn active"
-onclick="abrirIframe('agente.html')">
-Assistente
-</button>
-
-  
-<button class="tabBtn"
-onclick="fecharRepertorio()">
-Fechar
-</button>
-
-</div>
-
-</div>
-
-<div class="popupContent">
-
-<iframe id="frameRepertorio"></iframe>
-
-</div>
-
-</div>
-
-</div>
 </body>
 </html>
