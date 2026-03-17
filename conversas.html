@@ -623,16 +623,12 @@ pagina = 0
 const container = document.getElementById("mensagens")
 container.innerHTML = ""
 
-/* busca só as últimas 20 */
-
 const {data} = await db
 .from("conversas_whatsapp")
 .select("*")
 .eq("telefone",telefone)
 .order("created_at",{ascending:false})
 .range(0, limite-1)
-
-/* se vazio */
 
 if(!data || data.length === 0){
 const empty = document.createElement("div")
@@ -642,39 +638,23 @@ container.appendChild(empty)
 return
 }
 
-/* inverter ordem */
-
 const mensagens = data.reverse()
-
 mensagens.forEach(m=>renderMensagem(m))
-
-/* scroll pro final */
 
 setTimeout(()=>{
 container.scrollTop = container.scrollHeight
 },50)
 
-/* ativa scroll infinito */
-
 ativarScroll()
 
-}
-const pausado = await verificarPausa(telefone)
+/* 🔥 ISSO TEM QUE FICAR AQUI DENTRO */
 
+const pausado = await verificarPausa(telefone)
 const sendBox = document.getElementById("sendBox")
 
-if(pausado){
-
-sendBox.style.display = "flex"
-
-}else{
-
-sendBox.style.display = "none"
+sendBox.style.display = pausado ? "flex" : "none"
 
 }
-
-}
-
 async function excluirSelecionadas(){
 
 if(selecionadas.length===0){
