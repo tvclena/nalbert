@@ -1,13 +1,22 @@
+import { createClient } from "@supabase/supabase-js"
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE
+)
+
 export default async function handler(req, res) {
 
   try {
 
-    /* ===== MÉTODO ===== */
+    /* ================= MÉTODO ================= */
+
     if (req.method !== "POST") {
       return res.status(405).json({ error: "Método não permitido" })
     }
 
-    /* ===== BODY ===== */
+    /* ================= BODY ================= */
+
     const body = typeof req.body === "string"
       ? JSON.parse(req.body)
       : req.body
@@ -18,7 +27,8 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Telefone obrigatório" })
     }
 
-    /* ===== ENV ===== */
+    /* ================= ENV ================= */
+
     const PHONE_ID = process.env.WHATSAPP_PHONE_ID
     const TOKEN = process.env.WHATSAPP_TOKEN
 
@@ -26,7 +36,8 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: "Credenciais não configuradas" })
     }
 
-    /* ===== NORMALIZAR ===== */
+    /* ================= NORMALIZAR ================= */
+
     const numero = telefone.replace(/\D/g, "")
 
     let payload = {
@@ -35,7 +46,7 @@ export default async function handler(req, res) {
     }
 
     /* =====================================================
-       🔥 PRIORIDADE: MÍDIA
+       🔥 MÍDIA
     ===================================================== */
 
     if (media_url) {
@@ -75,14 +86,15 @@ export default async function handler(req, res) {
         payload.type = "document"
         payload.document = {
           link: media_url,
-          filename: nome_arquivo || "arquivo"
+          filename: nome_arquivo || "arquivo",
+          caption: mensagem || ""
         }
       }
 
     }
 
     /* =====================================================
-       🔥 TEXTO (SEM MÍDIA)
+       🔥 TEXTO
     ===================================================== */
 
     else if (mensagem) {
@@ -96,7 +108,7 @@ export default async function handler(req, res) {
 
     else {
       return res.status(400).json({
-        error: "Nada para enviar (sem texto ou mídia)"
+        error: "Nada para enviar"
       })
     }
 
@@ -120,7 +132,10 @@ export default async function handler(req, res) {
 
     console.log("📤 RESPOSTA META:", data)
 
-    /* ===== ERRO META ===== */
+    /* =====================================================
+       ❌ ERRO WHATSAPP
+    ===================================================== */
+
     if (data.error) {
       return res.status(200).json({
         ok: false,
@@ -129,7 +144,37 @@ export default async function handler(req, res) {
       })
     }
 
-    /* ===== SUCESSO ===== */
+    /* =====================================================
+       💾 SALVAR NO SUPABASE
+    ===================================================== */
+
+    const tipoFinal = tipo || (
+      media_url
+        ? detectarTipo(media_url, nome_arquivo)
+        : "texto"
+    )
+
+    const { error: erroBanco } = await supabase
+      .from("conversas_whatsapp")
+      .insert({
+        telefone: numero,
+        mensagem: mensagem || `[${tipoFinal.toUpperCase()}]`,
+        media_url: media_url || null,
+        tipo: tipoFinal,
+        nome_arquivo: nome_arquivo || null,
+        role: "assistant"
+      })
+
+    if (erroBanco) {
+      console.error("❌ ERRO AO SALVAR:", erroBanco)
+    } else {
+      console.log("✅ SALVO NO BANCO")
+    }
+
+    /* =====================================================
+       ✅ SUCESSO
+    ===================================================== */
+
     return res.status(200).json({
       ok: true,
       id: data.messages?.[0]?.id || null
@@ -149,7 +194,7 @@ export default async function handler(req, res) {
 }
 
 /* =====================================================
-   🔍 DETECTOR AUTOMÁTICO DE TIPO
+   🔍 DETECTAR TIPO AUTOMATICAMENTE
 ===================================================== */
 
 function detectarTipo(url, nome){
