@@ -529,7 +529,7 @@ let clienteSelecionado = null
 /* ================= CARREGAR CLIENTES ================= */
 
 async function carregarClientes(){
-
+document.getElementById("frameChat").src = ""
 const {data} = await db
 .from("conversas_whatsapp")
 .select("*")
