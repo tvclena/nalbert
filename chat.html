@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+content="width=device-width,
+initial-scale=1,
+maximum-scale=1,
+user-scalable=no,
+viewport-fit=cover">
+
+<title>Chat</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+
+/* BASE */
+
+*{
+box-sizing:border-box;
+-webkit-tap-highlight-color:transparent;
+}
+
+body{
+margin:0;
+font-family:Inter;
+background:#020617;
+color:white;
+height:100vh;
+display:flex;
+flex-direction:column;
+overflow:hidden;
+}
+
+/* MENSAGENS */
+
+.messages{
+flex:1;
+overflow:auto;
+padding:20px;
+display:flex;
+flex-direction:column;
+gap:14px;
+}
+
+/* BOLHAS */
+
+.msg{
+max-width:70%;
+padding:14px 16px;
+border-radius:16px;
+font-size:14px;
+line-height:1.5;
+animation:fade .2s ease;
+}
+
+/* USER */
+
+.user{
+background:#1e293b;
+align-self:flex-start;
+}
+
+/* BOT */
+
+.assistant{
+background:#22c55e;
+align-self:flex-end;
+}
+
+/* HORA */
+
+.time{
+font-size:11px;
+opacity:.6;
+margin-top:6px;
+text-align:right;
+}
+
+/* ANIMAÇÃO */
+
+@keyframes fade{
+from{opacity:0;transform:translateY(6px)}
+to{opacity:1}
+}
+
+/* SCROLL */
+
+::-webkit-scrollbar{
+width:5px;
+}
+
+::-webkit-scrollbar-thumb{
+background:#334155;
+border-radius:10px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="messages" id="msgs"></div>
+
+<script>
+
+/* ================= CONFIG ================= */
+
+const db = supabase.createClient(
+"https://dxkszikemntfusfyrzos.supabase.co",
+"sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
+)
+
+/* ================= PEGAR TELEFONE ================= */
+
+const urlParams = new URLSearchParams(window.location.search)
+const telefone = urlParams.get("telefone")
+
+if(!telefone){
+document.body.innerHTML = "<div style='margin:auto'>Telefone não informado</div>"
+}
+
+/* ================= CARREGAR ================= */
+
+async function carregar(){
+
+const {data,error} = await db
+.from("conversas_whatsapp")
+.select("*")
+.eq("telefone", telefone)
+.order("created_at",{ascending:true})
+
+if(error){
+console.error(error)
+return
+}
+
+const container = document.getElementById("msgs")
+container.innerHTML=""
+
+data.forEach(m=>render(m))
+
+scrollFinal()
+
+}
+
+/* ================= RENDER ================= */
+
+function render(m){
+
+const container = document.getElementById("msgs")
+
+const div = document.createElement("div")
+
+div.className = "msg " + (m.role === "assistant" ? "assistant" : "user")
+
+const date = new Date(m.created_at)
+
+const hora = date.toLocaleTimeString("pt-BR",{
+hour:"2-digit",
+minute:"2-digit"
+})
+
+div.innerHTML = `
+<div>${m.mensagem}</div>
+<div class="time">${hora}</div>
+`
+
+container.appendChild(div)
+
+}
+
+/* ================= SCROLL ================= */
+
+function scrollFinal(){
+
+const container = document.getElementById("msgs")
+
+setTimeout(()=>{
+container.scrollTop = container.scrollHeight
+},50)
+
+}
+
+/* ================= REALTIME (🔥 TOP) ================= */
+
+db
+.channel("chat-"+telefone)
+.on(
+"postgres_changes",
+{
+event:"INSERT",
+schema:"public",
+table:"conversas_whatsapp",
+filter:`telefone=eq.${telefone}`
+},
+payload=>{
+
+render(payload.new)
+scrollFinal()
+
+}
+)
+.subscribe()
+
+/* ================= INIT ================= */
+
+carregar()
+
+</script>
+
+</body>
+</html>
