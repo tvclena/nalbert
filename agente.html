@@ -317,6 +317,33 @@ thinking.remove()
 
 addMsg("assistant",data.resposta)
 
+/* 🔥 NOVO: TENTAR REGISTRAR RESERVA */
+
+try{
+
+const reserva = JSON.parse(data.resposta)
+
+/* valida se parece reserva */
+
+if(reserva.nome && reserva.data && reserva.horario){
+
+const salvar = await fetch("/api/reservas",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify(reserva)
+})
+
+const resultado = await salvar.json()
+
+addMsg("assistant","✅ Reserva registrada com sucesso!")
+
+}
+
+}catch(e){
+/* não era JSON, ignora */
+}
 historico.push({role:"assistant",content:data.resposta})
 
 salvarHistorico()
